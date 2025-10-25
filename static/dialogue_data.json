@@ -1,0 +1,3775 @@
+{
+  "dialogueTreeId": "managerCheckinWithPetraJones",
+  "characterName": "Petra Jones",
+  "startNodeId": "petraStart",
+  "nodes": {
+    "petraStart": {
+      "id": "petraStart",
+      "text": "Hi, you wanted to see me? Is this about my performance reviews or something?",
+      "npcMood": "apprehensive_guarded",
+      "themes": [
+        "Work Performance",
+        "Team Dynamics",
+        "Role Expectations"
+      ],
+      "choices": [
+        {
+          "id": "choicePetraStart1",
+          "text": "Thanks for coming in, Petra. I wanted to check in about your workload and how things are going. I've noticed a shift recently, particularly with customer-facing duties.",
+          "technique": "Open Question",
+          "techniqueType": "Core Skill",
+          "rapportScore": 1,
+          "feedback": "An open question invites Petra to share her perspective, which is a good way to start exploring her concerns.",
+          "nextNodeId": "petraInitialResponse"
+        },
+        {
+          "id": "choicePetraStart2",
+          "text": "I appreciate you coming. I've been observing some changes in your approach to customer interactions. What are your thoughts on that?",
+          "technique": "Simple Reflection",
+          "techniqueType": "Core Skill",
+          "rapportScore": 0,
+          "feedback": "This acknowledges observations while inviting her perspective, but could be more open-ended.",
+          "nextNodeId": "petraSustain1"
+        },
+        {
+          "id": "choicePetraStart3",
+          "text": "Yes, I wanted to discuss some concerns I have about your engagement with customer-facing duties. Are you aware of any changes?",
+          "technique": "Confrontation",
+          "techniqueType": "Anti-MI",
+          "rapportScore": -1,
+          "feedback": "Starting with 'concerns' can put Petra on the defensive right away, which may shut down open dialogue.",
+          "nextNodeId": "petraSustain2"
+        }
+      ]
+    },
+    "petraInitialResponse": {
+      "id": "petraInitialResponse",
+      "text": "Well, it's a lot to manage, isn't it? There's a lot going on and I am meeting my job requirements. Prioritizing the customer is important, but so is prioritizing the paperwork and I always do that on time.",
+      "npcMood": "defensive_justifying",
+      "themes": [
+        "Workload",
+        "Priorities",
+        "Job Requirements"
+      ],
+      "choices": [
+        {
+          "id": "choicePetraInitialResponse1",
+          "text": "It sounds like you're juggling a lot, and you're making sure the paperwork is always done on time.",
+          "technique": "Complex Reflection",
+          "techniqueType": "Core Skill",
+          "rapportScore": 1,
+          "feedback": "This complex reflection acknowledges her effort and the challenge, building rapport by showing understanding.",
+          "nextNodeId": "petraReflection1"
+        },
+        {
+          "id": "choicePetraInitialResponse2",
+          "text": "But the customer-facing duties are really your core role, aren't they?",
+          "technique": "Confrontation",
+          "techniqueType": "Anti-MI",
+          "rapportScore": -2,
+          "feedback": "Directly confronting Petra will likely lead to defensiveness and shut down the conversation.",
+          "nextNodeId": "petraDefensive1"
+        },
+        {
+          "id": "choicePetraInitialResponse3",
+          "text": "Perhaps you could try to find more time for customer interactions?",
+          "technique": "Premature Advice",
+          "techniqueType": "Anti-MI",
+          "rapportScore": -1,
+          "feedback": "Giving unsolicited advice can be perceived as dismissive and undermine Petra's autonomy.",
+          "nextNodeId": "petraResistant1"
+        }
+      ],
+      "quotesUsed": [
+        "There's a lot going on and I am meeting my job requirements.",
+        "Prioritizing the customer is important, but so is prioritizing the paperwork and I always do that on time."
+      ]
+    },
+    "petraSustain1": {
+      "id": "petraSustain1",
+      "text": "It feels like people just have the same questions. I have the same answers. No-one has complained about my performance before and I've been here over 4 years.",
+      "npcMood": "frustrated_apathetic",
+      "themes": [
+        "Monotony",
+        "Past Performance",
+        "Lack of Engagement"
+      ],
+      "choices": [
+        {
+          "id": "choicePetraSustain11",
+          "text": "So it sounds like the routine of the customer interactions has become a bit repetitive for you.",
+          "technique": "Simple Reflection",
+          "techniqueType": "Core Skill",
+          "rapportScore": 1,
+          "feedback": "A simple reflection on her feeling of repetition. This validates her experience.",
+          "nextNodeId": "petraReflection2"
+        },
+        {
+          "id": "choicePetraSustain12",
+          "text": "What do you think could make those interactions more engaging for you?",
+          "technique": "Open Question",
+          "techniqueType": "Core Skill",
+          "rapportScore": 1,
+          "feedback": "An open question invites Petra to think about solutions and potential change, eliciting change talk.",
+          "nextNodeId": "petraChange1"
+        },
+        {
+          "id": "choicePetraSustain13",
+          "text": "You just need to push through it, it's part of the job.",
+          "technique": "Confrontation",
+          "techniqueType": "Anti-MI",
+          "rapportScore": -2,
+          "feedback": "This is a highly directive and dismissive statement that will likely increase resistance.",
+          "nextNodeId": "petraResistant2"
+        }
+      ],
+      "isSustainTalk": true,
+      "quotesUsed": [
+        "It feels like people just have the same questions. I have the same answers.",
+        "No-one has complained about my performance before and I've been here over 4 years."
+      ]
+    },
+    "petraSustain2": {
+      "id": "petraSustain2",
+      "text": "I'm meeting my job requirements. The team are managing and I'm supporting them. I should just get over it and push through it.",
+      "npcMood": "resigned_stoic",
+      "themes": [
+        "Self-Criticism",
+        "Team Support",
+        "Job Requirements"
+      ],
+      "choices": [
+        {
+          "id": "choicePetraSustain21",
+          "text": "It sounds like you feel a lot of pressure to just 'get over it' and keep pushing, even if it's a struggle.",
+          "technique": "Complex Reflection",
+          "techniqueType": "Core Skill",
+          "rapportScore": 2,
+          "feedback": "This complex reflection acknowledges her internal conflict and pressure, building strong rapport.",
+          "nextNodeId": "petraReflection3"
+        },
+        {
+          "id": "choicePetraSustain22",
+          "text": "Are you sure the team is managing? I've heard some concerns.",
+          "technique": "Confrontation",
+          "techniqueType": "Anti-MI",
+          "rapportScore": -2,
+          "feedback": "Directly challenging Petra's statement about the team will likely make her defensive and shut down.",
+          "nextNodeId": "petraDefensive2"
+        },
+        {
+          "id": "choicePetraSustain23",
+          "text": "What would it look like if you didn't 'just get over it'?",
+          "technique": "Evocative Question",
+          "techniqueType": "Advanced Technique",
+          "rapportScore": 1,
+          "feedback": "An evocative question encourages Petra to explore the implications of not pushing through, potentially eliciting change talk.",
+          "nextNodeId": "petraChange2"
+        }
+      ],
+      "isSustainTalk": true,
+      "quotesUsed": [
+        "I'm meeting my job requirements.",
+        "The team are managing and I'm supporting them.",
+        "I should just get over it and push through it."
+      ]
+    },
+    "petraReflection1": {
+      "id": "petraReflection1",
+      "text": "Yes, it is. And I am. But it feels like I'm just going through the motions with the customer calls. I want to be the one that makes a real difference again.",
+      "npcMood": "reflective_yearning",
+      "themes": [
+        "Dissatisfaction",
+        "Impact",
+        "Motivation"
+      ],
+      "choices": [
+        {
+          "id": "choicePetraReflection11",
+          "text": "You miss that sense of making a difference, that feeling of impact you used to have.",
+          "technique": "Complex Reflection",
+          "techniqueType": "Core Skill",
+          "rapportScore": 2,
+          "feedback": "This reflection accurately captures her underlying feeling and value, strengthening rapport.",
+          "nextNodeId": "petraChange3"
+        },
+        {
+          "id": "choicePetraReflection12",
+          "text": "What do you think is stopping you from making that difference now?",
+          "technique": "Open Question",
+          "techniqueType": "Core Skill",
+          "rapportScore": 1,
+          "feedback": "An open question invites Petra to explore barriers, which can lead to change talk.",
+          "nextNodeId": "petraChange4"
+        },
+        {
+          "id": "choicePetraReflection13",
+          "text": "Perhaps you just need a break.",
+          "technique": "Giving Advice",
+          "techniqueType": "Anti-MI",
+          "rapportScore": -1,
+          "feedback": "Offering unsolicited advice can be perceived as dismissive of her deeper concerns and undermine her autonomy.",
+          "nextNodeId": "petraResistant3"
+        }
+      ],
+      "isChangeTalk": true,
+      "quotesUsed": [
+        "I want to be the one that makes a real difference again."
+      ]
+    },
+    "petraReflection2": {
+      "id": "petraReflection2",
+      "text": "Exactly. It's just the same thing day in, day out. Maybe I could find 30 minutes for myself, just to reset.",
+      "npcMood": "thoughtful_exploratory",
+      "themes": [
+        "Burnout",
+        "Self-Care",
+        "Routine"
+      ],
+      "choices": [
+        {
+          "id": "choicePetraReflection21",
+          "text": "Taking 30 minutes for yourself sounds like a small step that could make a difference.",
+          "technique": "Affirmation/Support",
+          "techniqueType": "Core Skill",
+          "rapportScore": 1,
+          "feedback": "Affirming her idea reinforces her agency and encourages her to consider action.",
+          "nextNodeId": "petraChange5"
+        },
+        {
+          "id": "choicePetraReflection22",
+          "text": "What would you do with those 30 minutes?",
+          "technique": "Open Question",
+          "techniqueType": "Core Skill",
+          "rapportScore": 1,
+          "feedback": "This open question helps Petra elaborate on her idea, strengthening her commitment to it.",
+          "nextNodeId": "petraChange6"
+        },
+        {
+          "id": "choicePetraReflection23",
+          "text": "That's not really going to solve the problem, is it?",
+          "technique": "Confrontation",
+          "techniqueType": "Anti-MI",
+          "rapportScore": -2,
+          "feedback": "This dismisses her idea and will likely make her defensive, shutting down further exploration.",
+          "nextNodeId": "petraDefensive3"
+        }
+      ],
+      "isChangeTalk": true,
+      "quotesUsed": [
+        "Maybe I could find 30 minutes for myself."
+      ]
+    },
+    "petraReflection3": {
+      "id": "petraReflection3",
+      "text": "It is. It feels like I'm expected to just power through, but I'm not sure how much more I have to give. It would be a relief to know I'm not the only one feeling this way.",
+      "npcMood": "vulnerable_seeking_reassurance",
+      "themes": [
+        "Overwhelm",
+        "Isolation",
+        "Support"
+      ],
+      "choices": [
+        {
+          "id": "choicePetraReflection31",
+          "text": "It sounds like you're carrying a heavy burden and could use some support or understanding.",
+          "technique": "Complex Reflection",
+          "techniqueType": "Core Skill",
+          "rapportScore": 2,
+          "feedback": "This reflection validates her feelings and opens the door to discussing support, which is a key MI principle.",
+          "nextNodeId": "petraAskPermission"
+        },
+        {
+          "id": "choicePetraReflection32",
+          "text": "Many people feel this way, it's normal.",
+          "technique": "Reassurance",
+          "techniqueType": "Anti-MI",
+          "rapportScore": -1,
+          "feedback": "While well-intentioned, this can be dismissive of her unique experience and may not feel helpful.",
+          "nextNodeId": "petraSustain3"
+        },
+        {
+          "id": "choicePetraReflection33",
+          "text": "What kind of support are you looking for?",
+          "technique": "Open Question",
+          "techniqueType": "Core Skill",
+          "rapportScore": 1,
+          "feedback": "An open question allows Petra to define what support means to her, empowering her.",
+          "nextNodeId": "petraChange7"
+        }
+      ],
+      "isChangeTalk": true,
+      "quotesUsed": [
+        "It would be a relief to know I'm not the only one feeling this way."
+      ]
+    },
+    "petraChange1": {
+      "id": "petraChange1",
+      "text": "I don't know... I used to enjoy helping people navigate complex issues. Now it just feels like a chore. I know I need to do something, I just don't know what.",
+      "npcMood": "frustrated_ambivalent",
+      "themes": [
+        "Loss of Enjoyment",
+        "Uncertainty",
+        "Need for Action"
+      ],
+      "choices": [
+        {
+          "id": "choicePetraChange11",
+          "text": "You're aware that something needs to shift, but the path forward isn't clear yet.",
+          "technique": "Complex Reflection",
+          "techniqueType": "Core Skill",
+          "rapportScore": 2,
+          "feedback": "This reflection accurately captures her ambivalence and desire for change, building rapport.",
+          "nextNodeId": "petraAskPermission"
+        },
+        {
+          "id": "choicePetraChange12",
+          "text": "Have you considered taking on a new project?",
+          "technique": "Giving Advice",
+          "techniqueType": "Anti-MI",
+          "rapportScore": -1,
+          "feedback": "Giving unsolicited advice can lead to resistance, as it bypasses Petra's own problem-solving.",
+          "nextNodeId": "petraResistant4"
+        },
+        {
+          "id": "choicePetraChange13",
+          "text": "What makes you say you 'know' you need to do something?",
+          "technique": "Evocative Question",
+          "techniqueType": "Advanced Technique",
+          "rapportScore": 1,
+          "feedback": "This question encourages Petra to elaborate on her motivation for change, strengthening her commitment.",
+          "nextNodeId": "petraChange8"
+        }
+      ],
+      "isChangeTalk": true,
+      "quotesUsed": [
+        "I know I need to do something, I just don't know what."
+      ]
+    },
+    "petraChange2": {
+      "id": "petraChange2",
+      "text": "If I didn't 'just get over it'... I guess I'd have to admit I'm struggling. That's hard to do. But maybe it would also mean I could actually get some help.",
+      "npcMood": "hesitant_hopeful",
+      "themes": [
+        "Vulnerability",
+        "Seeking Help",
+        "Struggle"
+      ],
+      "choices": [
+        {
+          "id": "choicePetraChange21",
+          "text": "It sounds like acknowledging a struggle feels difficult, but also opens the door to potential support.",
+          "technique": "Complex Reflection",
+          "techniqueType": "Core Skill",
+          "rapportScore": 2,
+          "feedback": "This reflection highlights her ambivalence and the potential positive outcome of vulnerability, strengthening change talk.",
+          "nextNodeId": "petraAskPermission"
+        },
+        {
+          "id": "choicePetraChange22",
+          "text": "What kind of help do you think you'd need?",
+          "technique": "Open Question",
+          "techniqueType": "Core Skill",
+          "rapportScore": 1,
+          "feedback": "An open question allows Petra to explore her ideas about support, fostering self-efficacy.",
+          "nextNodeId": "petraChange9"
+        },
+        {
+          "id": "choicePetraChange23",
+          "text": "We all struggle sometimes, it's part of life.",
+          "technique": "Reassurance",
+          "techniqueType": "Anti-MI",
+          "rapportScore": -1,
+          "feedback": "While meant to be supportive, this can minimize her unique experience and be perceived as dismissive.",
+          "nextNodeId": "petraSustain4"
+        }
+      ],
+      "isChangeTalk": true
+    },
+    "petraChange3": {
+      "id": "petraChange3",
+      "text": "Yes, exactly. I used to feel so engaged. Now... it's just not there. I want to be the one that makes a real difference again.",
+      "npcMood": "longing_frustrated",
+      "themes": [
+        "Engagement",
+        "Impact",
+        "Loss"
+      ],
+      "choices": [
+        {
+          "id": "choicePetraChange31",
+          "text": "What would it take to get some of that engagement back?",
+          "technique": "Open Question",
+          "techniqueType": "Core Skill",
+          "rapportScore": 1,
+          "feedback": "This open question invites Petra to brainstorm solutions, moving her towards action.",
+          "nextNodeId": "petraAskPermission"
+        },
+        {
+          "id": "choicePetraChange32",
+          "text": "It sounds like you're feeling a bit burnt out.",
+          "technique": "Interpretation/Labeling",
+          "techniqueType": "Anti-MI",
+          "rapportScore": -1,
+          "feedback": "Labeling her experience can feel presumptuous and may lead to resistance if she doesn't agree.",
+          "nextNodeId": "petraSustain5"
+        },
+        {
+          "id": "choicePetraChange33",
+          "text": "What was it about making a difference that was so important to you?",
+          "technique": "Exploring Values",
+          "techniqueType": "Advanced Technique",
+          "rapportScore": 2,
+          "feedback": "Exploring her underlying values connects her to deeper motivations for change, a powerful MI technique.",
+          "nextNodeId": "petraChange10"
+        }
+      ],
+      "isChangeTalk": true,
+      "quotesUsed": [
+        "I want to be the one that makes a real difference again."
+      ]
+    },
+    "petraChange4": {
+      "id": "petraChange4",
+      "text": "I don't know. Maybe it's just me. Or maybe it's that I'm so drained. I know I need to do something, I just don't know what.",
+      "npcMood": "weary_uncertain",
+      "themes": [
+        "Fatigue",
+        "Self-Doubt",
+        "Uncertainty"
+      ],
+      "choices": [
+        {
+          "id": "choicePetraChange41",
+          "text": "It sounds like you're feeling a deep sense of exhaustion, and that's making it hard to see a way forward.",
+          "technique": "Complex Reflection",
+          "techniqueType": "Core Skill",
+          "rapportScore": 2,
+          "feedback": "This reflection accurately captures her core issue (exhaustion) and its impact, building empathy.",
+          "nextNodeId": "petraAskPermission"
+        },
+        {
+          "id": "choicePetraChange42",
+          "text": "Have you considered talking to HR?",
+          "technique": "Giving Advice",
+          "techniqueType": "Anti-MI",
+          "rapportScore": -1,
+          "feedback": "Offering unsolicited advice can be perceived as dismissive and undermine Petra's autonomy.",
+          "nextNodeId": "petraResistant5"
+        },
+        {
+          "id": "choicePetraChange43",
+          "text": "What's one small thing you think you *could* do?",
+          "technique": "Scaling Question",
+          "techniqueType": "Advanced Technique",
+          "rapportScore": 1,
+          "feedback": "A scaling question helps break down large problems into manageable steps, fostering self-efficacy.",
+          "nextNodeId": "petraChange11"
+        }
+      ],
+      "isChangeTalk": true,
+      "quotesUsed": [
+        "I know I need to do something, I just don't know what."
+      ]
+    },
+    "petraChange5": {
+      "id": "petraChange5",
+      "text": "It might. It's just hard to find the time or the motivation sometimes. But I know it would help.",
+      "npcMood": "hopeful_struggling",
+      "themes": [
+        "Self-Care",
+        "Motivation",
+        "Barriers"
+      ],
+      "choices": [
+        {
+          "id": "choicePetraChange51",
+          "text": "So you see the benefit, even if the path to getting there feels challenging right now.",
+          "technique": "Complex Reflection",
+          "techniqueType": "Core Skill",
+          "rapportScore": 2,
+          "feedback": "This reflection highlights her ambivalence and commitment to change, strengthening her resolve.",
+          "nextNodeId": "petraAskPermission"
+        },
+        {
+          "id": "choicePetraChange52",
+          "text": "Why do you think it's hard to find the time?",
+          "technique": "Open Question",
+          "techniqueType": "Core Skill",
+          "rapportScore": 0,
+          "feedback": "While an open question, 'why' questions can sometimes feel accusatory. Consider 'what makes it challenging?' instead.",
+          "nextNodeId": "petraSustain6"
+        },
+        {
+          "id": "choicePetraChange53",
+          "text": "Just schedule it in, it's important.",
+          "technique": "Directing",
+          "techniqueType": "Anti-MI",
+          "rapportScore": -1,
+          "feedback": "Directing Petra tells her what to do, undermining her autonomy and potentially increasing resistance.",
+          "nextNodeId": "petraResistant6"
+        }
+      ],
+      "isChangeTalk": true
+    },
+    "petraChange6": {
+      "id": "petraChange6",
+      "text": "Just something quiet, away from screens. Maybe listen to music, or just sit. It would be a relief to know I'm not the only one feeling this way.",
+      "npcMood": "yearning_for_peace",
+      "themes": [
+        "Stress Relief",
+        "Solitude",
+        "Validation"
+      ],
+      "choices": [
+        {
+          "id": "choicePetraChange61",
+          "text": "So a moment of calm and a sense of shared experience would be really valuable to you.",
+          "technique": "Complex Reflection",
+          "techniqueType": "Core Skill",
+          "rapportScore": 2,
+          "feedback": "This reflection captures both her desire for peace and validation, deepening understanding.",
+          "nextNodeId": "petraAskPermission"
+        },
+        {
+          "id": "choicePetraChange62",
+          "text": "That sounds like a good idea. You should definitely try that.",
+          "technique": "Affirmation/Support",
+          "techniqueType": "Core Skill",
+          "rapportScore": 0,
+          "feedback": "While affirming, adding 'you should' makes it slightly directive. A simpler affirmation is often more effective.",
+          "nextNodeId": "petraSustain7"
+        },
+        {
+          "id": "choicePetraChange63",
+          "text": "What makes you think you're not the only one feeling this way?",
+          "technique": "Evocative Question",
+          "techniqueType": "Advanced Technique",
+          "rapportScore": 1,
+          "feedback": "This question encourages Petra to elaborate on her feelings of shared experience, potentially leading to deeper insights.",
+          "nextNodeId": "petraChange12"
+        }
+      ],
+      "isChangeTalk": true,
+      "quotesUsed": [
+        "It would be a relief to know I'm not the only one feeling this way."
+      ]
+    },
+    "petraChange7": {
+      "id": "petraChange7",
+      "text": "Just someone to talk to, I guess. Someone who understands. I know I need to do something, I just don't know what.",
+      "npcMood": "lonely_overwhelmed",
+      "themes": [
+        "Support",
+        "Understanding",
+        "Uncertainty"
+      ],
+      "choices": [
+        {
+          "id": "choicePetraChange71",
+          "text": "It sounds like you're looking for a safe space to process things and explore options.",
+          "technique": "Complex Reflection",
+          "techniqueType": "Core Skill",
+          "rapportScore": 2,
+          "feedback": "This reflection accurately captures her need for a supportive environment, building empathy.",
+          "nextNodeId": "petraAskPermission"
+        },
+        {
+          "id": "choicePetraChange72",
+          "text": "Have you considered talking to a therapist?",
+          "technique": "Giving Advice",
+          "techniqueType": "Anti-MI",
+          "rapportScore": -1,
+          "feedback": "Offering unsolicited advice can be perceived as dismissive and undermine Petra's autonomy.",
+          "nextNodeId": "petraResistant7"
+        },
+        {
+          "id": "choicePetraChange73",
+          "text": "What's stopping you from finding that someone?",
+          "technique": "Open Question",
+          "techniqueType": "Core Skill",
+          "rapportScore": 0,
+          "feedback": "This open question explores barriers, but could be perceived as slightly challenging. Consider 'What makes it hard to find that someone?'",
+          "nextNodeId": "petraSustain8"
+        }
+      ],
+      "isChangeTalk": true,
+      "quotesUsed": [
+        "I know I need to do something, I just don't know what."
+      ]
+    },
+    "petraChange8": {
+      "id": "petraChange8",
+      "text": "Because I'm not happy with how things are. I want to be the one that makes a real difference again. But it's hard when you're just so tired.",
+      "npcMood": "determined_weary",
+      "themes": [
+        "Dissatisfaction",
+        "Motivation",
+        "Fatigue"
+      ],
+      "choices": [
+        {
+          "id": "choicePetraChange81",
+          "text": "So your desire to make a difference is strong, but your energy levels are a significant barrier right now.",
+          "technique": "Complex Reflection",
+          "techniqueType": "Core Skill",
+          "rapportScore": 2,
+          "feedback": "This reflection links her motivation for change with the current barrier, acknowledging her ambivalence.",
+          "nextNodeId": "petraAskPermission"
+        },
+        {
+          "id": "choicePetraChange82",
+          "text": "What specifically makes you tired?",
+          "technique": "Open Question",
+          "techniqueType": "Core Skill",
+          "rapportScore": 0,
+          "feedback": "While an open question, this might be too direct and personal at this stage, potentially increasing resistance.",
+          "nextNodeId": "petraSustain9"
+        },
+        {
+          "id": "choicePetraChange83",
+          "text": "You just need to push through it.",
+          "technique": "Confrontation",
+          "techniqueType": "Anti-MI",
+          "rapportScore": -2,
+          "feedback": "This is a highly directive and dismissive statement that will likely increase resistance.",
+          "nextNodeId": "petraResistant8"
+        }
+      ],
+      "isChangeTalk": true,
+      "quotesUsed": [
+        "I want to be the one that makes a real difference again."
+      ]
+    },
+    "petraChange9": {
+      "id": "petraChange9",
+      "text": "I'm not sure. Maybe just some space, some understanding. And maybe someone to help me figure out how to manage everything. Maybe I could find 30 minutes for myself.",
+      "npcMood": "tentative_hopeful",
+      "themes": [
+        "Support",
+        "Coping Strategies",
+        "Self-Care"
+      ],
+      "choices": [
+        {
+          "id": "choicePetraChange91",
+          "text": "So it sounds like a combination of understanding, practical strategies, and a little personal time could be really beneficial.",
+          "technique": "Complex Reflection",
+          "techniqueType": "Core Skill",
+          "rapportScore": 2,
+          "feedback": "This summary reflection captures multiple aspects of her desired support, showing deep listening.",
+          "nextNodeId": "petraAskPermission"
+        },
+        {
+          "id": "choicePetraChange92",
+          "text": "We can definitely look at your workload.",
+          "technique": "Premature Solution",
+          "techniqueType": "Anti-MI",
+          "rapportScore": -1,
+          "feedback": "Offering a solution before fully understanding her perspective can be perceived as dismissive and disempowering.",
+          "nextNodeId": "petraSustain10"
+        },
+        {
+          "id": "choicePetraChange93",
+          "text": "Have you thought about delegating some tasks?",
+          "technique": "Giving Advice",
+          "techniqueType": "Anti-MI",
+          "rapportScore": -1,
+          "feedback": "Giving unsolicited advice can be perceived as dismissive and undermine Petra's autonomy.",
+          "nextNodeId": "petraResistant9"
+        }
+      ],
+      "isChangeTalk": true,
+      "quotesUsed": [
+        "Maybe I could find 30 minutes for myself."
+      ]
+    },
+    "petraChange10": {
+      "id": "petraChange10",
+      "text": "It was the feeling of genuinely helping someone, seeing their relief. Now it's just... routine. I know I need to do something, I just don't know what.",
+      "npcMood": "nostalgic_frustrated",
+      "themes": [
+        "Values",
+        "Purpose",
+        "Uncertainty"
+      ],
+      "choices": [
+        {
+          "id": "choicePetraChange101",
+          "text": "It sounds like your core value of helping others isn't being met in your current routine, and you're seeking a way to reconnect with that.",
+          "technique": "Complex Reflection",
+          "techniqueType": "Core Skill",
+          "rapportScore": 2,
+          "feedback": "This reflection connects her current dissatisfaction to her core values, a powerful motivator for change.",
+          "nextNodeId": "petraAskPermission"
+        },
+        {
+          "id": "choicePetraChange102",
+          "text": "Perhaps we can find you a new project.",
+          "technique": "Premature Solution",
+          "techniqueType": "Anti-MI",
+          "rapportScore": -1,
+          "feedback": "Offering a solution before fully understanding her perspective can be perceived as dismissive and disempowering.",
+          "nextNodeId": "petraSustain11"
+        },
+        {
+          "id": "choicePetraChange103",
+          "text": "What kind of relief did you see?",
+          "technique": "Open Question",
+          "techniqueType": "Core Skill",
+          "rapportScore": 1,
+          "feedback": "This open question encourages her to elaborate on the positive impact she used to have, reinforcing her values.",
+          "nextNodeId": "petraChange13"
+        }
+      ],
+      "isChangeTalk": true,
+      "quotesUsed": [
+        "I know I need to do something, I just don't know what."
+      ]
+    },
+    "petraChange11": {
+      "id": "petraChange11",
+      "text": "Just... maybe actually taking those 30 minutes for myself. Or talking to someone. It would be a relief to know I'm not the only one feeling this way.",
+      "npcMood": "small_hope_seeking_validation",
+      "themes": [
+        "Self-Care",
+        "Support",
+        "Validation"
+      ],
+      "choices": [
+        {
+          "id": "choicePetraChange111",
+          "text": "So even small steps like taking personal time or seeking a connection could offer significant relief and a sense of not being alone.",
+          "technique": "Complex Reflection",
+          "techniqueType": "Core Skill",
+          "rapportScore": 2,
+          "feedback": "This reflection connects her proposed actions to their potential benefits, strengthening her motivation.",
+          "nextNodeId": "petraAskPermission"
+        },
+        {
+          "id": "choicePetraChange112",
+          "text": "Those are good ideas, you should definitely try them.",
+          "technique": "Affirmation",
+          "techniqueType": "Core Skill",
+          "rapportScore": 0,
+          "feedback": "While affirming, adding 'you should' makes it slightly directive. A simpler affirmation is often more effective.",
+          "nextNodeId": "petraSustain12"
+        },
+        {
+          "id": "choicePetraChange113",
+          "text": "Why do you think you're not the only one?",
+          "technique": "Evocative Question",
+          "techniqueType": "Advanced Technique",
+          "rapportScore": 1,
+          "feedback": "This question encourages Petra to explore her feelings of shared experience, potentially leading to deeper insights.",
+          "nextNodeId": "petraChange14"
+        }
+      ],
+      "isChangeTalk": true,
+      "quotesUsed": [
+        "Maybe I could find 30 minutes for myself.",
+        "It would be a relief to know I'm not the only one feeling this way."
+      ]
+    },
+    "petraChange12": {
+      "id": "petraChange12",
+      "text": "Because everyone seems so busy, and I see the strain on their faces sometimes. It's not just me. I know I need to do something, I just don't know what.",
+      "npcMood": "empathetic_overwhelmed",
+      "themes": [
+        "Shared Struggle",
+        "Team Strain",
+        "Uncertainty"
+      ],
+      "choices": [
+        {
+          "id": "choicePetraChange121",
+          "text": "So you're observing similar struggles in others, which validates your own feelings, but also highlights the collective challenge.",
+          "technique": "Complex Reflection",
+          "techniqueType": "Core Skill",
+          "rapportScore": 2,
+          "feedback": "This reflection connects her personal feelings to a broader context, showing deep understanding.",
+          "nextNodeId": "petraAskPermission"
+        },
+        {
+          "id": "choicePetraChange122",
+          "text": "We can't worry about everyone else, we need to focus on you.",
+          "technique": "Directing",
+          "techniqueType": "Anti-MI",
+          "rapportScore": -1,
+          "feedback": "This dismisses her empathy for the team and can be perceived as unsupportive.",
+          "nextNodeId": "petraResistant10"
+        },
+        {
+          "id": "choicePetraChange123",
+          "text": "What do you think the team needs?",
+          "technique": "Open Question",
+          "techniqueType": "Core Skill",
+          "rapportScore": 0,
+          "feedback": "While an open question, it shifts the focus away from Petra's core issue, which might not be helpful at this stage.",
+          "nextNodeId": "petraSustain13"
+        }
+      ],
+      "isChangeTalk": true,
+      "quotesUsed": [
+        "I know I need to do something, I just don't know what."
+      ]
+    },
+    "petraChange13": {
+      "id": "petraChange13",
+      "text": "Just a genuine 'thank you', or seeing someone understand a complex pension concept because I explained it well. That's what made it worthwhile. I want to be the one that makes a real difference again.",
+      "npcMood": "reminiscent_longing",
+      "themes": [
+        "Appreciation",
+        "Competence",
+        "Impact"
+      ],
+      "choices": [
+        {
+          "id": "choicePetraChange131",
+          "text": "So that sense of direct impact and appreciation is really key to your job satisfaction, and you're eager to recapture it.",
+          "technique": "Complex Reflection",
+          "techniqueType": "Core Skill",
+          "rapportScore": 2,
+          "feedback": "This reflection links her past positive experiences to her current desire for change, strengthening her motivation.",
+          "nextNodeId": "petraAskPermission"
+        },
+        {
+          "id": "choicePetraChange132",
+          "text": "We can get you more training if you feel you need to explain things better.",
+          "technique": "Premature Advice",
+          "techniqueType": "Anti-MI",
+          "rapportScore": -1,
+          "feedback": "This assumes a problem (lack of training) without fully understanding her perspective, potentially leading to resistance.",
+          "nextNodeId": "petraResistant11"
+        },
+        {
+          "id": "choicePetraChange133",
+          "text": "How often do you get that now?",
+          "technique": "Open Question",
+          "techniqueType": "Core Skill",
+          "rapportScore": 0,
+          "feedback": "This open question explores the current situation, but could be framed more positively to elicit change talk.",
+          "nextNodeId": "petraSustain14"
+        }
+      ],
+      "isChangeTalk": true,
+      "quotesUsed": [
+        "I want to be the one that makes a real difference again."
+      ]
+    },
+    "petraChange14": {
+      "id": "petraChange14",
+      "text": "Just a feeling, I guess. Everyone seems to be running on empty. It would be a relief to know I'm not the only one feeling this way.",
+      "npcMood": "isolated_seeking_connection",
+      "themes": [
+        "Shared Experience",
+        "Burnout",
+        "Validation"
+      ],
+      "choices": [
+        {
+          "id": "choicePetraChange141",
+          "text": "It sounds like you're sensing a collective exhaustion, and finding common ground would offer you comfort.",
+          "technique": "Complex Reflection",
+          "techniqueType": "Core Skill",
+          "rapportScore": 2,
+          "feedback": "This reflection validates her feelings and connects them to a broader sense of shared experience, building empathy.",
+          "nextNodeId": "petraAskPermission"
+        },
+        {
+          "id": "choicePetraChange142",
+          "text": "We can't assume everyone feels that way.",
+          "technique": "Confrontation",
+          "techniqueType": "Anti-MI",
+          "rapportScore": -2,
+          "feedback": "This dismisses her perception and can make her feel invalidated and defensive.",
+          "nextNodeId": "petraDefensive4"
+        },
+        {
+          "id": "choicePetraChange143",
+          "text": "What makes you think everyone is running on empty?",
+          "technique": "Open Question",
+          "techniqueType": "Core Skill",
+          "rapportScore": 0,
+          "feedback": "This open question explores her observation but could be perceived as challenging rather than empathetic.",
+          "nextNodeId": "petraSustain15"
+        }
+      ],
+      "isChangeTalk": true,
+      "quotesUsed": [
+        "It would be a relief to know I'm not the only one feeling this way."
+      ]
+    },
+    "petraSustain3": {
+      "id": "petraSustain3",
+      "text": "I'm just doing my job. I'm not sure what else there is to say.",
+      "npcMood": "closed_off",
+      "themes": [
+        "Resistance",
+        "Frustration"
+      ],
+      "choices": [
+        {
+          "id": "choicePetraSustain31",
+          "text": "It sounds like you're feeling a bit stuck right now.",
+          "technique": "Simple Reflection",
+          "techniqueType": "Core Skill",
+          "rapportScore": 1,
+          "feedback": "A simple reflection acknowledges her feeling without pushing, keeping the door open for further conversation.",
+          "nextNodeId": "petraAskPermission"
+        },
+        {
+          "id": "choicePetraSustain32",
+          "text": "We need to find a solution, Petra.",
+          "technique": "Directing",
+          "techniqueType": "Anti-MI",
+          "rapportScore": -2,
+          "feedback": "Directing Petra when she's feeling stuck will likely increase resistance and shut down the conversation.",
+          "nextNodeId": "petraEndNegative"
+        },
+        {
+          "id": "choicePetraSustain33",
+          "text": "What's the downside of exploring this further?",
+          "technique": "Open Question",
+          "techniqueType": "Core Skill",
+          "rapportScore": 1,
+          "feedback": "This open question invites her to consider the implications, potentially leading to a shift in perspective.",
+          "nextNodeId": "petraChange15"
+        }
+      ],
+      "isSustainTalk": true
+    },
+    "petraSustain4": {
+      "id": "petraSustain4",
+      "text": "I'm just doing my job. I'm not sure what else there is to say.",
+      "npcMood": "closed_off",
+      "themes": [
+        "Resistance",
+        "Frustration"
+      ],
+      "choices": [
+        {
+          "id": "choicePetraSustain41",
+          "text": "It sounds like you're feeling a bit stuck right now.",
+          "technique": "Simple Reflection",
+          "techniqueType": "Core Skill",
+          "rapportScore": 1,
+          "feedback": "A simple reflection acknowledges her feeling without pushing, keeping the door open for further conversation.",
+          "nextNodeId": "petraAskPermission"
+        },
+        {
+          "id": "choicePetraSustain42",
+          "text": "We need to find a solution, Petra.",
+          "technique": "Directing",
+          "techniqueType": "Anti-MI",
+          "rapportScore": -2,
+          "feedback": "Directing Petra when she's feeling stuck will likely increase resistance and shut down the conversation.",
+          "nextNodeId": "petraEndNegative"
+        },
+        {
+          "id": "choicePetraSustain43",
+          "text": "What's the downside of exploring this further?",
+          "technique": "Open Question",
+          "techniqueType": "Core Skill",
+          "rapportScore": 1,
+          "feedback": "This open question invites her to consider the implications, potentially leading to a shift in perspective.",
+          "nextNodeId": "petraChange15"
+        }
+      ],
+      "isSustainTalk": true
+    },
+    "petraSustain5": {
+      "id": "petraSustain5",
+      "text": "I'm just doing my job. I'm not sure what else there is to say.",
+      "npcMood": "closed_off",
+      "themes": [
+        "Resistance",
+        "Frustration"
+      ],
+      "choices": [
+        {
+          "id": "choicePetraSustain51",
+          "text": "It sounds like you're feeling a bit stuck right now.",
+          "technique": "Simple Reflection",
+          "techniqueType": "Core Skill",
+          "rapportScore": 1,
+          "feedback": "A simple reflection acknowledges her feeling without pushing, keeping the door open for further conversation.",
+          "nextNodeId": "petraAskPermission"
+        },
+        {
+          "id": "choicePetraSustain52",
+          "text": "We need to find a solution, Petra.",
+          "technique": "Directing",
+          "techniqueType": "Anti-MI",
+          "rapportScore": -2,
+          "feedback": "Directing Petra when she's feeling stuck will likely increase resistance and shut down the conversation.",
+          "nextNodeId": "petraEndNegative"
+        },
+        {
+          "id": "choicePetraSustain53",
+          "text": "What's the downside of exploring this further?",
+          "technique": "Open Question",
+          "techniqueType": "Core Skill",
+          "rapportScore": 1,
+          "feedback": "This open question invites her to consider the implications, potentially leading to a shift in perspective.",
+          "nextNodeId": "petraChange15"
+        }
+      ],
+      "isSustainTalk": true
+    },
+    "petraSustain6": {
+      "id": "petraSustain6",
+      "text": "I'm just doing my job. I'm not sure what else there is to say.",
+      "npcMood": "closed_off",
+      "themes": [
+        "Resistance",
+        "Frustration"
+      ],
+      "choices": [
+        {
+          "id": "choicePetraSustain61",
+          "text": "It sounds like you're feeling a bit stuck right now.",
+          "technique": "Simple Reflection",
+          "techniqueType": "Core Skill",
+          "rapportScore": 1,
+          "feedback": "A simple reflection acknowledges her feeling without pushing, keeping the door open for further conversation.",
+          "nextNodeId": "petraAskPermission"
+        },
+        {
+          "id": "choicePetraSustain62",
+          "text": "We need to find a solution, Petra.",
+          "technique": "Directing",
+          "techniqueType": "Anti-MI",
+          "rapportScore": -2,
+          "feedback": "Directing Petra when she's feeling stuck will likely increase resistance and shut down the conversation.",
+          "nextNodeId": "petraEndNegative"
+        },
+        {
+          "id": "choicePetraSustain63",
+          "text": "What's the downside of exploring this further?",
+          "technique": "Open Question",
+          "techniqueType": "Core Skill",
+          "rapportScore": 1,
+          "feedback": "This open question invites her to consider the implications, potentially leading to a shift in perspective.",
+          "nextNodeId": "petraChange15"
+        }
+      ],
+      "isSustainTalk": true
+    },
+    "petraSustain7": {
+      "id": "petraSustain7",
+      "text": "I'm just doing my job. I'm not sure what else there is to say.",
+      "npcMood": "closed_off",
+      "themes": [
+        "Resistance",
+        "Frustration"
+      ],
+      "choices": [
+        {
+          "id": "choicePetraSustain71",
+          "text": "It sounds like you're feeling a bit stuck right now.",
+          "technique": "Simple Reflection",
+          "techniqueType": "Core Skill",
+          "rapportScore": 1,
+          "feedback": "A simple reflection acknowledges her feeling without pushing, keeping the door open for further conversation.",
+          "nextNodeId": "petraAskPermission"
+        },
+        {
+          "id": "choicePetraSustain72",
+          "text": "We need to find a solution, Petra.",
+          "technique": "Directing",
+          "techniqueType": "Anti-MI",
+          "rapportScore": -2,
+          "feedback": "Directing Petra when she's feeling stuck will likely increase resistance and shut down the conversation.",
+          "nextNodeId": "petraEndNegative"
+        },
+        {
+          "id": "choicePetraSustain73",
+          "text": "What's the downside of exploring this further?",
+          "technique": "Open Question",
+          "techniqueType": "Core Skill",
+          "rapportScore": 1,
+          "feedback": "This open question invites her to consider the implications, potentially leading to a shift in perspective.",
+          "nextNodeId": "petraChange15"
+        }
+      ],
+      "isSustainTalk": true
+    },
+    "petraSustain8": {
+      "id": "petraSustain8",
+      "text": "I'm just doing my job. I'm not sure what else there is to say.",
+      "npcMood": "closed_off",
+      "themes": [
+        "Resistance",
+        "Frustration"
+      ],
+      "choices": [
+        {
+          "id": "choicePetraSustain81",
+          "text": "It sounds like you're feeling a bit stuck right now.",
+          "technique": "Simple Reflection",
+          "techniqueType": "Core Skill",
+          "rapportScore": 1,
+          "feedback": "A simple reflection acknowledges her feeling without pushing, keeping the door open for further conversation.",
+          "nextNodeId": "petraAskPermission"
+        },
+        {
+          "id": "choicePetraSustain82",
+          "text": "We need to find a solution, Petra.",
+          "technique": "Directing",
+          "techniqueType": "Anti-MI",
+          "rapportScore": -2,
+          "feedback": "Directing Petra when she's feeling stuck will likely increase resistance and shut down the conversation.",
+          "nextNodeId": "petraEndNegative"
+        },
+        {
+          "id": "choicePetraSustain83",
+          "text": "What's the downside of exploring this further?",
+          "technique": "Open Question",
+          "techniqueType": "Core Skill",
+          "rapportScore": 1,
+          "feedback": "This open question invites her to consider the implications, potentially leading to a shift in perspective.",
+          "nextNodeId": "petraChange15"
+        }
+      ],
+      "isSustainTalk": true
+    },
+    "petraSustain9": {
+      "id": "petraSustain9",
+      "text": "I'm just doing my job. I'm not sure what else there is to say.",
+      "npcMood": "closed_off",
+      "themes": [
+        "Resistance",
+        "Frustration"
+      ],
+      "choices": [
+        {
+          "id": "choicePetraSustain91",
+          "text": "It sounds like you're feeling a bit stuck right now.",
+          "technique": "Simple Reflection",
+          "techniqueType": "Core Skill",
+          "rapportScore": 1,
+          "feedback": "A simple reflection acknowledges her feeling without pushing, keeping the door open for further conversation.",
+          "nextNodeId": "petraAskPermission"
+        },
+        {
+          "id": "choicePetraSustain92",
+          "text": "We need to find a solution, Petra.",
+          "technique": "Directing",
+          "techniqueType": "Anti-MI",
+          "rapportScore": -2,
+          "feedback": "Directing Petra when she's feeling stuck will likely increase resistance and shut down the conversation.",
+          "nextNodeId": "petraEndNegative"
+        },
+        {
+          "id": "choicePetraSustain93",
+          "text": "What's the downside of exploring this further?",
+          "technique": "Open Question",
+          "techniqueType": "Core Skill",
+          "rapportScore": 1,
+          "feedback": "This open question invites her to consider the implications, potentially leading to a shift in perspective.",
+          "nextNodeId": "petraChange15"
+        }
+      ],
+      "isSustainTalk": true
+    },
+    "petraSustain10": {
+      "id": "petraSustain10",
+      "text": "I'm just doing my job. I'm not sure what else there is to say.",
+      "npcMood": "closed_off",
+      "themes": [
+        "Resistance",
+        "Frustration"
+      ],
+      "choices": [
+        {
+          "id": "choicePetraSustain101",
+          "text": "It sounds like you're feeling a bit stuck right now.",
+          "technique": "Simple Reflection",
+          "techniqueType": "Core Skill",
+          "rapportScore": 1,
+          "feedback": "A simple reflection acknowledges her feeling without pushing, keeping the door open for further conversation.",
+          "nextNodeId": "petraAskPermission"
+        },
+        {
+          "id": "choicePetraSustain102",
+          "text": "We need to find a solution, Petra.",
+          "technique": "Directing",
+          "techniqueType": "Anti-MI",
+          "rapportScore": -2,
+          "feedback": "Directing Petra when she's feeling stuck will likely increase resistance and shut down the conversation.",
+          "nextNodeId": "petraEndNegative"
+        },
+        {
+          "id": "choicePetraSustain103",
+          "text": "What's the downside of exploring this further?",
+          "technique": "Open Question",
+          "techniqueType": "Core Skill",
+          "rapportScore": 1,
+          "feedback": "This open question invites her to consider the implications, potentially leading to a shift in perspective.",
+          "nextNodeId": "petraChange15"
+        }
+      ],
+      "isSustainTalk": true
+    },
+    "petraSustain11": {
+      "id": "petraSustain11",
+      "text": "I'm just doing my job. I'm not sure what else there is to say.",
+      "npcMood": "closed_off",
+      "themes": [
+        "Resistance",
+        "Frustration"
+      ],
+      "choices": [
+        {
+          "id": "choicePetraSustain111",
+          "text": "It sounds like you're feeling a bit stuck right now.",
+          "technique": "Simple Reflection",
+          "techniqueType": "Core Skill",
+          "rapportScore": 1,
+          "feedback": "A simple reflection acknowledges her feeling without pushing, keeping the door open for further conversation.",
+          "nextNodeId": "petraAskPermission"
+        },
+        {
+          "id": "choicePetraSustain112",
+          "text": "We need to find a solution, Petra.",
+          "technique": "Directing",
+          "techniqueType": "Anti-MI",
+          "rapportScore": -2,
+          "feedback": "Directing Petra when she's feeling stuck will likely increase resistance and shut down the conversation.",
+          "nextNodeId": "petraEndNegative"
+        },
+        {
+          "id": "choicePetraSustain113",
+          "text": "What's the downside of exploring this further?",
+          "technique": "Open Question",
+          "techniqueType": "Core Skill",
+          "rapportScore": 1,
+          "feedback": "This open question invites her to consider the implications, potentially leading to a shift in perspective.",
+          "nextNodeId": "petraChange15"
+        }
+      ],
+      "isSustainTalk": true
+    },
+    "petraSustain12": {
+      "id": "petraSustain12",
+      "text": "I'm just doing my job. I'm not sure what else there is to say.",
+      "npcMood": "closed_off",
+      "themes": [
+        "Resistance",
+        "Frustration"
+      ],
+      "choices": [
+        {
+          "id": "choicePetraSustain121",
+          "text": "It sounds like you're feeling a bit stuck right now.",
+          "technique": "Simple Reflection",
+          "techniqueType": "Core Skill",
+          "rapportScore": 1,
+          "feedback": "A simple reflection acknowledges her feeling without pushing, keeping the door open for further conversation.",
+          "nextNodeId": "petraAskPermission"
+        },
+        {
+          "id": "choicePetraSustain122",
+          "text": "We need to find a solution, Petra.",
+          "technique": "Directing",
+          "techniqueType": "Anti-MI",
+          "rapportScore": -2,
+          "feedback": "Directing Petra when she's feeling stuck will likely increase resistance and shut down the conversation.",
+          "nextNodeId": "petraEndNegative"
+        },
+        {
+          "id": "choicePetraSustain123",
+          "text": "What's the downside of exploring this further?",
+          "technique": "Open Question",
+          "techniqueType": "Core Skill",
+          "rapportScore": 1,
+          "feedback": "This open question invites her to consider the implications, potentially leading to a shift in perspective.",
+          "nextNodeId": "petraChange15"
+        }
+      ],
+      "isSustainTalk": true
+    },
+    "petraSustain13": {
+      "id": "petraSustain13",
+      "text": "I'm just doing my job. I'm not sure what else there is to say.",
+      "npcMood": "closed_off",
+      "themes": [
+        "Resistance",
+        "Frustration"
+      ],
+      "choices": [
+        {
+          "id": "choicePetraSustain131",
+          "text": "It sounds like you're feeling a bit stuck right now.",
+          "technique": "Simple Reflection",
+          "techniqueType": "Core Skill",
+          "rapportScore": 1,
+          "feedback": "A simple reflection acknowledges her feeling without pushing, keeping the door open for further conversation.",
+          "nextNodeId": "petraAskPermission"
+        },
+        {
+          "id": "choicePetraSustain132",
+          "text": "We need to find a solution, Petra.",
+          "technique": "Directing",
+          "techniqueType": "Anti-MI",
+          "rapportScore": -2,
+          "feedback": "Directing Petra when she's feeling stuck will likely increase resistance and shut down the conversation.",
+          "nextNodeId": "petraEndNegative"
+        },
+        {
+          "id": "choicePetraSustain133",
+          "text": "What's the downside of exploring this further?",
+          "technique": "Open Question",
+          "techniqueType": "Core Skill",
+          "rapportScore": 1,
+          "feedback": "This open question invites her to consider the implications, potentially leading to a shift in perspective.",
+          "nextNodeId": "petraChange15"
+        }
+      ],
+      "isSustainTalk": true
+    },
+    "petraSustain14": {
+      "id": "petraSustain14",
+      "text": "I'm just doing my job. I'm not sure what else there is to say.",
+      "npcMood": "closed_off",
+      "themes": [
+        "Resistance",
+        "Frustration"
+      ],
+      "choices": [
+        {
+          "id": "choicePetraSustain141",
+          "text": "It sounds like you're feeling a bit stuck right now.",
+          "technique": "Simple Reflection",
+          "techniqueType": "Core Skill",
+          "rapportScore": 1,
+          "feedback": "A simple reflection acknowledges her feeling without pushing, keeping the door open for further conversation.",
+          "nextNodeId": "petraAskPermission"
+        },
+        {
+          "id": "choicePetraSustain142",
+          "text": "We need to find a solution, Petra.",
+          "technique": "Directing",
+          "techniqueType": "Anti-MI",
+          "rapportScore": -2,
+          "feedback": "Directing Petra when she's feeling stuck will likely increase resistance and shut down the conversation.",
+          "nextNodeId": "petraEndNegative"
+        },
+        {
+          "id": "choicePetraSustain143",
+          "text": "What's the downside of exploring this further?",
+          "technique": "Open Question",
+          "techniqueType": "Core Skill",
+          "rapportScore": 1,
+          "feedback": "This open question invites her to consider the implications, potentially leading to a shift in perspective.",
+          "nextNodeId": "petraChange15"
+        }
+      ],
+      "isSustainTalk": true
+    },
+    "petraSustain15": {
+      "id": "petraSustain15",
+      "text": "I'm just doing my job. I'm not sure what else there is to say.",
+      "npcMood": "closed_off",
+      "themes": [
+        "Resistance",
+        "Frustration"
+      ],
+      "choices": [
+        {
+          "id": "choicePetraSustain151",
+          "text": "It sounds like you're feeling a bit stuck right now.",
+          "technique": "Simple Reflection",
+          "techniqueType": "Core Skill",
+          "rapportScore": 1,
+          "feedback": "A simple reflection acknowledges her feeling without pushing, keeping the door open for further conversation.",
+          "nextNodeId": "petraAskPermission"
+        },
+        {
+          "id": "choicePetraSustain152",
+          "text": "We need to find a solution, Petra.",
+          "technique": "Directing",
+          "techniqueType": "Anti-MI",
+          "rapportScore": -2,
+          "feedback": "Directing Petra when she's feeling stuck will likely increase resistance and shut down the conversation.",
+          "nextNodeId": "petraEndNegative"
+        },
+        {
+          "id": "choicePetraSustain153",
+          "text": "What's the downside of exploring this further?",
+          "technique": "Open Question",
+          "techniqueType": "Core Skill",
+          "rapportScore": 1,
+          "feedback": "This open question invites her to consider the implications, potentially leading to a shift in perspective.",
+          "nextNodeId": "petraChange15"
+        }
+      ],
+      "isSustainTalk": true
+    },
+    "petraChange15": {
+      "id": "petraChange15",
+      "text": "The downside is it's just more talk, and I'm tired. But... maybe the upside is things could actually get better.",
+      "npcMood": "hesitant_hopeful",
+      "themes": [
+        "Ambivalence",
+        "Hope",
+        "Fatigue"
+      ],
+      "choices": [
+        {
+          "id": "choicePetraChange151",
+          "text": "So you're weighing the effort against the potential for improvement.",
+          "technique": "Complex Reflection",
+          "techniqueType": "Core Skill",
+          "rapportScore": 2,
+          "feedback": "This reflection highlights her ambivalence and the potential for positive change, strengthening her motivation.",
+          "nextNodeId": "petraAskPermission"
+        },
+        {
+          "id": "choicePetraChange152",
+          "text": "Let's focus on the upside then.",
+          "technique": "Directing",
+          "techniqueType": "Anti-MI",
+          "rapportScore": -1,
+          "feedback": "Directing Petra to focus only on the upside can dismiss her valid concerns and increase resistance.",
+          "nextNodeId": "petraEndNeutral"
+        },
+        {
+          "id": "choicePetraChange153",
+          "text": "What would 'better' look like?",
+          "technique": "Evocative Question",
+          "techniqueType": "Advanced Technique",
+          "rapportScore": 1,
+          "feedback": "This question helps Petra visualize a positive future, which can be a strong motivator for change.",
+          "nextNodeId": "petraChange16"
+        }
+      ],
+      "isChangeTalk": true
+    },
+    "petraChange16": {
+      "id": "petraChange16",
+      "text": "Better would be feeling engaged again, feeling like I'm making a difference, and not being so utterly drained all the time. It would be a relief to know I'm not the only one feeling this way.",
+      "npcMood": "longing_exhausted",
+      "themes": [
+        "Engagement",
+        "Energy",
+        "Validation"
+      ],
+      "choices": [
+        {
+          "id": "choicePetraChange161",
+          "text": "It sounds like you're longing for a return to feeling purposeful and energized, and that knowing you're not alone would be a comfort.",
+          "technique": "Complex Reflection",
+          "techniqueType": "Core Skill",
+          "rapportScore": 2,
+          "feedback": "This reflection captures her core desires and needs, showing deep empathy and understanding.",
+          "nextNodeId": "petraAskPermission"
+        },
+        {
+          "id": "choicePetraChange162",
+          "text": "That sounds like a lot to ask for.",
+          "technique": "Confrontation",
+          "techniqueType": "Anti-MI",
+          "rapportScore": -2,
+          "feedback": "This dismisses her aspirations and can be perceived as discouraging and invalidating.",
+          "nextNodeId": "petraDefensive5"
+        },
+        {
+          "id": "choicePetraChange163",
+          "text": "What's one small step towards feeling more engaged?",
+          "technique": "Scaling Question",
+          "techniqueType": "Advanced Technique",
+          "rapportScore": 1,
+          "feedback": "A scaling question helps break down large goals into manageable steps, fostering self-efficacy.",
+          "nextNodeId": "petraAskPermission"
+        }
+      ],
+      "isChangeTalk": true,
+      "quotesUsed": [
+        "It would be a relief to know I'm not the only one feeling this way."
+      ]
+    },
+    "petraDefensive1": {
+      "id": "petraDefensive1",
+      "text": "Look, I'm doing my best. I don't appreciate being questioned like this. No-one has complained about my performance before and I've been here over 4 years.",
+      "npcMood": "angry_defensive",
+      "themes": [
+        "Confrontation",
+        "Trust Breakdown"
+      ],
+      "choices": [
+        {
+          "id": "choicePetraDefensive11",
+          "text": "I hear your frustration, and I want to assure you that my intention is to support you, not to question your efforts.",
+          "technique": "Affirmation/Apology",
+          "techniqueType": "Core Skill",
+          "rapportScore": 1,
+          "feedback": "Acknowledging her feelings and clarifying your intent helps de-escalate defensiveness and rebuild rapport.",
+          "nextNodeId": "petraAskPermission"
+        },
+        {
+          "id": "choicePetraDefensive12",
+          "text": "We need to address this, Petra.",
+          "technique": "Directing",
+          "techniqueType": "Anti-MI",
+          "rapportScore": -2,
+          "feedback": "Directing Petra when she is defensive will only increase her resistance and shut down the conversation.",
+          "nextNodeId": "petraEndNegative"
+        },
+        {
+          "id": "choicePetraDefensive13",
+          "text": "What would make you feel more supported in this conversation?",
+          "technique": "Open Question",
+          "techniqueType": "Core Skill",
+          "rapportScore": 1,
+          "feedback": "This open question invites her to articulate her needs, empowering her and potentially de-escalating the situation.",
+          "nextNodeId": "petraChange17"
+        }
+      ],
+      "isSustainTalk": true,
+      "quotesUsed": [
+        "No-one has complained about my performance before and I've been here over 4 years."
+      ]
+    },
+    "petraDefensive2": {
+      "id": "petraDefensive2",
+      "text": "Look, I'm doing my best. I don't appreciate being questioned like this. No-one has complained about my performance before and I've been here over 4 years.",
+      "npcMood": "angry_defensive",
+      "themes": [
+        "Confrontation",
+        "Trust Breakdown"
+      ],
+      "choices": [
+        {
+          "id": "choicePetraDefensive21",
+          "text": "I hear your frustration, and I want to assure you that my intention is to support you, not to question your efforts.",
+          "technique": "Affirmation/Apology",
+          "techniqueType": "Core Skill",
+          "rapportScore": 1,
+          "feedback": "Acknowledging her feelings and clarifying your intent helps de-escalate defensiveness and rebuild rapport.",
+          "nextNodeId": "petraAskPermission"
+        },
+        {
+          "id": "choicePetraDefensive22",
+          "text": "We need to address this, Petra.",
+          "technique": "Directing",
+          "techniqueType": "Anti-MI",
+          "rapportScore": -2,
+          "feedback": "Directing Petra when she is defensive will only increase her resistance and shut down the conversation.",
+          "nextNodeId": "petraEndNegative"
+        },
+        {
+          "id": "choicePetraDefensive23",
+          "text": "What would make you feel more supported in this conversation?",
+          "technique": "Open Question",
+          "techniqueType": "Core Skill",
+          "rapportScore": 1,
+          "feedback": "This open question invites her to articulate her needs, empowering her and potentially de-escalating the situation.",
+          "nextNodeId": "petraChange17"
+        }
+      ],
+      "isSustainTalk": true,
+      "quotesUsed": [
+        "No-one has complained about my performance before and I've been here over 4 years."
+      ]
+    },
+    "petraDefensive3": {
+      "id": "petraDefensive3",
+      "text": "Look, I'm doing my best. I don't appreciate being questioned like this. No-one has complained about my performance before and I've been here over 4 years.",
+      "npcMood": "angry_defensive",
+      "themes": [
+        "Confrontation",
+        "Trust Breakdown"
+      ],
+      "choices": [
+        {
+          "id": "choicePetraDefensive31",
+          "text": "I hear your frustration, and I want to assure you that my intention is to support you, not to question your efforts.",
+          "technique": "Affirmation/Apique",
+          "techniqueType": "Core Skill",
+          "rapportScore": 1,
+          "feedback": "Acknowledging her feelings and clarifying your intent helps de-escalate defensiveness and rebuild rapport.",
+          "nextNodeId": "petraAskPermission"
+        },
+        {
+          "id": "choicePetraDefensive32",
+          "text": "We need to address this, Petra.",
+          "technique": "Directing",
+          "techniqueType": "Anti-MI",
+          "rapportScore": -2,
+          "feedback": "Directing Petra when she is defensive will only increase her resistance and shut down the conversation.",
+          "nextNodeId": "petraEndNegative"
+        },
+        {
+          "id": "choicePetraDefensive33",
+          "text": "What would make you feel more supported in this conversation?",
+          "technique": "Open Question",
+          "techniqueType": "Core Skill",
+          "rapportScore": 1,
+          "feedback": "This open question invites her to articulate her needs, empowering her and potentially de-escalating the situation.",
+          "nextNodeId": "petraChange17"
+        }
+      ],
+      "isSustainTalk": true,
+      "quotesUsed": [
+        "No-one has complained about my performance before and I've been here over 4 years."
+      ]
+    },
+    "petraDefensive4": {
+      "id": "petraDefensive4",
+      "text": "Look, I'm doing my best. I don't appreciate being questioned like this. No-one has complained about my performance before and I've been here over 4 years.",
+      "npcMood": "angry_defensive",
+      "themes": [
+        "Confrontation",
+        "Trust Breakdown"
+      ],
+      "choices": [
+        {
+          "id": "choicePetraDefensive41",
+          "text": "I hear your frustration, and I want to assure you that my intention is to support you, not to question your efforts.",
+          "technique": "Affirmation/Apology",
+          "techniqueType": "Core Skill",
+          "rapportScore": 1,
+          "feedback": "Acknowledging her feelings and clarifying your intent helps de-escalate defensiveness and rebuild rapport.",
+          "nextNodeId": "petraAskPermission"
+        },
+        {
+          "id": "choicePetraDefensive42",
+          "text": "We need to address this, Petra.",
+          "technique": "Directing",
+          "techniqueType": "Anti-MI",
+          "rapportScore": -2,
+          "feedback": "Directing Petra when she is defensive will only increase her resistance and shut down the conversation.",
+          "nextNodeId": "petraEndNegative"
+        },
+        {
+          "id": "choicePetraDefensive43",
+          "text": "What would make you feel more supported in this conversation?",
+          "technique": "Open Question",
+          "techniqueType": "Core Skill",
+          "rapportScore": 1,
+          "feedback": "This open question invites her to articulate her needs, empowering her and potentially de-escalating the situation.",
+          "nextNodeId": "petraChange17"
+        }
+      ],
+      "isSustainTalk": true,
+      "quotesUsed": [
+        "No-one has complained about my performance before and I've been here over 4 years."
+      ]
+    },
+    "petraDefensive5": {
+      "id": "petraDefensive5",
+      "text": "Look, I'm doing my best. I don't appreciate being questioned like this. No-one has complained about my performance before and I've been here over 4 years.",
+      "npcMood": "angry_defensive",
+      "themes": [
+        "Confrontation",
+        "Trust Breakdown"
+      ],
+      "choices": [
+        {
+          "id": "choicePetraDefensive51",
+          "text": "I hear your frustration, and I want to assure you that my intention is to support you, not to question your efforts.",
+          "technique": "Affirmation/Apology",
+          "techniqueType": "Core Skill",
+          "rapportScore": 1,
+          "feedback": "Acknowledging her feelings and clarifying your intent helps de-escalate defensiveness and rebuild rapport.",
+          "nextNodeId": "petraAskPermission"
+        },
+        {
+          "id": "choicePetraDefensive52",
+          "text": "We need to address this, Petra.",
+          "technique": "Directing",
+          "techniqueType": "Anti-MI",
+          "rapportScore": -2,
+          "feedback": "Directing Petra when she is defensive will only increase her resistance and shut down the conversation.",
+          "nextNodeId": "petraEndNegative"
+        },
+        {
+          "id": "choicePetraDefensive53",
+          "text": "What would make you feel more supported in this conversation?",
+          "technique": "Open Question",
+          "techniqueType": "Core Skill",
+          "rapportScore": 1,
+          "feedback": "This open question invites her to articulate her needs, empowering her and potentially de-escalating the situation.",
+          "nextNodeId": "petraChange17"
+        }
+      ],
+      "isSustainTalk": true,
+      "quotesUsed": [
+        "No-one has complained about my performance before and I've been here over 4 years."
+      ]
+    },
+    "petraChange17": {
+      "id": "petraChange17",
+      "text": "Just... listening, I guess. And not making me feel like I'm doing something wrong. I know I need to do something, I just don't know what.",
+      "npcMood": "frustrated_seeking_understanding",
+      "themes": [
+        "Trust",
+        "Communication",
+        "Uncertainty"
+      ],
+      "choices": [
+        {
+          "id": "choicePetraChange171",
+          "text": "So you're looking for an open, non-judgmental space to explore what's going on and figure out next steps.",
+          "technique": "Complex Reflection",
+          "techniqueType": "Core Skill",
+          "rapportScore": 2,
+          "feedback": "This reflection accurately captures her desire for a safe space, rebuilding trust and rapport.",
+          "nextNodeId": "petraAskPermission"
+        },
+        {
+          "id": "choicePetraChange172",
+          "text": "I am listening.",
+          "technique": "Simple Reflection",
+          "techniqueType": "Core Skill",
+          "rapportScore": 0,
+          "feedback": "While a reflection, simply stating 'I am listening' can sound defensive rather than empathetic, potentially increasing mistrust.",
+          "nextNodeId": "petraSustain16"
+        },
+        {
+          "id": "choicePetraChange173",
+          "text": "What do you think the 'something' is that you need to do?",
+          "technique": "Open Question",
+          "techniqueType": "Core Skill",
+          "rapportScore": 1,
+          "feedback": "This open question encourages her to explore her own ideas for change, fostering self-efficacy.",
+          "nextNodeId": "petraChange18"
+        }
+      ],
+      "isChangeTalk": true,
+      "quotesUsed": [
+        "I know I need to do something, I just don't know what."
+      ]
+    },
+    "petraSustain16": {
+      "id": "petraSustain16",
+      "text": "It doesn't feel like it. It feels like you already have your mind made up.",
+      "npcMood": "mistrustful",
+      "themes": [
+        "Trust Breakdown",
+        "Misunderstanding"
+      ],
+      "choices": [
+        {
+          "id": "choicePetraSustain161",
+          "text": "I can see why you might feel that way, and I want to assure you that's not my intention. My goal is truly to understand and support you.",
+          "technique": "Affirmation/Apology",
+          "techniqueType": "Core Skill",
+          "rapportScore": 1,
+          "feedback": "Acknowledging her perception and clarifying your intent helps rebuild trust and de-escalate resistance.",
+          "nextNodeId": "petraAskPermission"
+        },
+        {
+          "id": "choicePetraSustain162",
+          "text": "That's not fair, Petra.",
+          "technique": "Confrontation",
+          "techniqueType": "Anti-MI",
+          "rapportScore": -2,
+          "feedback": "This is a confrontational statement that will further erode trust and shut down the conversation.",
+          "nextNodeId": "petraEndNegative"
+        },
+        {
+          "id": "choicePetraSustain163",
+          "text": "What would make you feel I am listening?",
+          "technique": "Open Question",
+          "techniqueType": "Core Skill",
+          "rapportScore": 1,
+          "feedback": "This open question invites her to articulate specific needs, empowering her to guide the interaction.",
+          "nextNodeId": "petraChange19"
+        }
+      ],
+      "isSustainTalk": true
+    },
+    "petraChange18": {
+      "id": "petraChange18",
+      "text": "I think it's about finding a way to get my energy back, and feeling useful again. Maybe I could find 30 minutes for myself.",
+      "npcMood": "thoughtful_seeking_solutions",
+      "themes": [
+        "Energy",
+        "Purpose",
+        "Self-Care"
+      ],
+      "choices": [
+        {
+          "id": "choicePetraChange181",
+          "text": "So regaining energy and a sense of purpose, perhaps starting with some personal time, are key areas for you.",
+          "technique": "Complex Reflection",
+          "techniqueType": "Core Skill",
+          "rapportScore": 2,
+          "feedback": "This reflection summarizes her core desires and potential solutions, reinforcing her ideas.",
+          "nextNodeId": "petraAskPermission"
+        },
+        {
+          "id": "choicePetraChange182",
+          "text": "We can look at your workload.",
+          "technique": "Premature Solution",
+          "techniqueType": "Anti-MI",
+          "rapportScore": -1,
+          "feedback": "Offering a solution before fully understanding her perspective can be perceived as dismissive and disempowering.",
+          "nextNodeId": "petraSustain17"
+        },
+        {
+          "id": "choicePetraChange183",
+          "text": "What does 'feeling useful' mean to you?",
+          "technique": "Exploring Values",
+          "techniqueType": "Advanced Technique",
+          "rapportScore": 2,
+          "feedback": "Exploring her underlying values connects her to deeper motivations for change, a powerful MI technique.",
+          "nextNodeId": "petraChange20"
+        }
+      ],
+      "isChangeTalk": true,
+      "quotesUsed": [
+        "Maybe I could find 30 minutes for myself."
+      ]
+    },
+    "petraChange19": {
+      "id": "petraChange19",
+      "text": "If you acknowledged what I'm saying, instead of trying to fix it right away. It would be a relief to know I'm not the only one feeling this way.",
+      "npcMood": "seeking_empathy",
+      "themes": [
+        "Empathy",
+        "Validation",
+        "Trust"
+      ],
+      "choices": [
+        {
+          "id": "choicePetraChange191",
+          "text": "So you're looking for me to really hear and validate your experience, and perhaps to know that others might share similar feelings.",
+          "technique": "Complex Reflection",
+          "techniqueType": "Core Skill",
+          "rapportScore": 2,
+          "feedback": "This reflection accurately captures her need for validation and empathy, rebuilding trust and rapport.",
+          "nextNodeId": "petraAskPermission"
+        },
+        {
+          "id": "choicePetraChange192",
+          "text": "I am acknowledging it.",
+          "technique": "Simple Reflection",
+          "techniqueType": "Core Skill",
+          "rapportScore": 0,
+          "feedback": "While a reflection, simply stating 'I am acknowledging it' can sound defensive rather than empathetic, potentially increasing mistrust.",
+          "nextNodeId": "petraSustain18"
+        },
+        {
+          "id": "choicePetraChange193",
+          "text": "What specifically do you want me to acknowledge?",
+          "technique": "Open Question",
+          "techniqueType": "Core Skill",
+          "rapportScore": 1,
+          "feedback": "This open question invites her to articulate specific needs, empowering her to guide the interaction.",
+          "nextNodeId": "petraChange21"
+        }
+      ],
+      "isChangeTalk": true,
+      "quotesUsed": [
+        "It would be a relief to know I'm not the only one feeling this way."
+      ]
+    },
+    "petraChange20": {
+      "id": "petraChange20",
+      "text": "It means being able to help customers effectively, to explain complex things clearly, and to feel like I'm contributing meaningfully to the team, not just doing paperwork. I want to be the one that makes a real difference again.",
+      "npcMood": "passionate_frustrated",
+      "themes": [
+        "Competence",
+        "Contribution",
+        "Impact"
+      ],
+      "choices": [
+        {
+          "id": "choicePetraChange201",
+          "text": "So, for you, feeling useful is deeply connected to your ability to excel in your customer-facing role and contribute meaningfully to the team, and you miss that.",
+          "technique": "Complex Reflection",
+          "techniqueType": "Core Skill",
+          "rapportScore": 2,
+          "feedback": "This reflection connects her current feelings to her core values and past experiences, strengthening her motivation for change.",
+          "nextNodeId": "petraAskPermission"
+        },
+        {
+          "id": "choicePetraChange202",
+          "text": "We can definitely get you back on customer calls.",
+          "technique": "Premature Solution",
+          "techniqueType": "Anti-MI",
+          "rapportScore": -1,
+          "feedback": "Offering a solution before fully understanding her perspective can be perceived as dismissive and disempowering.",
+          "nextNodeId": "petraSustain19"
+        },
+        {
+          "id": "choicePetraChange203",
+          "text": "What's preventing you from feeling that way now?",
+          "technique": "Open Question",
+          "techniqueType": "Core Skill",
+          "rapportScore": 1,
+          "feedback": "This open question invites her to explore barriers, which can lead to further change talk.",
+          "nextNodeId": "petraChange22"
+        }
+      ],
+      "isChangeTalk": true,
+      "quotesUsed": [
+        "I want to be the one that makes a real difference again."
+      ]
+    },
+    "petraChange21": {
+      "id": "petraChange21",
+      "text": "That I'm tired. That it's hard. That I'm trying my best but it's not enough right now. And that I'm worried about the team, even if I said they're managing.",
+      "npcMood": "vulnerable_honest",
+      "themes": [
+        "Fatigue",
+        "Struggle",
+        "Honesty",
+        "Team Concern"
+      ],
+      "choices": [
+        {
+          "id": "choicePetraChange211",
+          "text": "Thank you for sharing that, Petra. It sounds like you're feeling a deep sense of exhaustion and difficulty, despite your best efforts, and you're also carrying a concern for the team.",
+          "technique": "Complex Reflection/Affirmation",
+          "techniqueType": "Core Skill",
+          "rapportScore": 2,
+          "feedback": "This powerful reflection and affirmation validates her vulnerability and shows deep understanding, significantly building rapport.",
+          "nextNodeId": "petraAskPermission"
+        },
+        {
+          "id": "choicePetraChange212",
+          "text": "So you're admitting you're not managing?",
+          "technique": "Confrontation",
+          "techniqueType": "Anti-MI",
+          "rapportScore": -2,
+          "feedback": "This is a highly confrontational and accusatory statement that will shut down her vulnerability and increase defensiveness.",
+          "nextNodeId": "petraDefensive6"
+        },
+        {
+          "id": "choicePetraChange213",
+          "text": "It's good that you're being honest.",
+          "technique": "Affirmation",
+          "techniqueType": "Core Skill",
+          "rapportScore": 0,
+          "feedback": "While an affirmation, it can sound slightly judgmental, implying that she wasn't honest before. A more neutral affirmation is better.",
+          "nextNodeId": "petraSustain20"
+        }
+      ],
+      "isChangeTalk": true
+    },
+    "petraChange22": {
+      "id": "petraChange22",
+      "text": "My energy levels, mostly. I'm just so drained. And it makes everything else feel harder. I know I need to do something, I just don't know what.",
+      "npcMood": "exhausted_resigned",
+      "themes": [
+        "Fatigue",
+        "Barriers",
+        "Uncertainty"
+      ],
+      "choices": [
+        {
+          "id": "choicePetraChange221",
+          "text": "So the core challenge right now is this profound exhaustion, which then impacts your ability to engage and see a path forward.",
+          "technique": "Complex Reflection",
+          "techniqueType": "Core Skill",
+          "rapportScore": 2,
+          "feedback": "This reflection accurately captures the central issue and its impact, showing deep empathy and understanding.",
+          "nextNodeId": "petraAskPermission"
+        },
+        {
+          "id": "choicePetraChange222",
+          "text": "Have you seen a doctor about your energy?",
+          "technique": "Premature Advice/Directing",
+          "techniqueType": "Anti-MI",
+          "rapportScore": -1,
+          "feedback": "This is premature advice and can be perceived as intrusive, especially given her undisclosed medical condition.",
+          "nextNodeId": "petraResistant12"
+        },
+        {
+          "id": "choicePetraChange223",
+          "text": "What's one small thing that might give you a tiny bit more energy?",
+          "technique": "Scaling Question",
+          "techniqueType": "Advanced Technique",
+          "rapportScore": 1,
+          "feedback": "A scaling question helps break down large problems into manageable steps, fostering self-efficacy.",
+          "nextNodeId": "petraChange23"
+        }
+      ],
+      "isChangeTalk": true,
+      "quotesUsed": [
+        "I know I need to do something, I just don't know what."
+      ]
+    },
+    "petraChange23": {
+      "id": "petraChange23",
+      "text": "Honestly, maybe just those 30 minutes to myself. Or talking to someone who understands. It would be a relief to know I'm not the only one feeling this way.",
+      "npcMood": "weary_hopeful",
+      "themes": [
+        "Self-Care",
+        "Support",
+        "Validation"
+      ],
+      "choices": [
+        {
+          "id": "choicePetraChange231",
+          "text": "So, simple acts of self-care and finding a sense of connection could be really impactful in boosting your energy and morale.",
+          "technique": "Complex Reflection",
+          "techniqueType": "Core Skill",
+          "rapportScore": 2,
+          "feedback": "This reflection connects her proposed actions to their potential benefits, strengthening her motivation for change.",
+          "nextNodeId": "petraAskPermission"
+        },
+        {
+          "id": "choicePetraChange232",
+          "text": "You need to prioritize that.",
+          "technique": "Directing",
+          "techniqueType": "Anti-MI",
+          "rapportScore": -1,
+          "feedback": "Directing Petra tells her what to do, undermining her autonomy and potentially increasing resistance.",
+          "nextNodeId": "petraResistant13"
+        },
+        {
+          "id": "choicePetraChange233",
+          "text": "What's stopping you from taking those 30 minutes?",
+          "technique": "Open Question",
+          "techniqueType": "Core Skill",
+          "rapportScore": 0,
+          "feedback": "This open question explores barriers, but could be perceived as slightly challenging. Consider 'What makes it hard to take those 30 minutes?'",
+          "nextNodeId": "petraSustain21"
+        }
+      ],
+      "isChangeTalk": true,
+      "quotesUsed": [
+        "Maybe I could find 30 minutes for myself.",
+        "It would be a relief to know I'm not the only one feeling this way."
+      ]
+    },
+    "petraResistant1": {
+      "id": "petraResistant1",
+      "text": "I appreciate your suggestions, but I'm not sure that's going to help. I'm doing what I can.",
+      "npcMood": "polite_resistant",
+      "themes": [
+        "Resistance",
+        "Autonomy"
+      ],
+      "choices": [
+        {
+          "id": "choicePetraResistant11",
+          "text": "It sounds like you're feeling that these suggestions aren't quite hitting the mark for what you need right now.",
+          "technique": "Complex Reflection",
+          "techniqueType": "Core Skill",
+          "rapportScore": 1,
+          "feedback": "Reflecting her resistance without confronting it helps maintain rapport and invites further exploration.",
+          "nextNodeId": "petraAskPermission"
+        },
+        {
+          "id": "choicePetraResistant12",
+          "text": "We need to find a solution, Petra.",
+          "technique": "Directing",
+          "techniqueType": "Anti-MI",
+          "rapportScore": -2,
+          "feedback": "Directing Petra when she is resistant will only increase her resistance and shut down the conversation.",
+          "nextNodeId": "petraEndNegative"
+        },
+        {
+          "id": "choicePetraResistant13",
+          "text": "What do you think *would* help?",
+          "technique": "Open Question",
+          "techniqueType": "Core Skill",
+          "rapportScore": 1,
+          "feedback": "This open question empowers Petra to identify her own solutions, fostering self-efficacy.",
+          "nextNodeId": "petraChange24"
+        }
+      ],
+      "isSustainTalk": true
+    },
+    "petraResistant2": {
+      "id": "petraResistant2",
+      "text": "I appreciate your suggestions, but I'm not sure that's going to help. I'm doing what I can.",
+      "npcMood": "polite_resistant",
+      "themes": [
+        "Resistance",
+        "Autonomy"
+      ],
+      "choices": [
+        {
+          "id": "choicePetraResistant21",
+          "text": "It sounds like you're feeling that these suggestions aren't quite hitting the mark for what you need right now.",
+          "technique": "Complex Reflection",
+          "techniqueType": "Core Skill",
+          "rapportScore": 1,
+          "feedback": "Reflecting her resistance without confronting it helps maintain rapport and invites further exploration.",
+          "nextNodeId": "petraAskPermission"
+        },
+        {
+          "id": "choicePetraResistant22",
+          "text": "We need to find a solution, Petra.",
+          "technique": "Directing",
+          "techniqueType": "Anti-MI",
+          "rapportScore": -2,
+          "feedback": "Directing Petra when she is resistant will only increase her resistance and shut down the conversation.",
+          "nextNodeId": "petraEndNegative"
+        },
+        {
+          "id": "choicePetraResistant23",
+          "text": "What do you think *would* help?",
+          "technique": "Open Question",
+          "techniqueType": "Core Skill",
+          "rapportScore": 1,
+          "feedback": "This open question empowers Petra to identify her own solutions, fostering self-efficacy.",
+          "nextNodeId": "petraChange24"
+        }
+      ],
+      "isSustainTalk": true
+    },
+    "petraResistant3": {
+      "id": "petraResistant3",
+      "text": "I appreciate your suggestions, but I'm not sure that's going to help. I'm doing what I can.",
+      "npcMood": "polite_resistant",
+      "themes": [
+        "Resistance",
+        "Autonomy"
+      ],
+      "choices": [
+        {
+          "id": "choicePetraResistant31",
+          "text": "It sounds like you're feeling that these suggestions aren't quite hitting the mark for what you need right now.",
+          "technique": "Complex Reflection",
+          "techniqueType": "Core Skill",
+          "rapportScore": 1,
+          "feedback": "Reflecting her resistance without confronting it helps maintain rapport and invites further exploration.",
+          "nextNodeId": "petraAskPermission"
+        },
+        {
+          "id": "choicePetraResistant32",
+          "text": "We need to find a solution, Petra.",
+          "technique": "Directing",
+          "techniqueType": "Anti-MI",
+          "rapportScore": -2,
+          "feedback": "Directing Petra when she is resistant will only increase her resistance and shut down the conversation.",
+          "nextNodeId": "petraEndNegative"
+        },
+        {
+          "id": "choicePetraResistant33",
+          "text": "What do you think *would* help?",
+          "technique": "Open Question",
+          "techniqueType": "Core Skill",
+          "rapportScore": 1,
+          "feedback": "This open question empowers Petra to identify her own solutions, fostering self-efficacy.",
+          "nextNodeId": "petraChange24"
+        }
+      ],
+      "isSustainTalk": true
+    },
+    "petraResistant4": {
+      "id": "petraResistant4",
+      "text": "I appreciate your suggestions, but I'm not sure that's going to help. I'm doing what I can.",
+      "npcMood": "polite_resistant",
+      "themes": [
+        "Resistance",
+        "Autonomy"
+      ],
+      "choices": [
+        {
+          "id": "choicePetraResistant41",
+          "text": "It sounds like you're feeling that these suggestions aren't quite hitting the mark for what you need right now.",
+          "technique": "Complex Reflection",
+          "techniqueType": "Core Skill",
+          "rapportScore": 1,
+          "feedback": "Reflecting her resistance without confronting it helps maintain rapport and invites further exploration.",
+          "nextNodeId": "petraAskPermission"
+        },
+        {
+          "id": "choicePetraResistant42",
+          "text": "We need to find a solution, Petra.",
+          "technique": "Directing",
+          "techniqueType": "Anti-MI",
+          "rapportScore": -2,
+          "feedback": "Directing Petra when she is resistant will only increase her resistance and shut down the conversation.",
+          "nextNodeId": "petraEndNegative"
+        },
+        {
+          "id": "choicePetraResistant43",
+          "text": "What do you think *would* help?",
+          "technique": "Open Question",
+          "techniqueType": "Core Skill",
+          "rapportScore": 1,
+          "feedback": "This open question empowers Petra to identify her own solutions, fostering self-efficacy.",
+          "nextNodeId": "petraChange24"
+        }
+      ],
+      "isSustainTalk": true
+    },
+    "petraResistant5": {
+      "id": "petraResistant5",
+      "text": "I appreciate your suggestions, but I'm not sure that's going to help. I'm doing what I can.",
+      "npcMood": "polite_resistant",
+      "themes": [
+        "Resistance",
+        "Autonomy"
+      ],
+      "choices": [
+        {
+          "id": "choicePetraResistant51",
+          "text": "It sounds like you're feeling that these suggestions aren't quite hitting the mark for what you need right now.",
+          "technique": "Complex Reflection",
+          "techniqueType": "Core Skill",
+          "rapportScore": 1,
+          "feedback": "Reflecting her resistance without confronting it helps maintain rapport and invites further exploration.",
+          "nextNodeId": "petraAskPermission"
+        },
+        {
+          "id": "choicePetraResistant52",
+          "text": "We need to find a solution, Petra.",
+          "technique": "Directing",
+          "techniqueType": "Anti-MI",
+          "rapportScore": -2,
+          "feedback": "Directing Petra when she is resistant will only increase her resistance and shut down the conversation.",
+          "nextNodeId": "petraEndNegative"
+        },
+        {
+          "id": "choicePetraResistant53",
+          "text": "What do you think *would* help?",
+          "technique": "Open Question",
+          "techniqueType": "Core Skill",
+          "rapportScore": 1,
+          "feedback": "This open question empowers Petra to identify her own solutions, fostering self-efficacy.",
+          "nextNodeId": "petraChange24"
+        }
+      ],
+      "isSustainTalk": true
+    },
+    "petraResistant6": {
+      "id": "petraResistant6",
+      "text": "I appreciate your suggestions, but I'm not sure that's going to help. I'm doing what I can.",
+      "npcMood": "polite_resistant",
+      "themes": [
+        "Resistance",
+        "Autonomy"
+      ],
+      "choices": [
+        {
+          "id": "choicePetraResistant61",
+          "text": "It sounds like you're feeling that these suggestions aren't quite hitting the mark for what you need right now.",
+          "technique": "Complex Reflection",
+          "techniqueType": "Core Skill",
+          "rapportScore": 1,
+          "feedback": "Reflecting her resistance without confronting it helps maintain rapport and invites further exploration.",
+          "nextNodeId": "petraAskPermission"
+        },
+        {
+          "id": "choicePetraResistant62",
+          "text": "We need to find a solution, Petra.",
+          "technique": "Directing",
+          "techniqueType": "Anti-MI",
+          "rapportScore": -2,
+          "feedback": "Directing Petra when she is resistant will only increase her resistance and shut down the conversation.",
+          "nextNodeId": "petraEndNegative"
+        },
+        {
+          "id": "choicePetraResistant63",
+          "text": "What do you think *would* help?",
+          "technique": "Open Question",
+          "techniqueType": "Core Skill",
+          "rapportScore": 1,
+          "feedback": "This open question empowers Petra to identify her own solutions, fostering self-efficacy.",
+          "nextNodeId": "petraChange24"
+        }
+      ],
+      "isSustainTalk": true
+    },
+    "petraResistant7": {
+      "id": "petraResistant7",
+      "text": "I appreciate your suggestions, but I'm not sure that's going to help. I'm doing what I can.",
+      "npcMood": "polite_resistant",
+      "themes": [
+        "Resistance",
+        "Autonomy"
+      ],
+      "choices": [
+        {
+          "id": "choicePetraResistant71",
+          "text": "It sounds like you're feeling that these suggestions aren't quite hitting the mark for what you need right now.",
+          "technique": "Complex Reflection",
+          "techniqueType": "Core Skill",
+          "rapportScore": 1,
+          "feedback": "Reflecting her resistance without confronting it helps maintain rapport and invites further exploration.",
+          "nextNodeId": "petraAskPermission"
+        },
+        {
+          "id": "choicePetraResistant72",
+          "text": "We need to find a solution, Petra.",
+          "technique": "Directing",
+          "techniqueType": "Anti-MI",
+          "rapportScore": -2,
+          "feedback": "Directing Petra when she is resistant will only increase her resistance and shut down the conversation.",
+          "nextNodeId": "petraEndNegative"
+        },
+        {
+          "id": "choicePetraResistant73",
+          "text": "What do you think *would* help?",
+          "technique": "Open Question",
+          "techniqueType": "Core Skill",
+          "rapportScore": 1,
+          "feedback": "This open question empowers Petra to identify her own solutions, fostering self-efficacy.",
+          "nextNodeId": "petraChange24"
+        }
+      ],
+      "isSustainTalk": true
+    },
+    "petraResistant8": {
+      "id": "petraResistant8",
+      "text": "I appreciate your suggestions, but I'm not sure that's going to help. I'm doing what I can.",
+      "npcMood": "polite_resistant",
+      "themes": [
+        "Resistance",
+        "Autonomy"
+      ],
+      "choices": [
+        {
+          "id": "choicePetraResistant81",
+          "text": "It sounds like you're feeling that these suggestions aren't quite hitting the mark for what you need right now.",
+          "technique": "Complex Reflection",
+          "techniqueType": "Core Skill",
+          "rapportScore": 1,
+          "feedback": "Reflecting her resistance without confronting it helps maintain rapport and invites further exploration.",
+          "nextNodeId": "petraAskPermission"
+        },
+        {
+          "id": "choicePetraResistant82",
+          "text": "We need to find a solution, Petra.",
+          "technique": "Directing",
+          "techniqueType": "Anti-MI",
+          "rapportScore": -2,
+          "feedback": "Directing Petra when she is resistant will only increase her resistance and shut down the conversation.",
+          "nextNodeId": "petraEndNegative"
+        },
+        {
+          "id": "choicePetraResistant83",
+          "text": "What do you think *would* help?",
+          "technique": "Open Question",
+          "techniqueType": "Core Skill",
+          "rapportScore": 1,
+          "feedback": "This open question empowers Petra to identify her own solutions, fostering self-efficacy.",
+          "nextNodeId": "petraChange24"
+        }
+      ],
+      "isSustainTalk": true
+    },
+    "petraResistant9": {
+      "id": "petraResistant9",
+      "text": "I appreciate your suggestions, but I'm not sure that's going to help. I'm doing what I can.",
+      "npcMood": "polite_resistant",
+      "themes": [
+        "Resistance",
+        "Autonomy"
+      ],
+      "choices": [
+        {
+          "id": "choicePetraResistant91",
+          "text": "It sounds like you're feeling that these suggestions aren't quite hitting the mark for what you need right now.",
+          "technique": "Complex Reflection",
+          "techniqueType": "Core Skill",
+          "rapportScore": 1,
+          "feedback": "Reflecting her resistance without confronting it helps maintain rapport and invites further exploration.",
+          "nextNodeId": "petraAskPermission"
+        },
+        {
+          "id": "choicePetraResistant92",
+          "text": "We need to find a solution, Petra.",
+          "technique": "Directing",
+          "techniqueType": "Anti-MI",
+          "rapportScore": -2,
+          "feedback": "Directing Petra when she is resistant will only increase her resistance and shut down the conversation.",
+          "nextNodeId": "petraEndNegative"
+        },
+        {
+          "id": "choicePetraResistant93",
+          "text": "What do you think *would* help?",
+          "technique": "Open Question",
+          "techniqueType": "Core Skill",
+          "rapportScore": 1,
+          "feedback": "This open question empowers Petra to identify her own solutions, fostering self-efficacy.",
+          "nextNodeId": "petraChange24"
+        }
+      ],
+      "isSustainTalk": true
+    },
+    "petraResistant10": {
+      "id": "petraResistant10",
+      "text": "I appreciate your suggestions, but I'm not sure that's going to help. I'm doing what I can.",
+      "npcMood": "polite_resistant",
+      "themes": [
+        "Resistance",
+        "Autonomy"
+      ],
+      "choices": [
+        {
+          "id": "choicePetraResistant101",
+          "text": "It sounds like you're feeling that these suggestions aren't quite hitting the mark for what you need right now.",
+          "technique": "Complex Reflection",
+          "techniqueType": "Core Skill",
+          "rapportScore": 1,
+          "feedback": "Reflecting her resistance without confronting it helps maintain rapport and invites further exploration.",
+          "nextNodeId": "petraAskPermission"
+        },
+        {
+          "id": "choicePetraResistant102",
+          "text": "We need to find a solution, Petra.",
+          "technique": "Directing",
+          "techniqueType": "Anti-MI",
+          "rapportScore": -2,
+          "feedback": "Directing Petra when she is resistant will only increase her resistance and shut down the conversation.",
+          "nextNodeId": "petraEndNegative"
+        },
+        {
+          "id": "choicePetraResistant103",
+          "text": "What do you think *would* help?",
+          "technique": "Open Question",
+          "techniqueType": "Core Skill",
+          "rapportScore": 1,
+          "feedback": "This open question empowers Petra to identify her own solutions, fostering self-efficacy.",
+          "nextNodeId": "petraChange24"
+        }
+      ],
+      "isSustainTalk": true
+    },
+    "petraResistant11": {
+      "id": "petraResistant11",
+      "text": "I appreciate your suggestions, but I'm not sure that's going to help. I'm doing what I can.",
+      "npcMood": "polite_resistant",
+      "themes": [
+        "Resistance",
+        "Autonomy"
+      ],
+      "choices": [
+        {
+          "id": "choicePetraResistant111",
+          "text": "It sounds like you're feeling that these suggestions aren't quite hitting the mark for what you need right now.",
+          "technique": "Complex Reflection",
+          "techniqueType": "Core Skill",
+          "rapportScore": 1,
+          "feedback": "Reflecting her resistance without confronting it helps maintain rapport and invites further exploration.",
+          "nextNodeId": "petraAskPermission"
+        },
+        {
+          "id": "choicePetraResistant112",
+          "text": "We need to find a solution, Petra.",
+          "technique": "Directing",
+          "techniqueType": "Anti-MI",
+          "rapportScore": -2,
+          "feedback": "Directing Petra when she is resistant will only increase her resistance and shut down the conversation.",
+          "nextNodeId": "petraEndNegative"
+        },
+        {
+          "id": "choicePetraResistant113",
+          "text": "What do you think *would* help?",
+          "technique": "Open Question",
+          "techniqueType": "Core Skill",
+          "rapportScore": 1,
+          "feedback": "This open question empowers Petra to identify her own solutions, fostering self-efficacy.",
+          "nextNodeId": "petraChange24"
+        }
+      ],
+      "isSustainTalk": true
+    },
+    "petraResistant12": {
+      "id": "petraResistant12",
+      "text": "I appreciate your suggestions, but I'm not sure that's going to help. I'm doing what I can.",
+      "npcMood": "polite_resistant",
+      "themes": [
+        "Resistance",
+        "Autonomy"
+      ],
+      "choices": [
+        {
+          "id": "choicePetraResistant121",
+          "text": "It sounds like you're feeling that these suggestions aren't quite hitting the mark for what you need right now.",
+          "technique": "Complex Reflection",
+          "techniqueType": "Core Skill",
+          "rapportScore": 1,
+          "feedback": "Reflecting her resistance without confronting it helps maintain rapport and invites further exploration.",
+          "nextNodeId": "petraAskPermission"
+        },
+        {
+          "id": "choicePetraResistant122",
+          "text": "We need to find a solution, Petra.",
+          "technique": "Directing",
+          "techniqueType": "Anti-MI",
+          "rapportScore": -2,
+          "feedback": "Directing Petra when she is resistant will only increase her resistance and shut down the conversation.",
+          "nextNodeId": "petraEndNegative"
+        },
+        {
+          "id": "choicePetraResistant123",
+          "text": "What do you think *would* help?",
+          "technique": "Open Question",
+          "techniqueType": "Core Skill",
+          "rapportScore": 1,
+          "feedback": "This open question empowers Petra to identify her own solutions, fostering self-efficacy.",
+          "nextNodeId": "petraChange24"
+        }
+      ],
+      "isSustainTalk": true
+    },
+    "petraResistant13": {
+      "id": "petraResistant13",
+      "text": "I appreciate your suggestions, but I'm not sure that's going to help. I'm doing what I can.",
+      "npcMood": "polite_resistant",
+      "themes": [
+        "Resistance",
+        "Autonomy"
+      ],
+      "choices": [
+        {
+          "id": "choicePetraResistant131",
+          "text": "It sounds like you're feeling that these suggestions aren't quite hitting the mark for what you need right now.",
+          "technique": "Complex Reflection",
+          "techniqueType": "Core Skill",
+          "rapportScore": 1,
+          "feedback": "Reflecting her resistance without confronting it helps maintain rapport and invites further exploration.",
+          "nextNodeId": "petraAskPermission"
+        },
+        {
+          "id": "choicePetraResistant132",
+          "text": "We need to find a solution, Petra.",
+          "technique": "Directing",
+          "techniqueType": "Anti-MI",
+          "rapportScore": -2,
+          "feedback": "Directing Petra when she is resistant will only increase her resistance and shut down the conversation.",
+          "nextNodeId": "petraEndNegative"
+        },
+        {
+          "id": "choicePetraResistant133",
+          "text": "What do you think *would* help?",
+          "technique": "Open Question",
+          "techniqueType": "Core Skill",
+          "rapportScore": 1,
+          "feedback": "This open question empowers Petra to identify her own solutions, fostering self-efficacy.",
+          "nextNodeId": "petraChange24"
+        }
+      ],
+      "isSustainTalk": true
+    },
+    "petraChange24": {
+      "id": "petraChange24",
+      "text": "I'm not sure. Maybe just someone to listen. Or some understanding. It would be a relief to know I'm not the only one feeling this way.",
+      "npcMood": "seeking_empathy",
+      "themes": [
+        "Support",
+        "Understanding",
+        "Validation"
+      ],
+      "choices": [
+        {
+          "id": "choicePetraChange241",
+          "text": "So, a sense of being heard, understood, and connected could make a big difference for you right now.",
+          "technique": "Complex Reflection",
+          "techniqueType": "Core Skill",
+          "rapportScore": 2,
+          "feedback": "This reflection accurately captures her need for validation and empathy, rebuilding trust and rapport.",
+          "nextNodeId": "petraAskPermission"
+        },
+        {
+          "id": "choicePetraChange242",
+          "text": "I am listening.",
+          "technique": "Simple Reflection",
+          "techniqueType": "Core Skill",
+          "rapportScore": 0,
+          "feedback": "While a reflection, simply stating 'I am listening' can sound defensive rather than empathetic, potentially increasing mistrust.",
+          "nextNodeId": "petraSustain22"
+        },
+        {
+          "id": "choicePetraChange243",
+          "text": "What makes you feel you're not the only one?",
+          "technique": "Evocative Question",
+          "techniqueType": "Advanced Technique",
+          "rapportScore": 1,
+          "feedback": "This question encourages Petra to explore her feelings of shared experience, potentially leading to deeper insights.",
+          "nextNodeId": "petraChange25"
+        }
+      ],
+      "isChangeTalk": true,
+      "quotesUsed": [
+        "It would be a relief to know I'm not the only one feeling this way."
+      ]
+    },
+    "petraSustain17": {
+      "id": "petraSustain17",
+      "text": "I'm just doing my job. I'm not sure what else there is to say.",
+      "npcMood": "closed_off",
+      "themes": [
+        "Resistance",
+        "Frustration"
+      ],
+      "choices": [
+        {
+          "id": "choicePetraSustain171",
+          "text": "It sounds like you're feeling a bit stuck right now.",
+          "technique": "Simple Reflection",
+          "techniqueType": "Core Skill",
+          "rapportScore": 1,
+          "feedback": "A simple reflection acknowledges her feeling without pushing, keeping the door open for further conversation.",
+          "nextNodeId": "petraAskPermission"
+        },
+        {
+          "id": "choicePetraSustain172",
+          "text": "We need to find a solution, Petra.",
+          "technique": "Directing",
+          "techniqueType": "Anti-MI",
+          "rapportScore": -2,
+          "feedback": "Directing Petra when she's feeling stuck will likely increase resistance and shut down the conversation.",
+          "nextNodeId": "petraEndNegative"
+        },
+        {
+          "id": "choicePetraSustain173",
+          "text": "What's the downside of exploring this further?",
+          "technique": "Open Question",
+          "techniqueType": "Core Skill",
+          "rapportScore": 1,
+          "feedback": "This open question invites her to consider the implications, potentially leading to a shift in perspective.",
+          "nextNodeId": "petraChange25"
+        }
+      ],
+      "isSustainTalk": true
+    },
+    "petraSustain18": {
+      "id": "petraSustain18",
+      "text": "I'm just doing my job. I'm not sure what else there is to say.",
+      "npcMood": "closed_off",
+      "themes": [
+        "Resistance",
+        "Frustration"
+      ],
+      "choices": [
+        {
+          "id": "choicePetraSustain181",
+          "text": "It sounds like you're feeling a bit stuck right now.",
+          "technique": "Simple Reflection",
+          "techniqueType": "Core Skill",
+          "rapportScore": 1,
+          "feedback": "A simple reflection acknowledges her feeling without pushing, keeping the door open for further conversation.",
+          "nextNodeId": "petraAskPermission"
+        },
+        {
+          "id": "choicePetraSustain182",
+          "text": "We need to find a solution, Petra.",
+          "technique": "Directing",
+          "techniqueType": "Anti-MI",
+          "rapportScore": -2,
+          "feedback": "Directing Petra when she's feeling stuck will likely increase resistance and shut down the conversation.",
+          "nextNodeId": "petraEndNegative"
+        },
+        {
+          "id": "choicePetraSustain183",
+          "text": "What's the downside of exploring this further?",
+          "technique": "Open Question",
+          "techniqueType": "Core Skill",
+          "rapportScore": 1,
+          "feedback": "This open question invites her to consider the implications, potentially leading to a shift in perspective.",
+          "nextNodeId": "petraChange25"
+        }
+      ],
+      "isSustainTalk": true
+    },
+    "petraSustain19": {
+      "id": "petraSustain19",
+      "text": "I'm just doing my job. I'm not sure what else there is to say.",
+      "npcMood": "closed_off",
+      "themes": [
+        "Resistance",
+        "Frustration"
+      ],
+      "choices": [
+        {
+          "id": "choicePetraSustain191",
+          "text": "It sounds like you're feeling a bit stuck right now.",
+          "technique": "Simple Reflection",
+          "techniqueType": "Core Skill",
+          "rapportScore": 1,
+          "feedback": "A simple reflection acknowledges her feeling without pushing, keeping the door open for further conversation.",
+          "nextNodeId": "petraAskPermission"
+        },
+        {
+          "id": "choicePetraSustain192",
+          "text": "We need to find a solution, Petra.",
+          "technique": "Directing",
+          "techniqueType": "Anti-MI",
+          "rapportScore": -2,
+          "feedback": "Directing Petra when she's feeling stuck will likely increase resistance and shut down the conversation.",
+          "nextNodeId": "petraEndNegative"
+        },
+        {
+          "id": "choicePetraSustain193",
+          "text": "What's the downside of exploring this further?",
+          "technique": "Open Question",
+          "techniqueType": "Core Skill",
+          "rapportScore": 1,
+          "feedback": "This open question invites her to consider the implications, potentially leading to a shift in perspective.",
+          "nextNodeId": "petraChange25"
+        }
+      ],
+      "isSustainTalk": true
+    },
+    "petraSustain20": {
+      "id": "petraSustain20",
+      "text": "I'm just doing my job. I'm not sure what else there is to say.",
+      "npcMood": "closed_off",
+      "themes": [
+        "Resistance",
+        "Frustration"
+      ],
+      "choices": [
+        {
+          "id": "choicePetraSustain201",
+          "text": "It sounds like you're feeling a bit stuck right now.",
+          "technique": "Simple Reflection",
+          "techniqueType": "Core Skill",
+          "rapportScore": 1,
+          "feedback": "A simple reflection acknowledges her feeling without pushing, keeping the door open for further conversation.",
+          "nextNodeId": "petraAskPermission"
+        },
+        {
+          "id": "choicePetraSustain202",
+          "text": "We need to find a solution, Petra.",
+          "technique": "Directing",
+          "techniqueType": "Anti-MI",
+          "rapportScore": -2,
+          "feedback": "Directing Petra when she's feeling stuck will likely increase resistance and shut down the conversation.",
+          "nextNodeId": "petraEndNegative"
+        },
+        {
+          "id": "choicePetraSustain203",
+          "text": "What's the downside of exploring this further?",
+          "technique": "Open Question",
+          "techniqueType": "Core Skill",
+          "rapportScore": 1,
+          "feedback": "This open question invites her to consider the implications, potentially leading to a shift in perspective.",
+          "nextNodeId": "petraChange25"
+        }
+      ],
+      "isSustainTalk": true
+    },
+    "petraSustain21": {
+      "id": "petraSustain21",
+      "text": "I'm just doing my job. I'm not sure what else there is to say.",
+      "npcMood": "closed_off",
+      "themes": [
+        "Resistance",
+        "Frustration"
+      ],
+      "choices": [
+        {
+          "id": "choicePetraSustain211",
+          "text": "It sounds like you're feeling a bit stuck right now.",
+          "technique": "Simple Reflection",
+          "techniqueType": "Core Skill",
+          "rapportScore": 1,
+          "feedback": "A simple reflection acknowledges her feeling without pushing, keeping the door open for further conversation.",
+          "nextNodeId": "petraAskPermission"
+        },
+        {
+          "id": "choicePetraSustain212",
+          "text": "We need to find a solution, Petra.",
+          "technique": "Directing",
+          "techniqueType": "Anti-MI",
+          "rapportScore": -2,
+          "feedback": "Directing Petra when she's feeling stuck will likely increase resistance and shut down the conversation.",
+          "nextNodeId": "petraEndNegative"
+        },
+        {
+          "id": "choicePetraSustain213",
+          "text": "What's the downside of exploring this further?",
+          "technique": "Open Question",
+          "techniqueType": "Core Skill",
+          "rapportScore": 1,
+          "feedback": "This open question invites her to consider the implications, potentially leading to a shift in perspective.",
+          "nextNodeId": "petraChange25"
+        }
+      ],
+      "isSustainTalk": true
+    },
+    "petraSustain22": {
+      "id": "petraSustain22",
+      "text": "I'm just doing my job. I'm not sure what else there is to say.",
+      "npcMood": "closed_off",
+      "themes": [
+        "Resistance",
+        "Frustration"
+      ],
+      "choices": [
+        {
+          "id": "choicePetraSustain221",
+          "text": "It sounds like you're feeling a bit stuck right now.",
+          "technique": "Simple Reflection",
+          "techniqueType": "Core Skill",
+          "rapportScore": 1,
+          "feedback": "A simple reflection acknowledges her feeling without pushing, keeping the door open for further conversation.",
+          "nextNodeId": "petraAskPermission"
+        },
+        {
+          "id": "choicePetraSustain222",
+          "text": "We need to find a solution, Petra.",
+          "technique": "Directing",
+          "techniqueType": "Anti-MI",
+          "rapportScore": -2,
+          "feedback": "Directing Petra when she's feeling stuck will likely increase resistance and shut down the conversation.",
+          "nextNodeId": "petraEndNegative"
+        },
+        {
+          "id": "choicePetraSustain223",
+          "text": "What's the downside of exploring this further?",
+          "technique": "Open Question",
+          "techniqueType": "Core Skill",
+          "rapportScore": 1,
+          "feedback": "This open question invites her to consider the implications, potentially leading to a shift in perspective.",
+          "nextNodeId": "petraChange25"
+        }
+      ],
+      "isSustainTalk": true
+    },
+    "petraChange25": {
+      "id": "petraChange25",
+      "text": "Because everyone seems so busy, and I see the strain on their faces sometimes. It's not just me. I know I need to do something, I just don't know what.",
+      "npcMood": "empathetic_overwhelmed",
+      "themes": [
+        "Shared Struggle",
+        "Team Strain",
+        "Uncertainty"
+      ],
+      "choices": [
+        {
+          "id": "choicePetraChange251",
+          "text": "So you're observing similar struggles in others, which validates your own feelings, but also highlights the collective challenge.",
+          "technique": "Complex Reflection",
+          "techniqueType": "Core Skill",
+          "rapportScore": 2,
+          "feedback": "This reflection connects her personal feelings to a broader context, showing deep understanding.",
+          "nextNodeId": "petraAskPermission"
+        },
+        {
+          "id": "choicePetraChange252",
+          "text": "We can't worry about everyone else, we need to focus on you.",
+          "technique": "Directing",
+          "techniqueType": "Anti-MI",
+          "rapportScore": -1,
+          "feedback": "This dismisses her empathy for the team and can be perceived as unsupportive.",
+          "nextNodeId": "petraResistant14"
+        },
+        {
+          "id": "choicePetraChange253",
+          "text": "What do you think the team needs?",
+          "technique": "Open Question",
+          "techniqueType": "Core Skill",
+          "rapportScore": 0,
+          "feedback": "While an open question, it shifts the focus away from Petra's core issue, which might not be helpful at this stage.",
+          "nextNodeId": "petraSustain23"
+        }
+      ],
+      "isChangeTalk": true,
+      "quotesUsed": [
+        "I know I need to do something, I just don't know what."
+      ]
+    },
+    "petraDefensive6": {
+      "id": "petraDefensive6",
+      "text": "I'm not going to discuss this further right now. I'm just too tired.",
+      "npcMood": "closed_off_exhausted",
+      "themes": [
+        "Avoidance",
+        "Fatigue",
+        "Resistance"
+      ],
+      "choices": [
+        {
+          "id": "choicePetraDefensive61",
+          "text": "I hear that you're feeling too tired to continue right now, and I respect that. Perhaps we can revisit this another time?",
+          "technique": "Affirmation/Support",
+          "techniqueType": "Core Skill",
+          "rapportScore": 1,
+          "feedback": "Respecting her autonomy and current state helps maintain rapport, even if the conversation ends for now.",
+          "nextNodeId": "petraEndNeutral"
+        },
+        {
+          "id": "choicePetraDefensive62",
+          "text": "We really need to find a solution today, Petra.",
+          "technique": "Directing",
+          "techniqueType": "Anti-MI",
+          "rapportScore": -2,
+          "feedback": "Pushing her when she's exhausted will only increase resistance and lead to a negative outcome.",
+          "nextNodeId": "petraEndNegative"
+        },
+        {
+          "id": "choicePetraDefensive63",
+          "text": "What would make you feel able to discuss this?",
+          "technique": "Open Question",
+          "techniqueType": "Core Skill",
+          "rapportScore": 1,
+          "feedback": "This open question invites her to identify conditions for future engagement, empowering her.",
+          "nextNodeId": "petraChange26"
+        }
+      ],
+      "isSustainTalk": true
+    },
+    "petraResistant14": {
+      "id": "petraResistant14",
+      "text": "I'm not going to discuss this further right now. I'm just too tired.",
+      "npcMood": "closed_off_exhausted",
+      "themes": [
+        "Avoidance",
+        "Fatigue",
+        "Resistance"
+      ],
+      "choices": [
+        {
+          "id": "choicePetraResistant141",
+          "text": "I hear that you're feeling too tired to continue right now, and I respect that. Perhaps we can revisit this another time?",
+          "technique": "Affirmation/Support",
+          "techniqueType": "Core Skill",
+          "rapportScore": 1,
+          "feedback": "Respecting her autonomy and current state helps maintain rapport, even if the conversation ends for now.",
+          "nextNodeId": "petraEndNeutral"
+        },
+        {
+          "id": "choicePetraResistant142",
+          "text": "We really need to find a solution today, Petra.",
+          "technique": "Directing",
+          "techniqueType": "Anti-MI",
+          "rapportScore": -2,
+          "feedback": "Pushing her when she's exhausted will only increase resistance and lead to a negative outcome.",
+          "nextNodeId": "petraEndNegative"
+        },
+        {
+          "id": "choicePetraResistant143",
+          "text": "What would make you feel able to discuss this?",
+          "technique": "Open Question",
+          "techniqueType": "Core Skill",
+          "rapportScore": 1,
+          "feedback": "This open question invites her to identify conditions for future engagement, empowering her.",
+          "nextNodeId": "petraChange26"
+        }
+      ],
+      "isSustainTalk": true
+    },
+    "petraSustain23": {
+      "id": "petraSustain23",
+      "text": "I'm not going to discuss this further right now. I'm just too tired.",
+      "npcMood": "closed_off_exhausted",
+      "themes": [
+        "Avoidance",
+        "Fatigue",
+        "Resistance"
+      ],
+      "choices": [
+        {
+          "id": "choicePetraSustain231",
+          "text": "I hear that you're feeling too tired to continue right now, and I respect that. Perhaps we can revisit this another time?",
+          "technique": "Affirmation/Support",
+          "techniqueType": "Core Skill",
+          "rapportScore": 1,
+          "feedback": "Respecting her autonomy and current state helps maintain rapport, even if the conversation ends for now.",
+          "nextNodeId": "petraEndNeutral"
+        },
+        {
+          "id": "choicePetraSustain232",
+          "text": "We really need to find a solution today, Petra.",
+          "technique": "Directing",
+          "techniqueType": "Anti-MI",
+          "rapportScore": -2,
+          "feedback": "Pushing her when she's exhausted will only increase resistance and lead to a negative outcome.",
+          "nextNodeId": "petraEndNegative"
+        },
+        {
+          "id": "choicePetraSustain233",
+          "text": "What would make you feel able to discuss this?",
+          "technique": "Open Question",
+          "techniqueType": "Core Skill",
+          "rapportScore": 1,
+          "feedback": "This open question invites her to identify conditions for future engagement, empowering her.",
+          "nextNodeId": "petraChange26"
+        }
+      ],
+      "isSustainTalk": true
+    },
+    "petraChange26": {
+      "id": "petraChange26",
+      "text": "If I felt less judged, and more understood. And if I knew there was actual support, not just more pressure. It would be a relief to know I'm not the only one feeling this way.",
+      "npcMood": "vulnerable_hopeful",
+      "themes": [
+        "Trust",
+        "Support",
+        "Validation"
+      ],
+      "choices": [
+        {
+          "id": "choicePetraChange261",
+          "text": "So, a non-judgmental, supportive environment where you feel understood, and a clear path to actual support, would make a big difference.",
+          "technique": "Complex Reflection",
+          "techniqueType": "Core Skill",
+          "rapportScore": 2,
+          "feedback": "This reflection accurately captures her conditions for engagement, building trust and rapport.",
+          "nextNodeId": "petraAskPermission"
+        },
+        {
+          "id": "choicePetraChange262",
+          "text": "I assure you, I'm not judging you.",
+          "technique": "Reassurance",
+          "techniqueType": "Anti-MI",
+          "rapportScore": -1,
+          "feedback": "Simply stating you're not judging her can be dismissive of her perception and may not feel genuine to her.",
+          "nextNodeId": "petraSustain24"
+        },
+        {
+          "id": "choicePetraChange263",
+          "text": "What kind of actual support are you looking for?",
+          "technique": "Open Question",
+          "techniqueType": "Core Skill",
+          "rapportScore": 1,
+          "feedback": "This open question allows her to define her needs, fostering self-efficacy and a sense of control.",
+          "nextNodeId": "petraChange27"
+        }
+      ],
+      "isChangeTalk": true,
+      "quotesUsed": [
+        "It would be a relief to know I'm not the only one feeling this way."
+      ]
+    },
+    "petraSustain24": {
+      "id": "petraSustain24",
+      "text": "It's hard to believe that when I feel like I'm constantly being questioned.",
+      "npcMood": "mistrustful",
+      "themes": [
+        "Trust Breakdown",
+        "Misunderstanding"
+      ],
+      "choices": [
+        {
+          "id": "choicePetraSustain241",
+          "text": "I hear that my words aren't matching your experience right now, and I want to acknowledge that. My intention is to build understanding, not to question.",
+          "technique": "Affirmation/Apology",
+          "techniqueType": "Core Skill",
+          "rapportScore": 1,
+          "feedback": "Acknowledging her perception and clarifying your intent helps rebuild trust and de-escalate resistance.",
+          "nextNodeId": "petraAskPermission"
+        },
+        {
+          "id": "choicePetraSustain242",
+          "text": "I'm trying to help you, Petra.",
+          "technique": "Directing",
+          "techniqueType": "Anti-MI",
+          "rapportScore": -2,
+          "feedback": "This is a defensive and directive statement that will further erode trust and shut down the conversation.",
+          "nextNodeId": "petraEndNegative"
+        },
+        {
+          "id": "choicePetraSustain243",
+          "text": "What would help rebuild that trust?",
+          "technique": "Open Question",
+          "techniqueType": "Core Skill",
+          "rapportScore": 1,
+          "feedback": "This open question invites her to identify solutions, empowering her and potentially rebuilding trust.",
+          "nextNodeId": "petraChange27"
+        }
+      ],
+      "isSustainTalk": true
+    },
+    "petraChange27": {
+      "id": "petraChange27",
+      "text": "Just knowing there are options. Like, if there's someone confidential I could talk to, outside of work, about... everything. I know I need to do something, I just don't know what.",
+      "npcMood": "seeking_options_overwhelmed",
+      "themes": [
+        "Confidentiality",
+        "Support Systems",
+        "Uncertainty"
+      ],
+      "choices": [
+        {
+          "id": "choicePetraChange271",
+          "text": "So having access to confidential, external support to help you process things and explore options would be really valuable.",
+          "technique": "Complex Reflection",
+          "techniqueType": "Core Skill",
+          "rapportScore": 2,
+          "feedback": "This reflection accurately captures her need for confidential support, showing deep understanding.",
+          "nextNodeId": "petraAskPermission"
+        },
+        {
+          "id": "choicePetraChange272",
+          "text": "We have an EAP, you should use it.",
+          "technique": "Premature Advice/Directing",
+          "techniqueType": "Anti-MI",
+          "rapportScore": -1,
+          "feedback": "This is premature advice and directive, potentially increasing resistance by taking away her autonomy.",
+          "nextNodeId": "petraResistant15"
+        },
+        {
+          "id": "choicePetraChange273",
+          "text": "What kind of 'everything' are you referring to?",
+          "technique": "Open Question",
+          "techniqueType": "Core Skill",
+          "rapportScore": 0,
+          "feedback": "While an open question, this might be too intrusive at this stage, potentially making her feel uncomfortable.",
+          "nextNodeId": "petraSustain25"
+        }
+      ],
+      "isChangeTalk": true,
+      "quotesUsed": [
+        "I know I need to do something, I just don't know what."
+      ]
+    },
+    "petraResistant15": {
+      "id": "petraResistant15",
+      "text": "I'm not sure I'm ready for that. I just need to focus on my job.",
+      "npcMood": "resistant_avoidant",
+      "themes": [
+        "Avoidance",
+        "Resistance"
+      ],
+      "choices": [
+        {
+          "id": "choicePetraResistant151",
+          "text": "It sounds like you're not ready to explore that specific option right now, and your focus is on your current responsibilities.",
+          "technique": "Complex Reflection",
+          "techniqueType": "Core Skill",
+          "rapportScore": 1,
+          "feedback": "Reflecting her resistance without confronting it helps maintain rapport and acknowledges her current focus.",
+          "nextNodeId": "petraAskPermission"
+        },
+        {
+          "id": "choicePetraResistant152",
+          "text": "But your job performance is suffering.",
+          "technique": "Confrontation",
+          "techniqueType": "Anti-MI",
+          "rapportScore": -2,
+          "feedback": "This is a confrontational statement that will likely increase her defensiveness and shut down the conversation.",
+          "nextNodeId": "petraEndNegative"
+        },
+        {
+          "id": "choicePetraResistant153",
+          "text": "What's one small thing you *are* ready to consider that might help with your job focus?",
+          "technique": "Scaling Question",
+          "techniqueType": "Advanced Technique",
+          "rapportScore": 1,
+          "feedback": "A scaling question helps identify small, acceptable steps, fostering self-efficacy and reducing resistance.",
+          "nextNodeId": "petraChange28"
+        }
+      ],
+      "isSustainTalk": true
+    },
+    "petraSustain25": {
+      "id": "petraSustain25",
+      "text": "I'm not sure I'm ready for that. I just need to focus on my job.",
+      "npcMood": "resistant_avoidant",
+      "themes": [
+        "Avoidance",
+        "Resistance"
+      ],
+      "choices": [
+        {
+          "id": "choicePetraSustain251",
+          "text": "It sounds like you're not ready to explore that specific option right now, and your focus is on your current responsibilities.",
+          "technique": "Complex Reflection",
+          "techniqueType": "Core Skill",
+          "rapportScore": 1,
+          "feedback": "Reflecting her resistance without confronting it helps maintain rapport and acknowledges her current focus.",
+          "nextNodeId": "petraAskPermission"
+        },
+        {
+          "id": "choicePetraSustain252",
+          "text": "But your job performance is suffering.",
+          "technique": "Confrontation",
+          "techniqueType": "Anti-MI",
+          "rapportScore": -2,
+          "feedback": "This is a confrontational statement that will likely increase her defensiveness and shut down the conversation.",
+          "nextNodeId": "petraEndNegative"
+        },
+        {
+          "id": "choicePetraSustain253",
+          "text": "What's one small thing you *are* ready to consider that might help with your job focus?",
+          "technique": "Scaling Question",
+          "techniqueType": "Advanced Technique",
+          "rapportScore": 1,
+          "feedback": "A scaling question helps identify small, acceptable steps, fostering self-efficacy and reducing resistance.",
+          "nextNodeId": "petraChange28"
+        }
+      ],
+      "isSustainTalk": true
+    },
+    "petraChange28": {
+      "id": "petraChange28",
+      "text": "Maybe just those 30 minutes to myself. Or just having this conversation, knowing you're listening. It would be a relief to know I'm not the only one feeling this way.",
+      "npcMood": "tentative_hopeful",
+      "themes": [
+        "Self-Care",
+        "Connection",
+        "Validation"
+      ],
+      "choices": [
+        {
+          "id": "choicePetraChange281",
+          "text": "So, taking a small amount of personal time and feeling heard in this conversation are tangible steps that could offer you some relief and a sense of connection.",
+          "technique": "Complex Reflection",
+          "techniqueType": "Core Skill",
+          "rapportScore": 2,
+          "feedback": "This reflection connects her proposed actions to their potential benefits, strengthening her motivation for change.",
+          "nextNodeId": "petraAskPermission"
+        },
+        {
+          "id": "choicePetraChange282",
+          "text": "That's not enough to solve the problem.",
+          "technique": "Confrontation",
+          "techniqueType": "Anti-MI",
+          "rapportScore": -2,
+          "feedback": "This dismisses her ideas and can be perceived as discouraging and invalidating.",
+          "nextNodeId": "petraDefensive7"
+        },
+        {
+          "id": "choicePetraChange283",
+          "text": "How might taking those 30 minutes impact your job focus?",
+          "technique": "Open Question",
+          "techniqueType": "Core Skill",
+          "rapportScore": 1,
+          "feedback": "This open question encourages her to explore the positive impact of her ideas, strengthening her commitment.",
+          "nextNodeId": "petraChange29"
+        }
+      ],
+      "isChangeTalk": true,
+      "quotesUsed": [
+        "Maybe I could find 30 minutes for myself.",
+        "It would be a relief to know I'm not the only one feeling this way."
+      ]
+    },
+    "petraDefensive7": {
+      "id": "petraDefensive7",
+      "text": "I'm not sure what you expect from me. I'm doing my best.",
+      "npcMood": "frustrated_defensive",
+      "themes": [
+        "Frustration",
+        "Expectations"
+      ],
+      "choices": [
+        {
+          "id": "choicePetraDefensive71",
+          "text": "I hear your frustration, Petra. My expectation is simply to understand how I can best support you to thrive in your role.",
+          "technique": "Affirmation/Reframing",
+          "techniqueType": "Core Skill",
+          "rapportScore": 1,
+          "feedback": "Acknowledging her feelings and reframing your intent helps de-escalate defensiveness and rebuild rapport.",
+          "nextNodeId": "petraAskPermission"
+        },
+        {
+          "id": "choicePetraDefensive72",
+          "text": "I expect you to be performing at your best, Petra.",
+          "technique": "Directing",
+          "techniqueType": "Anti-MI",
+          "rapportScore": -2,
+          "feedback": "This is a directive and demanding statement that will increase her defensiveness and shut down the conversation.",
+          "nextNodeId": "petraEndNegative"
+        },
+        {
+          "id": "choicePetraDefensive73",
+          "text": "What kind of support would actually help you thrive?",
+          "technique": "Open Question",
+          "techniqueType": "Core Skill",
+          "rapportScore": 1,
+          "feedback": "This open question invites her to articulate her needs, empowering her and potentially de-escalating the situation.",
+          "nextNodeId": "petraChange29"
+        }
+      ],
+      "isSustainTalk": true
+    },
+    "petraChange29": {
+      "id": "petraChange29",
+      "text": "It would give me a moment to clear my head, feel a bit less overwhelmed. Then maybe I could approach the customer calls with a bit more energy, and feel like I'm making a real difference again.",
+      "npcMood": "hopeful_reflective",
+      "themes": [
+        "Energy",
+        "Clarity",
+        "Impact"
+      ],
+      "choices": [
+        {
+          "id": "choicePetraChange291",
+          "text": "So, even a small break could significantly improve your focus and help you reconnect with your sense of purpose in your customer-facing role.",
+          "technique": "Complex Reflection",
+          "techniqueType": "Core Skill",
+          "rapportScore": 2,
+          "feedback": "This reflection connects her proposed action to multiple positive outcomes, strengthening her motivation for change.",
+          "nextNodeId": "petraAskPermission"
+        },
+        {
+          "id": "choicePetraChange292",
+          "text": "That sounds like a good plan. Let's try that.",
+          "technique": "Premature Solution",
+          "techniqueType": "Anti-MI",
+          "rapportScore": -1,
+          "feedback": "Offering a solution before fully understanding her perspective can be perceived as dismissive and disempowering.",
+          "nextNodeId": "petraEndNeutral"
+        },
+        {
+          "id": "choicePetraChange293",
+          "text": "What else might help you feel less overwhelmed?",
+          "technique": "Open Question",
+          "techniqueType": "Core Skill",
+          "rapportScore": 1,
+          "feedback": "This open question invites her to explore additional strategies, fostering self-efficacy.",
+          "nextNodeId": "petraChange30"
+        }
+      ],
+      "isChangeTalk": true,
+      "quotesUsed": [
+        "I want to be the one that makes a real difference again."
+      ]
+    },
+    "petraChange30": {
+      "id": "petraChange30",
+      "text": "Just knowing that I'm not alone in feeling this way. And that there are resources if I need them. I know I need to do something, I just don't know what.",
+      "npcMood": "vulnerable_seeking_connection",
+      "themes": [
+        "Validation",
+        "Support Systems",
+        "Uncertainty"
+      ],
+      "choices": [
+        {
+          "id": "choicePetraChange301",
+          "text": "So, a sense of shared experience and awareness of available support would significantly ease your feeling of overwhelm.",
+          "technique": "Complex Reflection",
+          "techniqueType": "Core Skill",
+          "rapportScore": 2,
+          "feedback": "This reflection captures her core needs for validation and support, building empathy and understanding.",
+          "nextNodeId": "petraAskPermission"
+        },
+        {
+          "id": "choicePetraChange302",
+          "text": "You're definitely not alone.",
+          "technique": "Reassurance",
+          "techniqueType": "Anti-MI",
+          "rapportScore": -1,
+          "feedback": "While well-intentioned, this can be dismissive of her unique experience and may not feel helpful.",
+          "nextNodeId": "petraSustain26"
+        },
+        {
+          "id": "choicePetraChange303",
+          "text": "What kind of resources do you think would be most helpful?",
+          "technique": "Open Question",
+          "techniqueType": "Core Skill",
+          "rapportScore": 1,
+          "feedback": "This open question allows her to define what resources she finds valuable, empowering her.",
+          "nextNodeId": "petraChange31"
+        }
+      ],
+      "isChangeTalk": true,
+      "quotesUsed": [
+        "I know I need to do something, I just don't know what."
+      ]
+    },
+    "petraSustain26": {
+      "id": "petraSustain26",
+      "text": "It's easy to say, but hard to believe.",
+      "npcMood": "skeptical",
+      "themes": [
+        "Trust Breakdown",
+        "Skepticism"
+      ],
+      "choices": [
+        {
+          "id": "choicePetraSustain261",
+          "text": "I hear your skepticism, and I understand why you might feel that way. My hope is to demonstrate that support through our actions.",
+          "technique": "Affirmation/Support",
+          "techniqueType": "Core Skill",
+          "rapportScore": 1,
+          "feedback": "Acknowledging her skepticism and clarifying your intent helps rebuild trust and maintain rapport.",
+          "nextNodeId": "petraAskPermission"
+        },
+        {
+          "id": "choicePetraSustain262",
+          "text": "You just have to trust me.",
+          "technique": "Directing",
+          "techniqueType": "Anti-MI",
+          "rapportScore": -2,
+          "feedback": "This is a directive statement that will increase her resistance and further erode trust.",
+          "nextNodeId": "petraEndNegative"
+        },
+        {
+          "id": "choicePetraSustain263",
+          "text": "What would it take for you to believe that?",
+          "technique": "Open Question",
+          "techniqueType": "Core Skill",
+          "rapportScore": 1,
+          "feedback": "This open question invites her to identify conditions for rebuilding trust, empowering her.",
+          "nextNodeId": "petraChange31"
+        }
+      ],
+      "isSustainTalk": true
+    },
+    "petraChange31": {
+      "id": "petraChange31",
+      "text": "Honestly, just knowing about the EAP, and that it's confidential. That's a start. It would be a relief to know I'm not the only one feeling this way.",
+      "npcMood": "tentative_openness",
+      "themes": [
+        "Support Systems",
+        "Confidentiality",
+        "Validation"
+      ],
+      "choices": [
+        {
+          "id": "choicePetraChange311",
+          "text": "So, having that confidential resource available is a significant step forward for you, and knowing others might use it offers comfort.",
+          "technique": "Complex Reflection",
+          "techniqueType": "Core Skill",
+          "rapportScore": 2,
+          "feedback": "This reflection connects the resource to her specific needs for confidentiality and validation, strengthening her motivation.",
+          "nextNodeId": "petraAskPermission"
+        },
+        {
+          "id": "choicePetraChange312",
+          "text": "Good, you should definitely look into it.",
+          "technique": "Directing",
+          "techniqueType": "Anti-MI",
+          "rapportScore": -1,
+          "feedback": "While positive, this is still directive and can undermine her autonomy. A more open approach is better.",
+          "nextNodeId": "petraEndNeutral"
+        },
+        {
+          "id": "choicePetraChange313",
+          "text": "What makes the confidentiality of the EAP so important to you?",
+          "technique": "Open Question",
+          "techniqueType": "Core Skill",
+          "rapportScore": 1,
+          "feedback": "This open question explores her values, which can be a powerful motivator for change.",
+          "nextNodeId": "petraChange32"
+        }
+      ],
+      "isChangeTalk": true,
+      "quotesUsed": [
+        "It would be a relief to know I'm not the only one feeling this way."
+      ]
+    },
+    "petraChange32": {
+      "id": "petraChange32",
+      "text": "Because some things are personal. And I don't want to bring my personal issues into work, even if they're affecting my work. I should just get over it and push through it.",
+      "npcMood": "guarded_self-critical",
+      "themes": [
+        "Privacy",
+        "Self-Reliance",
+        "Stigma"
+      ],
+      "choices": [
+        {
+          "id": "choicePetraChange321",
+          "text": "It sounds like you value your privacy and feel pressure to handle personal challenges independently, even when they impact your work.",
+          "technique": "Complex Reflection",
+          "techniqueType": "Core Skill",
+          "rapportScore": 2,
+          "feedback": "This reflection acknowledges her core values and the internal conflict she's experiencing, building deep empathy.",
+          "nextNodeId": "petraAskPermission"
+        },
+        {
+          "id": "choicePetraChange322",
+          "text": "We all have personal issues, Petra.",
+          "technique": "Reassurance",
+          "techniqueType": "Anti-MI",
+          "rapportScore": -1,
+          "feedback": "While well-intentioned, this can be dismissive of her unique experience and may not feel helpful.",
+          "nextNodeId": "petraSustain27"
+        },
+        {
+          "id": "choicePetraChange323",
+          "text": "What's the downside of bringing those personal issues to a confidential resource?",
+          "technique": "Decisional Balance",
+          "techniqueType": "Advanced Technique",
+          "rapportScore": 1,
+          "feedback": "This question helps her explore the pros and cons of seeking help, a key MI technique for resolving ambivalence.",
+          "nextNodeId": "petraChange33"
+        }
+      ],
+      "isSustainTalk": true,
+      "quotesUsed": [
+        "I should just get over it and push through it."
+      ]
+    },
+    "petraSustain27": {
+      "id": "petraSustain27",
+      "text": "It's different for everyone. I just need to focus on what I can control.",
+      "npcMood": "closed_off",
+      "themes": [
+        "Control",
+        "Avoidance"
+      ],
+      "choices": [
+        {
+          "id": "choicePetraSustain271",
+          "text": "So, focusing on what's within your control feels like a way to manage things, and you're not ready to delve into other areas right now.",
+          "technique": "Complex Reflection",
+          "techniqueType": "Core Skill",
+          "rapportScore": 1,
+          "feedback": "Reflecting her current focus and resistance helps maintain rapport and acknowledges her autonomy.",
+          "nextNodeId": "petraAskPermission"
+        },
+        {
+          "id": "choicePetraSustain272",
+          "text": "But you're not controlling your customer-facing duties.",
+          "technique": "Confrontation",
+          "techniqueType": "Anti-MI",
+          "rapportScore": -2,
+          "feedback": "This is a confrontational statement that will increase her defensiveness and shut down the conversation.",
+          "nextNodeId": "petraEndNegative"
+        },
+        {
+          "id": "choicePetraSustain273",
+          "text": "What's one thing within your control that might make a positive difference?",
+          "technique": "Scaling Question",
+          "techniqueType": "Advanced Technique",
+          "rapportScore": 1,
+          "feedback": "A scaling question helps identify small, acceptable steps, fostering self-efficacy and reducing resistance.",
+          "nextNodeId": "petraChange33"
+        }
+      ],
+      "isSustainTalk": true
+    },
+    "petraChange33": {
+      "id": "petraChange33",
+      "text": "The downside is feeling vulnerable. But the upside... maybe actually getting some help. And maybe feeling a bit more like myself again. I want to be the one that makes a real difference again.",
+      "npcMood": "ambivalent_hopeful",
+      "themes": [
+        "Vulnerability",
+        "Help-Seeking",
+        "Self-Identity"
+      ],
+      "choices": [
+        {
+          "id": "choicePetraChange331",
+          "text": "So, while vulnerability is a concern, the potential for genuine help and regaining your sense of purpose is a strong motivator.",
+          "technique": "Complex Reflection",
+          "techniqueType": "Core Skill",
+          "rapportScore": 2,
+          "feedback": "This reflection highlights her ambivalence and connects it to her core values, strengthening her motivation for change.",
+          "nextNodeId": "petraAskPermission"
+        },
+        {
+          "id": "choicePetraChange332",
+          "text": "It sounds like you really want to feel like yourself again.",
+          "technique": "Simple Reflection",
+          "techniqueType": "Core Skill",
+          "rapportScore": 1,
+          "feedback": "This simple reflection validates her desire for self-reconnection, building rapport.",
+          "nextNodeId": "petraAskPermission"
+        },
+        {
+          "id": "choicePetraChange333",
+          "text": "Let's focus on getting help then.",
+          "technique": "Directing",
+          "techniqueType": "Anti-MI",
+          "rapportScore": -1,
+          "feedback": "Directing Petra tells her what to do, undermining her autonomy and potentially increasing resistance.",
+          "nextNodeId": "petraEndNeutral"
+        }
+      ],
+      "isChangeTalk": true,
+      "quotesUsed": [
+        "I want to be the one that makes a real difference again."
+      ]
+    },
+    "petraAskPermission": {
+      "id": "petraAskPermission",
+      "text": "Petra, I've noticed a few things, and I have some thoughts I'd like to share, and also some information about resources that might be helpful. Would you be open to hearing them?",
+      "npcMood": "curious_cautious",
+      "themes": [
+        "Permission",
+        "Information Sharing",
+        "Support"
+      ],
+      "choices": [
+        {
+          "id": "choicePetraAskPermission1",
+          "text": "Okay, I guess so.",
+          "technique": "Eliciting Permission",
+          "techniqueType": "Core Skill",
+          "rapportScore": 1,
+          "feedback": "Asking permission respects her autonomy and increases the likelihood she'll be receptive to information.",
+          "nextNodeId": "petraShareInfo"
+        },
+        {
+          "id": "choicePetraAskPermission2",
+          "text": "I'm not sure, I'm a bit overwhelmed right now.",
+          "technique": "Eliciting Permission",
+          "techniqueType": "Core Skill",
+          "rapportScore": 0,
+          "feedback": "She's expressing overwhelm. Acknowledging this and offering to pause or rephrase might be helpful, but for this simulation, it leads to a neutral end.",
+          "nextNodeId": "petraEndNeutral"
+        },
+        {
+          "id": "choicePetraAskPermission3",
+          "text": "I'd rather not, thank you.",
+          "technique": "Eliciting Permission",
+          "techniqueType": "Core Skill",
+          "rapportScore": 0,
+          "feedback": "Respecting her decision is crucial for rapport, even if it means not sharing information at this time.",
+          "nextNodeId": "petraEndNeutral"
+        }
+      ]
+    },
+    "petraShareInfo": {
+      "id": "petraShareInfo",
+      "text": "Thanks, Petra. From my perspective, I've noticed the team is feeling the strain of the current workload distribution, and I'm concerned about the backlog it's creating for our customers. Also, I want to remind you about the company's Employee Assistance Program (EAP). It's a confidential resource available to all employees for any challenges, personal or professional, and it's there to support you.",
+      "npcMood": "listening_processing",
+      "themes": [
+        "Team Dynamics",
+        "Workload",
+        "Support Resources",
+        "Confidentiality"
+      ],
+      "choices": [
+        {
+          "id": "choicePetraShareInfo1",
+          "text": "What are your thoughts on what I've just shared?",
+          "technique": "Ask (follow-up)",
+          "techniqueType": "Core Skill",
+          "rapportScore": 2,
+          "feedback": "Following up with 'Ask' after sharing information is crucial to ensure she has processed it and to invite her perspective.",
+          "nextNodeId": "petraAskThoughts"
+        },
+        {
+          "id": "choicePetraShareInfo2",
+          "text": "I hope you'll consider the EAP.",
+          "technique": "Directing",
+          "techniqueType": "Anti-MI",
+          "rapportScore": -1,
+          "feedback": "While well-intentioned, this is directive and can undermine her autonomy. It's better to ask for her thoughts first.",
+          "nextNodeId": "petraEndNeutral"
+        },
+        {
+          "id": "choicePetraShareInfo3",
+          "text": "We need to get the customer backlog cleared.",
+          "technique": "Directing/Confrontation",
+          "techniqueType": "Anti-MI",
+          "rapportScore": -2,
+          "feedback": "This is a confrontational and directive statement that will likely increase her defensiveness and shut down the conversation.",
+          "nextNodeId": "petraEndNegative"
+        }
+      ]
+    },
+    "petraAskThoughts": {
+      "id": "petraAskThoughts",
+      "text": "It's a lot to take in. I hadn't really thought about the team quite like that. And the EAP... I didn't even know we had one. It would be a relief to know I'm not the only one feeling this way.",
+      "npcMood": "thoughtful_surprised_vulnerable",
+      "themes": [
+        "Insight",
+        "Awareness",
+        "Support Systems",
+        "Validation"
+      ],
+      "choices": [
+        {
+          "id": "choicePetraAskThoughts1",
+          "text": "It sounds like you're processing this new information, particularly the impact on the team and the availability of confidential support, and finding some relief in the idea of shared experience.",
+          "technique": "Complex Reflection",
+          "techniqueType": "Core Skill",
+          "rapportScore": 2,
+          "feedback": "This complex reflection accurately captures her processing and feelings, showing deep empathy and understanding.",
+          "nextNodeId": "petraExploreNextSteps"
+        },
+        {
+          "id": "choicePetraAskThoughts2",
+          "text": "The EAP is a great resource, I really encourage you to use it.",
+          "technique": "Premature Advice",
+          "techniqueType": "Anti-MI",
+          "rapportScore": -1,
+          "feedback": "While positive, this is still directive and can undermine her autonomy. It's better to let her explore her own next steps.",
+          "nextNodeId": "petraEndNeutral"
+        },
+        {
+          "id": "choicePetraAskThoughts3",
+          "text": "So you admit the team is struggling because of you?",
+          "technique": "Confrontation",
+          "techniqueType": "Anti-MI",
+          "rapportScore": -2,
+          "feedback": "This is a highly confrontational and accusatory statement that will shut down her vulnerability and increase defensiveness.",
+          "nextNodeId": "petraEndNegative"
+        }
+      ],
+      "isChangeTalk": true,
+      "quotesUsed": [
+        "It would be a relief to know I'm not the only one feeling this way."
+      ]
+    },
+    "petraExploreNextSteps": {
+      "id": "petraExploreNextSteps",
+      "text": "Yes, exactly. It's a lot to think about. I know I need to do something, I just don't know what. But knowing about the EAP... that's something. And maybe those 30 minutes for myself.",
+      "npcMood": "tentative_hopeful",
+      "themes": [
+        "Commitment",
+        "Planning",
+        "Self-Care",
+        "Support Systems"
+      ],
+      "choices": [
+        {
+          "id": "choicePetraExploreNextSteps1",
+          "text": "It sounds like you're identifying some concrete steps, like exploring the EAP and finding personal time, as a way to move forward.",
+          "technique": "Affirmation/Summarizing",
+          "techniqueType": "Core Skill",
+          "rapportScore": 2,
+          "feedback": "Summarizing and affirming her ideas for change reinforces her commitment and self-efficacy.",
+          "nextNodeId": "petraEndPositive"
+        },
+        {
+          "id": "choicePetraExploreNextSteps2",
+          "text": "What's the very first step you'd be willing to take?",
+          "technique": "Commitment Question",
+          "techniqueType": "Advanced Technique",
+          "rapportScore": 2,
+          "feedback": "This question helps solidify her commitment by focusing on a concrete, immediate action.",
+          "nextNodeId": "petraEndPositive"
+        },
+        {
+          "id": "choicePetraExploreNextSteps23",
+          "text": "Let's schedule a follow-up to discuss your EAP use.",
+          "technique": "Directing",
+          "techniqueType": "Anti-MI",
+          "rapportScore": -1,
+          "feedback": "While well-intentioned, this is directive and assumes she will use the EAP. It's better to let her lead.",
+          "nextNodeId": "petraEndNeutral"
+        }
+      ],
+      "isChangeTalk": true,
+      "quotesUsed": [
+        "I know I need to do something, I just don't know what.",
+        "Maybe I could find 30 minutes for myself."
+      ]
+    },
+    "petraEndPositive": {
+      "id": "petraEndPositive",
+      "text": "Yes, I think so. Thank you for this conversation. It's given me a lot to consider.",
+      "npcMood": "hopeful_relieved",
+      "themes": [
+        "Resolution",
+        "Hope",
+        "Action Plan"
+      ],
+      "choices": [],
+      "isEndNode": true,
+      "outcomeType": "Positive Engagement"
+    },
+    "petraEndNeutral": {
+      "id": "petraEndNeutral",
+      "text": "Okay. I'll think about what you've said. Thanks for your time.",
+      "npcMood": "neutral_reserved",
+      "themes": [
+        "Ambivalence",
+        "Uncertainty"
+      ],
+      "choices": [],
+      "isEndNode": true,
+      "outcomeType": "Neutral/Uncertain"
+    },
+    "petraEndNegative": {
+      "id": "petraEndNegative",
+      "text": "I don't think this conversation is productive. I'm going to get back to my work now.",
+      "npcMood": "angry_shut_down",
+      "themes": [
+        "Resistance",
+        "Trust Breakdown",
+        "Disengagement"
+      ],
+      "choices": [],
+      "isEndNode": true,
+      "outcomeType": "Negative/Disengaged"
+    }
+  }
+}

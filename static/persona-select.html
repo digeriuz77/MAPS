@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>1-1 Platform - Select Persona</title>
+    <!-- Auth Blocker -->
+    <script src="/static/js/auth-blocker.js"></script>
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #b2d8d8 0%, #66b2b2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding-top: 70px; /* Space for fixed nav */
+        }
+
+        /* Navigation Bar */
+        .nav-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: #008080;
+            padding: 15px 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+        }
+        
+        .nav-bar a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            transition: opacity 0.2s;
+        }
+        
+        .nav-bar a:hover {
+            opacity: 0.8;
+        }
+        
+        .nav-bar a.active {
+            border-bottom: 2px solid white;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            width: 100%;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+        }
+
+        h1 {
+            color: #004c4c;
+            text-align: center;
+            margin-bottom: 40px;
+            font-size: 2em;
+            font-weight: 600;
+        }
+
+        .subtitle {
+            color: #006666;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+
+        .personas-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .persona-card {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 8px 20px rgba(0, 76, 76, 0.15);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 3px solid transparent;
+        }
+
+        .persona-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 30px rgba(0, 76, 76, 0.25);
+            border-color: #008080;
+        }
+
+        .persona-card.selected {
+            border-color: #008080;
+            background: linear-gradient(135deg, #ffffff 0%, #e6f5f5 100%);
+        }
+
+        .persona-name {
+            color: #004c4c;
+            font-size: 1.8em;
+            font-weight: 700;
+            margin-bottom: 15px;
+        }
+
+        .persona-description {
+            color: #006666;
+            font-size: 1em;
+            line-height: 1.6;
+        }
+
+        .footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: auto;
+            padding: 20px 0;
+        }
+
+        .footer button {
+            background: #008080;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0, 128, 128, 0.3);
+        }
+
+        .footer button:hover:not(:disabled) {
+            background: #006666;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0, 128, 128, 0.4);
+        }
+
+        .footer button:disabled {
+            background: #66b2b2;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .copyright {
+            color: #004c4c;
+            font-size: 0.85em;
+        }
+
+        .loading {
+            text-align: center;
+            color: #004c4c;
+            font-size: 1.2em;
+            padding: 40px;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.5em;
+                margin-bottom: 30px;
+            }
+
+            .personas-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .persona-card {
+                padding: 25px;
+            }
+
+            .footer {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="nav-bar">
+        <a href="/welcome"><i class="fas fa-sign-in-alt"></i> Welcome</a>
+        <a href="/persona-select" class="active"><i class="fas fa-users"></i> Personas</a>
+        <a href="/analysis"><i class="fas fa-chart-line"></i> Analysis</a>
+        <a href="/reflection"><i class="fas fa-lightbulb"></i> Reflection</a>
+        <a href="/feedback"><i class="fas fa-comment-dots"></i> Feedback</a>
+    </nav>
+
+    <div class="container">
+        <h1>Who would you like to talk with?</h1>
+        <p class="subtitle">(click to choose)</p>
+
+        <div id="personasGrid" class="personas-grid">
+            <div class="loading">Loading personas...</div>
+        </div>
+
+        <div class="footer">
+            <button onclick="goBack()">Previous</button>
+            <span class="copyright">©VHL 2025</span>
+            <span style="opacity: 0.6; color: #004c4c;">Click a persona to begin</span>
+        </div>
+    </div>
+
+    <!-- Persona Info Modal -->
+    <div class="modal fade" id="personaInfoModal" tabindex="-1" style="display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog" style="position: relative; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; border-radius: 16px; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto;">
+            <div class="modal-content" style="padding: 0;">
+                <div class="modal-header" style="padding: 20px 30px; border-bottom: 1px solid #e6f5f5; display: flex; justify-content: between; align-items: center;">
+                    <h5 class="modal-title" style="margin: 0; color: #004c4c; font-size: 1.4em;">
+                        <i class="fas fa-user-circle"></i> <span id="modalPersonaName">Persona Information</span>
+                    </h5>
+                    <button type="button" class="btn-close" onclick="closePersonaModal()" style="background: none; border: none; font-size: 1.5em; cursor: pointer; color: #666; margin-left: auto;">&times;</button>
+                </div>
+                <div class="modal-body" style="padding: 30px;">
+                    <div id="modalPersonaContent">
+                        <!-- Persona information will be loaded here -->
+                    </div>
+                </div>
+                <div class="modal-footer" style="padding: 20px 30px; border-top: 1px solid #e6f5f5; display: flex; gap: 10px; justify-content: flex-end;">
+                    <button type="button" class="btn btn-secondary" onclick="closePersonaModal()" style="background: #008080; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer;">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let selectedPersona = null;
+
+        // Load personas from API
+        async function loadPersonas() {
+            try {
+                const response = await fetch('/api/chat/personas');
+                const personas = await response.json();
+                
+                const grid = document.getElementById('personasGrid');
+                grid.innerHTML = '';
+                
+                personas.forEach(persona => {
+                    const card = document.createElement('div');
+                    card.className = 'persona-card';
+                    card.onclick = (e) => {
+                        // Don't trigger if clicking the info button
+                        if (e.target.closest('.persona-info-btn')) {
+                            return;
+                        }
+                        selectPersona(card, persona.id, persona.name);
+                    };
+                    card.innerHTML = `
+                        <div class="persona-name">${persona.name}</div>
+                        <div class="persona-description">${persona.description}</div>
+                        <div style="display: flex; justify-content: flex-end; margin-top: 15px;">
+                            <button class="persona-info-btn" onclick="showPersonaInfo('${persona.id}', event)" style="background: #008080; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 0.9em; transition: all 0.2s;">
+                                <i class="fas fa-info-circle"></i> Find out more
+                            </button>
+                        </div>
+                    `;
+                    grid.appendChild(card);
+                });
+            } catch (error) {
+                console.error('Error loading personas:', error);
+                document.getElementById('personasGrid').innerHTML = 
+                    '<div class="loading">Error loading personas. Please refresh the page.</div>';
+            }
+        }
+
+        function selectPersona(card, id, name) {
+            // Remove selection from all cards
+            document.querySelectorAll('.persona-card').forEach(c => {
+                c.classList.remove('selected');
+            });
+
+            // Add selection to clicked card
+            card.classList.add('selected');
+            selectedPersona = { id, name };
+
+            // Auto-navigate to chat immediately when persona is selected
+            window.location.href = `/chat?persona=${id}`;
+        }
+
+        async function startConversation() {
+            if (selectedPersona) {
+                console.log('Starting conversation with:', selectedPersona.name);
+                // Redirect to chat page with persona ID
+                window.location.href = `/chat?persona=${selectedPersona.id}`;
+            }
+        }
+
+        function goBack() {
+            window.location.href = '/welcome';
+        }
+
+        // Load personas on page load
+        loadPersonas();
+
+        // Global variable to store current modal persona
+        let currentModalPersona = null;
+
+        // Persona information database
+        const personaInfo = {
+            'vic': {
+                title: 'Vic (43, Pension Portfolio Manager) - Defensive and challenging',
+                subtitle: 'The Achiever Who Questions Feedback',
+                content: `<p>Vic is a proud professional with 5 years at Money and Pensions Service. He consistently meets targets and believes he's one of the strongest performers, though colleagues have mentioned collaboration skills. He values being seen to give excellent service but is skeptical of "soft" feedback.</p>
+                         <p><strong>What to expect:</strong> Vic starts confident and may question why this conversation is needed. He'll defend his track record first, but <em>can</em> become genuinely engaged if you show respect for his expertise and achievements before discussing development areas.</p>`
+            },
+            'mary': {
+                title: 'Mary (34, Customer Service Representative) - A more forgiving persona',
+                subtitle: 'The Former Star Under Pressure',
+                content: `<p>Mary was Customer Service Rep of the Year in 2022, but performance has slipped recently. As a single mother, she's naturally caring but currently overwhelmed by competing work and family demands.</p>
+                         <p><strong>What to expect:</strong> Mary arrived worried about job security but genuinely wants to be understood. She tends to be <em>more responsive</em> to empathetic approaches and may open up about her challenges if she feels the conversation is supportive rather than punitive.</p>`
+            },
+            'jan': {
+                title: 'Jan (28, Customer Service Representative) - Cautious',
+                subtitle: 'The Puzzled Former High Performer',
+                content: `<p>Jan was previously a strong performer (even employee of the month) but recent metrics have dropped. They're quiet, self-critical, and genuinely confused about the decline. Personal changes may be affecting work, though they haven't made that connection yet.</p>
+                         <p><strong>What to expect:</strong> Jan is uncertain but wants to improve. They'll be <em>moderately receptive</em> to understanding approaches and may gradually reveal what's really going on if they feel safe and supported in the conversation.</p>`
+            },
+            'terry': {
+                title: 'Terry (42, Pension Regulations Expert) - Cautious and belligerent',
+                subtitle: 'The Direct Expert Missing Social Cues',
+                content: `<p>Terry has 15 years experience as the pension regulations go-to person. Highly competent and efficiency-focused, but colleagues find their communication style too direct and sometimes intimidating. They're frustrated by "soft skills" feedback.</p>
+                         <p><strong>What to expect:</strong> Terry sees this as unnecessary workplace oversensitivity. However, they <em>can</em> engage constructively if you demonstrate respect for their expertise and provide specific, actionable guidance rather than vague suggestions to "be nicer."</p>`
+            }
+        };
+
+        // Show persona information modal
+        function showPersonaInfo(personaId, event) {
+            event.stopPropagation(); // Prevent card click
+            
+            const info = personaInfo[personaId];
+            if (!info) {
+                console.warn('No info available for persona:', personaId);
+                return;
+            }
+            
+            // Store current persona for modal
+            currentModalPersona = personaId;
+            
+            // Update modal content
+            document.getElementById('modalPersonaName').textContent = info.title;
+            document.getElementById('modalPersonaContent').innerHTML = `
+                <div class="persona-info-content">
+                    <h6 style="color: #008080; margin-bottom: 15px;">${info.subtitle}</h6>
+                    <div style="line-height: 1.6; color: #004c4c;">${info.content}</div>
+                </div>
+            `;
+            
+            // Show modal
+            document.getElementById('personaInfoModal').style.display = 'block';
+        }
+
+        // Close persona info modal
+        function closePersonaModal() {
+            document.getElementById('personaInfoModal').style.display = 'none';
+            currentModalPersona = null;
+        }
+
+        // Select persona from modal
+        function selectPersonaFromModal() {
+            if (currentModalPersona) {
+                closePersonaModal();
+                window.location.href = `/chat?persona=${currentModalPersona}`;
+            }
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('personaInfoModal').onclick = function(event) {
+            if (event.target === this) {
+                closePersonaModal();
+            }
+        };
+    </script>
+    
+    <!-- Supabase SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Auth utilities -->
+    <script src="/static/js/supabaseClient.js"></script>
+    <script src="/static/js/authGuard.js"></script>
+    <script src="/static/js/navigation.js"></script>
+    
+    <script>
+        // Initialize auth - BLOCKS until verified
+        (async function() {
+            try {
+                await initializeSupabase();
+                await requireAuth();
+                console.log('✅ Persona select page protected by auth');
+                window.authCheckComplete();
+            } catch (error) {
+                console.error('Auth failed:', error);
+            }
+        })();
+    </script>
+</body>
+</html>

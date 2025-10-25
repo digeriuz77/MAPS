@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome - 1-1 Practice Platform</title>
+    
+    <!-- Auth Blocker - MUST be first to hide page until auth verified -->
+    <script src="/static/js/auth-blocker.js"></script>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/teal-theme.css">
+    <style>
+        body {
+            padding-top: 70px; /* Space for fixed nav */
+        }
+        
+        .nav-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: var(--primary-teal);
+            padding: 15px 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+        }
+        
+        .nav-bar a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            transition: opacity 0.2s;
+        }
+        
+        .nav-bar a:hover {
+            opacity: 0.8;
+        }
+        
+        .nav-bar a.active {
+            border-bottom: 2px solid white;
+        }
+        
+        .welcome-text {
+            color: var(--primary-teal);
+            margin-bottom: var(--spacing-md);
+        }
+        
+        .intro-list {
+            text-align: left;
+            margin: var(--spacing-lg) auto;
+            max-width: 450px;
+        }
+        
+        .intro-list li {
+            margin-bottom: var(--spacing-sm);
+            color: var(--dark-gray);
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body class="teal-theme">
+    <!-- Navigation Bar -->
+    <nav class="nav-bar">
+        <a href="/welcome" class="active"><i class="fas fa-sign-in-alt"></i> Welcome</a>
+        <a href="/persona-select"><i class="fas fa-users"></i> Personas</a>
+        <a href="/analysis"><i class="fas fa-chart-line"></i> Analysis</a>
+        <a href="/reflection"><i class="fas fa-lightbulb"></i> Reflection</a>
+        <a href="/feedback"><i class="fas fa-comment-dots"></i> Feedback</a>
+    </nav>
+    <div class="login-container">
+        <div class="teal-card login-card">
+            <h1 class="welcome-text">Welcome to the 1-1 platform.</h1>
+            
+            <p style="color: var(--dark-teal); margin-bottom: var(--spacing-md);">
+                Here you will be able to:
+            </p>
+            
+            <ol class="intro-list">
+                <li>Select someone to talk with in a 1-1</li>
+                <li>Practice your feedback giving skills</li>
+                <li>Get some feedback on your performance</li>
+                <li>Reflect on what went well and what you might do differently next time</li>
+            </ol>
+            
+            <button type="button" class="btn-teal-primary" onclick="location.href='/persona-select'" style="font-size: 18px; padding: 14px 40px; margin-top: var(--spacing-md);">
+                Enter
+            </button>
+        </div>
+    </div>
+    
+    <footer class="vhl-footer">
+        <button class="btn-teal-secondary" disabled style="visibility: hidden;">Previous</button>
+        <span class="copyright">©VHL 2025</span>
+        <button class="btn-teal-secondary" onclick="location.href='/persona-select'">Next</button>
+    </footer>
+    
+    <!-- Supabase SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Auth utilities -->
+    <script src="/static/js/supabaseClient.js"></script>
+    <script src="/static/js/authGuard.js"></script>
+    <script src="/static/js/navigation.js"></script>
+    
+    <script>
+        // Initialize auth on page load - BLOCKS until verified
+        (async function() {
+            try {
+                await initializeSupabase();
+                await requireAuth(); // Will redirect if not authenticated
+                console.log('✅ Welcome page protected by auth');
+                
+                // Auth passed - show page
+                window.authCheckComplete();
+            } catch (error) {
+                console.error('Auth initialization failed:', error);
+                // Auth failed - redirect already happened in requireAuth()
+            }
+        })();
+    </script>
+</body>
+</html>

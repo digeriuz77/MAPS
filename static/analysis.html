@@ -1,0 +1,1783 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Person-Centred Analysis - MAPS Training</title>
+    
+    <!-- Auth Blocker - MUST be first to hide page until auth verified -->
+    <script src="/static/js/auth-blocker.js"></script>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- Teal Theme CSS -->
+    <link rel="stylesheet" href="/static/css/teal-theme.css">
+    <!-- Soft Enhancements -->
+    <link rel="stylesheet" href="/static/css/soft-chat-enhancements.css">
+    
+    <style>
+        /* Teal Theme Colors */
+        :root {
+            --primary-teal: #008080;
+            --light-teal: #b2d8d8;
+            --medium-teal: #66b2b2;
+            --dark-teal: #006666;
+            --darkest-teal: #004c4c;
+            --light-mist: #e6f2f2;
+        }
+        
+        .nav-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: var(--primary-teal);
+            padding: 15px 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+        }
+        
+        .nav-bar a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            transition: opacity 0.2s;
+        }
+        
+        .nav-bar a:hover {
+            opacity: 0.8;
+        }
+        
+        .nav-bar a.active {
+            border-bottom: 2px solid white;
+        }
+        
+        body {
+            background: linear-gradient(135deg, var(--light-mist) 0%, rgba(0, 128, 128, 0.08) 50%, rgba(178, 216, 216, 0.08) 100%);
+            min-height: 100vh;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            padding-top: 70px; /* Space for fixed nav */
+        }
+        
+        /* Navigation Header */
+        .nav-header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 1rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        
+        .nav-orb {
+            width: 40px;
+            height: 40px;
+            background: radial-gradient(circle at 30% 30%, var(--light-teal), var(--primary-teal));
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 0.5rem;
+            vertical-align: middle;
+            opacity: 0.8;
+        }
+        
+        /* Main Container */
+        .analysis-container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+        
+        /* Upload Section */
+        .upload-section {
+            background: white;
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+        
+        /* Speaker Verification */
+        .speaker-preview {
+            background: var(--light-mist);
+            border-radius: 10px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .speaker-turn {
+            padding: 0.5rem;
+            margin-bottom: 0.5rem;
+            border-radius: 8px;
+            border-left: 4px solid var(--primary-teal);
+        }
+        
+        .speaker-name {
+            font-weight: bold;
+            color: var(--primary-teal);
+        }
+        
+        .verification-controls {
+            background: rgba(0, 128, 128, 0.05);
+            border-radius: 15px;
+            padding: 1.5rem;
+        }
+        
+        .upload-area {
+            border: 2px dashed var(--primary-teal);
+            border-radius: 15px;
+            padding: 3rem;
+            text-align: center;
+            background: rgba(0, 128, 128, 0.05);
+            transition: all 0.3s ease;
+        }
+        
+        .upload-area:hover {
+            background: rgba(0, 128, 128, 0.1);
+            border-color: var(--light-teal);
+        }
+        
+        /* Progress Section */
+        .progress-section {
+            background: white;
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+            display: none;
+        }
+        
+        .stage-indicator {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .stage-icon {
+            width: 50px;
+            height: 50px;
+            background: var(--primary-teal);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+            margin-right: 1rem;
+        }
+        
+        /* Results Section */
+        .results-section {
+            display: none;
+        }
+        
+        .metric-card {
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            height: 100%;
+        }
+        
+        .metric-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: var(--primary-teal);
+            margin: 0.5rem 0;
+        }
+        
+        .metric-label {
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .proficiency-score {
+            font-size: 4rem;
+            font-weight: bold;
+            background: linear-gradient(135deg, var(--primary-teal), var(--light-teal));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        /* Report Sections */
+        .report-card {
+            background: white;
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            margin-bottom: 1.5rem;
+        }
+        
+        .rating-item {
+            padding: 1rem;
+            background: var(--light-mist);
+            border-radius: 10px;
+            margin-bottom: 1rem;
+            border-left: 4px solid var(--primary-teal);
+        }
+        
+        .rating-score {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            background: var(--primary-teal);
+            color: white;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 30px;
+            margin-right: 0.5rem;
+        }
+        
+        /* Context Form */
+        .context-form {
+            background: var(--light-mist);
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        /* Loading Animation */
+        .loading-spinner {
+            display: inline-block;
+            width: 60px;
+            height: 60px;
+            border: 4px solid rgba(78, 205, 196, 0.3);
+            border-top-color: var(--primary-teal);
+            border-radius: 50%;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="nav-bar">
+        <a href="/welcome"><i class="fas fa-sign-in-alt"></i> Welcome</a>
+        <a href="/persona-select"><i class="fas fa-users"></i> Personas</a>
+        <a href="/analysis" class="active"><i class="fas fa-chart-line"></i> Analysis</a>
+        <a href="/reflection"><i class="fas fa-lightbulb"></i> Reflection</a>
+        <a href="/feedback"><i class="fas fa-comment-dots"></i> Feedback</a>
+    </nav>
+    
+    <!-- Main Container -->
+    <div class="analysis-container">
+        <h1 class="text-center mb-4">Person-Centred Coaching Analysis</h1>
+        
+        <!-- Upload Section -->
+        <div id="uploadSection" class="upload-section">
+            <h3 class="mb-4">Upload Transcript for Analysis</h3>
+            
+            <!-- Context Form -->
+            <div class="context-form">
+                <h5>Session Context (Optional)</h5>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Practitioner Role</label>
+                        <input type="text" id="practitionerRole" class="form-control" 
+                               placeholder="e.g., Therapist, Counselor" value="Manager">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Client Role</label>
+                        <input type="text" id="clientRole" class="form-control" 
+                               placeholder="e.g., Patient, Client" value="Employee">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Scenario</label>
+                        <input type="text" id="scenario" class="form-control" 
+                               placeholder="Brief description" value="Performance review">
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Upload Area -->
+            <div class="upload-area">
+                <i class="fas fa-file-alt fa-3x mb-3" style="color: var(--primary-teal);"></i>
+                <h5>Paste Your Transcript</h5>
+                <p class="text-muted mb-3">
+                    Format: Each turn should start with speaker name followed by colon<br>
+                    Example: "Therapist: How are you feeling today?"
+                </p>
+                <textarea id="transcriptText" class="form-control mb-3" rows="10" 
+                          placeholder="Paste your conversation transcript here..."></textarea>
+                <button class="btn btn-primary btn-lg" onclick="previewTranscript()">
+                    <i class="fas fa-eye"></i> Preview & Verify Speakers
+                </button>
+            </div>
+            
+            <!-- Sample Transcript -->
+            <div class="mt-3">
+                <button class="btn btn-outline-secondary btn-sm" onclick="loadSampleTranscript()">
+                    <i class="fas fa-file-import"></i> Load Sample Transcript
+                </button>
+            </div>
+        </div>
+        
+        <!-- Speaker Verification Section -->
+        <div id="verificationSection" class="upload-section" style="display: none;">
+            <h3 class="mb-4">Verify Speaker Roles</h3>
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i>
+                <strong>Important:</strong> Please verify that speaker roles are correctly identified for accurate analysis.
+            </div>
+            
+            <div id="speakerPreview" class="mb-4">
+                <!-- Speaker preview will be populated here -->
+            </div>
+            
+            <div class="verification-controls">
+                <h5>Confirm Speaker Roles:</h5>
+                <div class="alert alert-info mb-3">
+                    <i class="fas fa-info-circle"></i>
+                    <strong>Help:</strong> Select which speaker label from your transcript corresponds to each role. 
+                    The <strong>Coach</strong> is the person providing person-centred coaching (usually you), and the <strong>Person</strong> is the individual being coached (usually the AI persona).
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Who is the Coach (providing person-centred coaching)? <span class="text-danger">*</span></label>
+                        <select id="practitionerSelect" class="form-control" required>
+                            <!-- Options populated dynamically -->
+                        </select>
+                        <small class="text-muted">The person practicing person-centred coaching skills (typically the human user)</small>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Who is the Person (receiving coaching)? <span class="text-muted">(Optional)</span></label>
+                        <select id="clientSelect" class="form-control">
+                            <!-- Options populated dynamically -->
+                        </select>
+                        <small class="text-muted">The person receiving coaching (typically the AI persona)</small>
+                    </div>
+                </div>
+                
+                <div class="text-center mb-3">
+                    <button class="btn btn-outline-primary btn-sm" onclick="autoDetectFromTranscript()">
+                        <i class="fas fa-robot"></i> Auto-detect Speaker Roles
+                    </button>
+                </div>
+                
+                <div class="text-center">
+                    <button class="btn btn-secondary me-2" onclick="backToUpload()">
+                        <i class="fas fa-arrow-left"></i> Back to Edit
+                    </button>
+                    <button class="btn btn-danger me-2" onclick="clearCacheAndAnalyze()">
+                        <i class="fas fa-trash"></i> Clear Cache & Analyze
+                    </button>
+                    <button class="btn btn-primary" onclick="confirmAndAnalyze()">
+                        <i class="fas fa-flask"></i> Confirm & Analyze
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Progress Section -->
+        <div id="progressSection" class="progress-section">
+            <div class="stage-indicator">
+                <div class="stage-icon">
+                    <i id="stageIcon" class="fas fa-cog fa-spin"></i>
+                </div>
+                <div>
+                    <h5 id="stageName" class="mb-0">Processing...</h5>
+                    <p id="stageDescription" class="text-muted mb-0">Initializing analysis</p>
+                </div>
+            </div>
+            <div class="progress" style="height: 25px;">
+                <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated" 
+                     style="width: 0%; background: linear-gradient(90deg, var(--primary-teal), var(--soft-seafoam));"></div>
+            </div>
+        </div>
+        
+        <!-- Results Section -->
+        <div id="resultsSection" class="results-section">
+            <!-- Overall Score -->
+            <div class="report-card text-center">
+                <h3>Person-Centred Proficiency Score</h3>
+                <div class="proficiency-score" id="proficiencyScore">--</div>
+                <p class="text-muted">Out of 100</p>
+            </div>
+            
+            <!-- Key Metrics -->
+            <h3 class="mb-3">Key Metrics</h3>
+            <div class="row mb-4">
+                <div class="col-md-3 mb-3">
+                    <div class="metric-card">
+                        <i class="fas fa-comments fa-2x mb-2" style="color: var(--primary-teal);"></i>
+                        <div class="metric-value" id="totalTurns">--</div>
+                        <div class="metric-label">Total Turns</div>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <div class="metric-card">
+                        <i class="fas fa-balance-scale fa-2x mb-2" style="color: var(--primary-teal);"></i>
+                        <div class="metric-value" id="reflectionRatio">--</div>
+                        <div class="metric-label">Reflection:Question</div>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <div class="metric-card">
+                        <i class="fas fa-chart-line fa-2x mb-2" style="color: var(--primary-teal);"></i>
+                        <div class="metric-value" id="complexPercentage">--</div>
+                        <div class="metric-label">Complex Reflections</div>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <div class="metric-card">
+                        <i class="fas fa-check-circle fa-2x mb-2" style="color: var(--primary-teal);"></i>
+                        <div class="metric-value" id="miAdherent">--</div>
+                        <div class="metric-label">Person-Centred Adherent Ratio</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Global Ratings -->
+            <div class="report-card">
+                <h4 class="mb-3">Global Ratings</h4>
+                <div id="globalRatings">
+                    <!-- Populated dynamically -->
+                </div>
+            </div>
+            
+            <!-- Patterns & Recommendations -->
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="report-card">
+                        <h4 class="mb-3">Practitioner Patterns</h4>
+                        <h5 class="text-success">Strengths</h5>
+                        <p id="strengths"></p>
+                        <h5 class="text-warning">Challenge Areas</h5>
+                        <p id="challenges"></p>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="report-card">
+                        <h4 class="mb-3">Recommendations</h4>
+                        <h5 class="text-primary">Immediate Focus</h5>
+                        <p id="immediateFocus"></p>
+                        <h5 class="text-info">Skill Development</h5>
+                        <p id="skillDevelopment"></p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Action Buttons -->
+            <div class="text-center mt-4">
+                <button class="btn btn-primary me-2" onclick="downloadReport('json')">
+                    <i class="fas fa-download"></i> Download JSON
+                </button>
+                <button class="btn btn-secondary me-2" onclick="downloadReport('html')">
+                    <i class="fas fa-file-alt"></i> Download Report
+                </button>
+                <button class="btn btn-success me-2" onclick="goToReflection()">
+                    <i class="fas fa-lightbulb"></i> Go to Reflection
+                </button>
+                <button class="btn btn-outline-primary" onclick="resetAnalysis()">
+                    <i class="fas fa-redo"></i> New Analysis
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        let currentTranscript = '';
+        let detectedSpeakers = [];
+        
+        // Extract speakers from transcript with improved parsing for chat exports
+        function extractSpeakersFromTranscript(transcript) {
+            const lines = transcript.split('\n').filter(line => line.trim());
+            const speakers = new Set();
+            
+            // Enhanced pattern to handle chat export format with timestamps
+            // Matches: [timestamp] Speaker: message or just Speaker: message
+            const speakerPatterns = [
+                // Pattern for chat exports: [timestamp] Speaker: message
+                /\[.*?\]\s*([A-Z][^:]*?):\s*(.*)$/,
+                // Pattern for simple format: Speaker: message
+                /^([A-Z][^:]*?):\s*(.*)$/
+            ];
+            
+            lines.forEach(line => {
+                // Skip obvious metadata lines
+                if (line.includes('Date') || 
+                    line.includes('Session ID') || 
+                    line.includes('Total messages') || 
+                    line.match(/^\d+\/\d+\/\d+/) || // Date format
+                    line.match(/^\d+:\d+/) || // Time format
+                    line.match(/^session-/) || // Session ID
+                    line.match(/^\d+$/) || // Just numbers
+                    line.length < 3) { // Very short lines
+                    return;
+                }
+                
+                // Try each pattern
+                for (const pattern of speakerPatterns) {
+                    const match = line.match(pattern);
+                    if (match) {
+                        const speaker = match[1].trim();
+                        const message = match[2].trim();
+                        
+                        // Only add if speaker name looks valid and message exists
+                        if (speaker && speaker.length > 0 && 
+                            !speaker.match(/^\d/) && // Doesn't start with number
+                            !speaker.includes('/') && // Not a date
+                            !speaker.includes('AM') && // Not a time
+                            !speaker.includes('PM') && // Not a time
+                            message && message.length > 0) {
+                            speakers.add(speaker);
+                        }
+                        break; // Found a match, stop trying other patterns
+                    }
+                }
+            });
+            
+            return Array.from(speakers);
+        }
+        
+        // Generate clean preview without timestamps and metadata
+        function generateCleanPreview(transcript) {
+            const lines = transcript.split('\n').filter(line => line.trim());
+            const preview = [];
+            let turnCounter = 1;
+            
+            const speakerPatterns = [
+                /\[.*?\]\s*([A-Z][^:]*?):\s*(.*)$/,
+                /^([A-Z][^:]*?):\s*(.*)$/
+            ];
+            
+            lines.forEach(line => {
+                // Skip metadata lines
+                if (line.includes('Date') || 
+                    line.includes('Session ID') || 
+                    line.includes('Total messages') || 
+                    line.match(/^\d+\/\d+\/\d+/) || 
+                    line.match(/^\d+:\d+/) || 
+                    line.match(/^session-/) || 
+                    line.match(/^\d+$/) || 
+                    line.length < 3) {
+                    return;
+                }
+                
+                // Try to extract speaker and message
+                for (const pattern of speakerPatterns) {
+                    const match = line.match(pattern);
+                    if (match) {
+                        const speaker = match[1].trim();
+                        const message = match[2].trim();
+                        
+                        // Validate speaker and message
+                        if (speaker && speaker.length > 0 && 
+                            !speaker.match(/^\d/) && 
+                            !speaker.includes('/') && 
+                            !speaker.includes('AM') && 
+                            !speaker.includes('PM') && 
+                            message && message.length > 0 && 
+                            preview.length < 6) {
+                            
+                            preview.push({ 
+                                speaker, 
+                                text: message, 
+                                index: turnCounter 
+                            });
+                            turnCounter++;
+                        }
+                        break;
+                    }
+                }
+            });
+            
+            return preview;
+        }
+        
+        // Auto-detect speaker roles based on common patterns
+        function autoDetectSpeakerRoles(speakers) {
+            let practitionerIndex = 0;
+            let clientIndex = 1;
+            
+            // Special handling for "You" - this is almost always the practitioner
+            const youIndex = speakers.findIndex(speaker => speaker.toLowerCase() === 'you');
+            if (youIndex !== -1) {
+                practitionerIndex = youIndex;
+                // Client is the other speaker
+                clientIndex = speakers.findIndex((speaker, index) => index !== youIndex);
+                if (clientIndex === -1) clientIndex = (youIndex + 1) % speakers.length;
+                return { practitionerIndex, clientIndex };
+            }
+            
+            // If no "You", use pattern matching
+            speakers.forEach((speaker, index) => {
+                const lowerSpeaker = speaker.toLowerCase();
+                
+                // Coach indicators (human providing person-centred coaching)
+                if (lowerSpeaker.includes('user') || 
+                    lowerSpeaker.includes('therapist') || 
+                    lowerSpeaker.includes('counselor') ||
+                    lowerSpeaker.includes('coach') ||
+                    lowerSpeaker.includes('practitioner') ||
+                    lowerSpeaker.includes('interviewer')) {
+                    practitionerIndex = index;
+                    clientIndex = (index + 1) % speakers.length;
+                }
+                // Client indicators (AI personas or clients)
+                else if (lowerSpeaker.includes('andy') || 
+                         lowerSpeaker.includes('persona') || 
+                         lowerSpeaker.includes('ai') || 
+                         lowerSpeaker.includes('bot') ||
+                         lowerSpeaker.includes('client') ||
+                         lowerSpeaker.includes('patient') ||
+                         lowerSpeaker.includes('simon') ||
+                         lowerSpeaker.includes('confrontational') ||
+                         lowerSpeaker.includes('non-compliant') ||
+                         lowerSpeaker.includes('direct') ||
+                         lowerSpeaker.includes('coach')) {
+                    clientIndex = index;
+                    practitionerIndex = (index + 1) % speakers.length;
+                }
+            });
+            
+            return { practitionerIndex, clientIndex };
+        }
+        
+        // Preview transcript and extract speakers
+        function previewTranscript() {
+            const transcript = document.getElementById('transcriptText').value.trim();
+            if (!transcript) {
+                alert('Please paste a transcript to analyze');
+                return;
+            }
+            
+            currentTranscript = transcript;
+            
+            // Extract speakers with improved logic
+            const speakers = extractSpeakersFromTranscript(transcript);
+            
+            if (speakers.length < 1) {
+                alert('No speakers detected. Please check that your transcript follows the format: "Speaker: Message" or "[timestamp] Speaker: Message"');
+                return;
+            }
+            
+            if (speakers.length < 2) {
+                const proceed = confirm('Only one speaker detected (' + speakers[0] + '). For person-centred analysis, you typically need at least a coach and person. Do you want to continue anyway?');
+                if (!proceed) {
+                    return;
+                }
+            }
+            
+            detectedSpeakers = speakers;
+            console.log('Detected speakers:', detectedSpeakers);
+            
+            // Generate clean preview without timestamps
+            const preview = generateCleanPreview(transcript);
+            
+            // Show verification section
+            document.getElementById('uploadSection').style.display = 'none';
+            document.getElementById('verificationSection').style.display = 'block';
+            
+            // Populate speaker preview
+            const previewHtml = preview.map(turn => `
+                <div class="speaker-turn">
+                    <span class="speaker-name">${turn.speaker}</span> (Turn ${turn.index}):
+                    <div class="text-muted">${turn.text.substring(0, 200)}${turn.text.length > 200 ? '...' : ''}</div>
+                </div>
+            `).join('');
+            
+            document.getElementById('speakerPreview').innerHTML = `
+                <h6>Transcript Preview (first ${preview.length} conversation turns):</h6>
+                <div class="speaker-preview">${previewHtml}</div>
+                <p class="text-muted mt-2">Detected ${detectedSpeakers.length} speaker(s): <strong>${detectedSpeakers.join(', ')}</strong></p>
+                <p class="text-success mt-1"><i class="fas fa-check-circle"></i> Timestamps and metadata have been filtered out</p>
+            `;
+            
+            // Populate speaker dropdowns
+            populateSpeakerDropdowns();
+        }
+        
+        function populateSpeakerDropdowns() {
+            const practitionerSelect = document.getElementById('practitionerSelect');
+            const clientSelect = document.getElementById('clientSelect');
+            
+            // Clear existing options
+            practitionerSelect.innerHTML = '';
+            clientSelect.innerHTML = '';
+            
+            // Add default options
+            const defaultPractitionerOption = document.createElement('option');
+            defaultPractitionerOption.value = '';
+            defaultPractitionerOption.textContent = '-- Select Practitioner --';
+            practitionerSelect.appendChild(defaultPractitionerOption);
+            
+            const defaultClientOption = document.createElement('option');
+            defaultClientOption.value = '';
+            defaultClientOption.textContent = '-- Select Client (Optional) --';
+            clientSelect.appendChild(defaultClientOption);
+            
+            // Add speaker options
+            detectedSpeakers.forEach(speaker => {
+                const option1 = document.createElement('option');
+                option1.value = speaker;
+                option1.textContent = speaker;
+                practitionerSelect.appendChild(option1);
+                
+                const option2 = document.createElement('option');
+                option2.value = speaker;
+                option2.textContent = speaker;
+                clientSelect.appendChild(option2);
+            });
+            
+            // Auto-select based on detected patterns
+            const { practitionerIndex, clientIndex } = autoDetectSpeakerRoles(detectedSpeakers);
+            
+            if (practitionerIndex >= 0 && practitionerIndex < detectedSpeakers.length) {
+                practitionerSelect.value = detectedSpeakers[practitionerIndex];
+            }
+            
+            if (clientIndex >= 0 && clientIndex < detectedSpeakers.length && detectedSpeakers.length > 1) {
+                clientSelect.value = detectedSpeakers[clientIndex];
+            }
+            
+            // Add change event listeners to prevent same selection
+            practitionerSelect.addEventListener('change', validateSpeakerSelection);
+            clientSelect.addEventListener('change', validateSpeakerSelection);
+        }
+        
+        function validateSpeakerSelection() {
+            const practitionerSelect = document.getElementById('practitionerSelect');
+            const clientSelect = document.getElementById('clientSelect');
+            
+            const practitioner = practitionerSelect.value;
+            const client = clientSelect.value;
+            
+            // Update client options to show which is selected as practitioner
+            Array.from(clientSelect.options).forEach(option => {
+                if (option.value && option.value === practitioner) {
+                    option.textContent = option.value + ' (Selected as Practitioner)';
+                    option.disabled = true;
+                } else if (option.value) {
+                    option.textContent = option.value;
+                    option.disabled = false;
+                }
+            });
+            
+            // Show warning if same speaker selected for both roles
+            const warningDiv = document.getElementById('speakerSelectionWarning');
+            if (practitioner && client && practitioner === client) {
+                if (!warningDiv) {
+                    const warning = document.createElement('div');
+                    warning.id = 'speakerSelectionWarning';
+                    warning.className = 'alert alert-warning mt-2';
+                    warning.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Practitioner and Client cannot be the same speaker.';
+                    document.querySelector('.verification-controls').appendChild(warning);
+                }
+            } else {
+                if (warningDiv) {
+                    warningDiv.remove();
+                }
+            }
+        }
+        
+        function autoDetectFromTranscript() {
+            if (detectedSpeakers.length === 0) {
+                alert('No speakers detected. Please check your transcript format.');
+                return;
+            }
+            
+            const { practitionerIndex, clientIndex } = autoDetectSpeakerRoles(detectedSpeakers);
+            
+            const practitionerSelect = document.getElementById('practitionerSelect');
+            const clientSelect = document.getElementById('clientSelect');
+            
+            if (practitionerIndex >= 0) {
+                practitionerSelect.value = detectedSpeakers[practitionerIndex];
+            }
+            
+            if (clientIndex >= 0 && detectedSpeakers.length > 1) {
+                clientSelect.value = detectedSpeakers[clientIndex];
+            }
+            
+            validateSpeakerSelection();
+            
+            // Show feedback
+            const infoDiv = document.createElement('div');
+            infoDiv.className = 'alert alert-info alert-dismissible fade show mt-2';
+            infoDiv.innerHTML = `
+                <i class="fas fa-robot"></i>
+                Auto-detected: <strong>${detectedSpeakers[practitionerIndex] || 'None'}</strong> as Practitioner, 
+                <strong>${detectedSpeakers[clientIndex] || 'None'}</strong> as Client.
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            document.querySelector('.verification-controls').appendChild(infoDiv);
+            
+            // Auto-remove the alert after 3 seconds
+            setTimeout(() => {
+                if (infoDiv && infoDiv.parentNode) {
+                    infoDiv.remove();
+                }
+            }, 3000);
+        }
+        
+        function backToUpload() {
+            document.getElementById('verificationSection').style.display = 'none';
+            document.getElementById('uploadSection').style.display = 'block';
+        }
+        
+        // Clear cache and analyze
+        async function clearCacheAndAnalyze() {
+            try {
+                // Clear cache first
+                await fetch('/api/v1/analysis/cache', { method: 'DELETE' });
+                console.log('Cache cleared successfully');
+                
+                // Show info message
+                const infoDiv = document.createElement('div');
+                infoDiv.className = 'alert alert-success alert-dismissible fade show';
+                infoDiv.innerHTML = `
+                    <i class="fas fa-check-circle"></i>
+                    Analysis cache cleared! Starting fresh analysis...
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                `;
+                document.getElementById('verificationSection').insertBefore(infoDiv, document.getElementById('verificationSection').firstChild);
+                
+                // Proceed with analysis
+                confirmAndAnalyze();
+                
+            } catch (error) {
+                console.error('Failed to clear cache:', error);
+                alert('Failed to clear cache, but proceeding with analysis...');
+                confirmAndAnalyze();
+            }
+        }
+        
+        function confirmAndAnalyze() {
+            const practitionerSpeaker = document.getElementById('practitionerSelect').value;
+            const clientSpeaker = document.getElementById('clientSelect').value;
+            
+            // Validate practitioner selection (required)
+            if (!practitionerSpeaker) {
+                alert('Please select who is the Practitioner before proceeding.');
+                document.getElementById('practitionerSelect').focus();
+                return;
+            }
+            
+            // Validate that they're not the same (if both selected)
+            if (practitionerSpeaker && clientSpeaker && practitionerSpeaker === clientSpeaker) {
+                alert('Practitioner and Client cannot be the same speaker!');
+                return;
+            }
+            
+            console.log('Confirmed speakers - Practitioner:', practitionerSpeaker, 'Client:', clientSpeaker);
+            
+            // Update speaker hints and start analysis
+            submitAnalysisWithVerification(practitionerSpeaker, clientSpeaker);
+        }
+        
+        // Check for incoming conversation data on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            checkForPendingAnalysis();
+        });
+        
+        // Check for conversation data from chat page
+        async function checkForPendingAnalysis() {
+            // Check URL parameters first
+            const urlParams = new URLSearchParams(window.location.search);
+            const sessionId = urlParams.get('session_id');
+            const conversationId = urlParams.get('conversation_id');
+            
+            console.log('🔍 Checking for pending analysis...', { sessionId, conversationId });
+            
+            if (conversationId) {
+                // Load conversation from server using correct endpoint
+                try {
+                    console.log('📡 Fetching conversation from API:', conversationId);
+                    const response = await fetch(`/api/chat/conversations/${conversationId}`);
+                    console.log('📡 API Response status:', response.status);
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        console.log('✅ Conversation data loaded:', data);
+                        loadConversationData(data);
+                        return;
+                    } else {
+                        const errorText = await response.text();
+                        console.error('❌ API returned error:', response.status, errorText);
+                    }
+                } catch (error) {
+                    console.error('❌ Failed to load conversation:', error);
+                }
+            }
+            
+            // Check sessionStorage for pending analysis
+            const pendingData = sessionStorage.getItem('pendingAnalysis');
+            const chatData = sessionStorage.getItem('conversationForAnalysis');
+
+            if (pendingData) {
+                try {
+                    const data = JSON.parse(pendingData);
+                    loadConversationFromPending(data);
+                    sessionStorage.removeItem('pendingAnalysis');
+                } catch (error) {
+                    console.error('Failed to parse pending analysis:', error);
+                }
+            } else if (chatData) {
+                try {
+                    const data = JSON.parse(chatData);
+                    loadConversationData(data);
+                    sessionStorage.removeItem('conversationForAnalysis');
+                } catch (error) {
+                    console.error('Failed to parse chat conversation data:', error);
+                }
+            }
+        }
+        
+        // Load conversation data into transcript field
+        function loadConversationData(conversation) {
+            console.log('📋 loadConversationData called with:', conversation);
+            
+            if (!conversation) {
+                console.error('❌ No conversation data provided');
+                return;
+            }
+            
+            if (!conversation.messages) {
+                console.error('❌ Conversation has no messages:', conversation);
+                alert('This conversation has no messages to analyze.');
+                return;
+            }
+            
+            console.log('✅ Processing', conversation.messages.length, 'messages');
+            
+            // Format messages as transcript with proper speaker roles
+            // API returns {conversation_id, persona: {name, description}, messages: [{role, message, turn_number, timestamp}]}
+            // Role is ALWAYS either "user" or "persona" from database
+            const personaName = conversation.persona?.name || 'AI Assistant';
+            const transcript = conversation.messages.map(msg => {
+                const speaker = msg.role === 'user' ? 'Practitioner' : personaName;
+                return `${speaker}: ${msg.message}`;
+            }).join('\n\n');
+            
+            console.log('✅ Generated transcript, length:', transcript.length);
+            
+            // Load into textarea
+            const textArea = document.getElementById('transcriptText');
+            if (!textArea) {
+                console.error('❌ transcriptText element not found!');
+                return;
+            }
+            textArea.value = transcript;
+            console.log('✅ Transcript loaded into textarea');
+            
+            // Auto-populate context with chat session details
+            document.getElementById('practitionerRole').value = 'Person-Centred Coach';
+            document.getElementById('clientRole').value = personaName;
+            document.getElementById('scenario').value = `Free practice session with ${personaName}`;
+            
+            // Add enhanced info message
+            const infoDiv = document.createElement('div');
+            infoDiv.className = 'alert alert-success mb-3';
+            const messageCount = conversation.message_count || conversation.messages.length;
+            infoDiv.innerHTML = `
+                <i class="fas fa-check-circle"></i>
+                <strong>Conversation loaded!</strong> Your ${messageCount}-message conversation with ${personaName} is ready for analysis.
+                <br><small class="text-muted mt-1 d-block">Conversation ID: ${conversation.conversation_id}</small>
+                <div class="mt-2">
+                    <div class="spinner-border spinner-border-sm text-success" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <span class="ms-2">Starting analysis automatically...</span>
+                </div>
+            `;
+            
+            // Hide upload section, show the info message in a dedicated area
+            document.getElementById('uploadSection').style.display = 'none';
+            
+            // Create or update status area
+            let statusArea = document.getElementById('autoAnalysisStatus');
+            if (!statusArea) {
+                statusArea = document.createElement('div');
+                statusArea.id = 'autoAnalysisStatus';
+                statusArea.className = 'container mt-4';
+                const uploadSection = document.querySelector('.upload-section');
+                if (uploadSection && uploadSection.parentNode) {
+                    uploadSection.parentNode.insertBefore(statusArea, uploadSection);
+                }
+            }
+            statusArea.innerHTML = '';
+            statusArea.appendChild(infoDiv);
+            
+            console.log('✅ Info message added, starting auto-analysis');
+            
+            // Clear sessionStorage after successfully loading
+            // This allows back button to work, but cleans up after user sees analysis
+            sessionStorage.removeItem('currentConversation');
+            console.log('🧹 Cleared sessionStorage after loading conversation');
+            
+            // AUTOMATICALLY submit for analysis - no verification needed!
+            // Database already has clean role="user" or role="persona"
+            setTimeout(() => {
+                autoSubmitAnalysis(transcript, personaName);
+            }, 1000);
+        }
+        
+        // Load conversation from pending sessionStorage data
+        function loadConversationFromPending(data) {
+            if (!data.messages) return;
+            
+            // Format messages as transcript
+            const transcript = data.messages.map(msg => {
+                const speaker = msg.sender === 'user' ? 'Client' : data.personaName || 'Therapist';
+                return `${speaker}: ${msg.message}`;
+            }).join('\n\n');
+            
+            // Load into textarea
+            document.getElementById('transcriptText').value = transcript;
+            
+            // Auto-populate context
+            document.getElementById('practitionerRole').value = data.personaName || 'AI Persona';
+            
+            // Show upload section with transcript loaded
+            document.getElementById('uploadSection').style.display = 'block';
+            
+            // Add info message
+            const infoDiv = document.createElement('div');
+            infoDiv.className = 'alert alert-info mb-3';
+            infoDiv.innerHTML = `
+                <i class="fas fa-info-circle"></i>
+                Conversation loaded from your chat session (${data.messageCount} messages). 
+                Click "Analyze Transcript" to begin analysis.
+            `;
+            document.querySelector('.upload-section').insertBefore(
+                infoDiv, 
+                document.querySelector('.upload-section').firstChild
+            );
+        }
+        
+        // Stage configurations with more detailed descriptions
+        const stageConfigs = {
+            'idle': { icon: 'fa-hourglass-start', name: 'Waiting', desc: 'Ready to analyze' },
+            'parsing': { icon: 'fa-file-alt', name: 'Parsing Transcript', desc: 'Parsing transcript and identifying speakers...' },
+            'caching_check': { icon: 'fa-database', name: 'Cache Check', desc: 'Checking for cached analysis results...' },
+            'coding': { icon: 'fa-tags', name: 'Analyzing MAPS Framework', desc: 'Evaluating person-centred conditions and core values...' },
+            'aggregating': { icon: 'fa-calculator', name: 'Aggregating Patterns', desc: 'Identifying coaching patterns and conversation themes...' },
+            'supervising': { icon: 'fa-user-tie', name: 'Quality Review', desc: 'Generating strengths, opportunities, and suggestions...' },
+            'complete': { icon: 'fa-check-circle', name: 'Complete', desc: 'Analysis complete!' },
+            'error': { icon: 'fa-exclamation-triangle', name: 'Error', desc: 'An error occurred during analysis' }
+        };
+        
+        let currentJobId = null;
+        let currentAnalysisResult = null; // Store result for downloads
+        let pollingInterval = null;
+        
+        // Auto-submit analysis for database-loaded conversations (no speaker verification needed)
+        async function autoSubmitAnalysis(transcript, personaName) {
+            console.log('🚀 Auto-submitting analysis for conversation with', personaName);
+            
+            // Get context from form fields (already populated by loadConversationData)
+            const context = {
+                practitioner_role: document.getElementById('practitionerRole').value || 'Person-Centred Coach',
+                client_identifier_hint: personaName,
+                scenario_description: document.getElementById('scenario').value || `Practice session with ${personaName}`
+            };
+            
+            // Speaker hints are simple - database guarantees clean role="user" or role="persona"
+            const speakerHints = {
+                practitioner_identifier_hint: 'Practitioner',
+                client_identifier_hint: personaName
+            };
+            
+            // Hide auto-analysis status, show progress
+            const statusArea = document.getElementById('autoAnalysisStatus');
+            if (statusArea) {
+                statusArea.style.display = 'none';
+            }
+            document.getElementById('uploadSection').style.display = 'none';
+            document.getElementById('verificationSection').style.display = 'none';
+            document.getElementById('progressSection').style.display = 'block';
+            document.getElementById('resultsSection').style.display = 'none';
+            
+            // Show initial progress
+            updateProgress({
+                stage: 'preprocessing',
+                progress: 5,
+                current_item: 'Submitting transcript for MAPS analysis...'
+            });
+            
+            try {
+                console.log('📡 Submitting analysis:', {
+                    transcript_length: transcript.length,
+                    context: context,
+                    speaker_hints: speakerHints
+                });
+                
+                // Update progress
+                updateProgress({
+                    stage: 'preprocessing',
+                    progress: 10,
+                    current_item: 'Connecting to analysis service...'
+                });
+                
+                // Submit for analysis
+                const response = await fetch('/api/v1/analysis/text', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        transcript: transcript,
+                        context: context,
+                        speaker_hints: speakerHints
+                    })
+                });
+                
+                console.log('📡 Analysis submission response status:', response.status);
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    console.error('❌ Analysis submission error:', errorData);
+                    throw new Error(errorData.detail || 'Failed to submit analysis');
+                }
+                
+                const result = await response.json();
+                console.log('✅ Analysis submission result:', result);
+                currentJobId = result.job_id;
+                
+                // Update progress
+                updateProgress({
+                    stage: 'coding',
+                    progress: 15,
+                    current_item: 'Analysis started! Evaluating person-centred conditions...'
+                });
+                
+                // Start polling for progress
+                startPolling();
+                
+            } catch (error) {
+                console.error('❌ Auto-analysis submission failed:', error);
+                updateProgress({
+                    stage: 'error',
+                    progress: 0,
+                    current_item: `Failed to submit: ${error.message}`
+                });
+                setTimeout(() => {
+                    alert('Failed to submit analysis: ' + error.message + '. Please try again.');
+                    resetAnalysis();
+                }, 2000);
+            }
+        }
+        
+        // Submit analysis with verified speaker roles
+        async function submitAnalysisWithVerification(practitionerSpeaker, clientSpeaker) {
+            const transcript = currentTranscript;
+            
+            // Get context
+            const context = {
+                practitioner_role: document.getElementById('practitionerRole').value || 'Therapist/Coach',
+                client_identifier_hint: clientSpeaker,
+                scenario_description: document.getElementById('scenario').value || 'Motivational interviewing session'
+            };
+            
+            // Create speaker hints with verified roles
+            const speakerHints = {
+                practitioner_identifier_hint: practitionerSpeaker,
+                client_identifier_hint: clientSpeaker
+            };
+            
+            // Hide verification, show progress
+            document.getElementById('verificationSection').style.display = 'none';
+            document.getElementById('progressSection').style.display = 'block';
+            document.getElementById('resultsSection').style.display = 'none';
+            
+            // Show initial progress
+            updateProgress({
+                stage: 'preprocessing',
+                progress: 5,
+                current_item: 'Submitting transcript for MAPS analysis...'
+            });
+            
+            try {
+                console.log('Submitting analysis:', {
+                    transcript_length: transcript.length,
+                    context: context,
+                    speaker_hints: speakerHints
+                });
+                
+                // Update progress
+                updateProgress({
+                    stage: 'preprocessing',
+                    progress: 10,
+                    current_item: 'Connecting to analysis service...'
+                });
+                
+                // Submit for analysis
+                const response = await fetch('/api/v1/analysis/text', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        transcript: transcript,
+                        context: context,
+                        speaker_hints: speakerHints
+                    })
+                });
+                
+                console.log('Analysis submission response status:', response.status);
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    console.error('Analysis submission error:', errorData);
+                    throw new Error(errorData.detail || 'Failed to submit analysis');
+                }
+                
+                const result = await response.json();
+                console.log('Analysis submission result:', result);
+                currentJobId = result.job_id;
+                
+                // Update progress
+                updateProgress({
+                    stage: 'coding',
+                    progress: 15,
+                    current_item: 'Analysis started! Evaluating person-centred conditions...'
+                });
+                
+                // Start polling for progress
+                startPolling();
+                
+            } catch (error) {
+                console.error('Analysis submission failed:', error);
+                updateProgress({
+                    stage: 'error',
+                    progress: 0,
+                    current_item: `Failed to submit: ${error.message}`
+                });
+                setTimeout(() => {
+                    alert('Failed to submit analysis: ' + error.message + '. Please check your transcript format and try again.');
+                    resetAnalysis();
+                }, 2000);
+            }
+        }
+        
+        // Poll for job status
+        function startPolling() {
+            console.log('Starting polling for job:', currentJobId);
+            pollingInterval = setInterval(async () => {
+                try {
+                    const response = await fetch(`/api/v1/analysis/status/${currentJobId}`);
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    
+                    const status = await response.json();
+                    console.log('Polling status update:', status);
+                    
+                    updateProgress(status);
+                    
+                    if (status.status === 'complete') {
+                        console.log('Analysis complete, displaying results:', status.result);
+                        stopPolling();
+                        currentAnalysisResult = status.result; // Store for downloads
+                        displayResults(status.result);
+                    } else if (status.status === 'error') {
+                        console.error('Analysis failed with error:', status.error);
+                        stopPolling();
+                        const errorMsg = status.error || 'Unknown error occurred during analysis';
+                        
+                        // Show detailed error information
+                        updateProgress({
+                            stage: 'error',
+                            progress: 0,
+                            current_item: `Error: ${errorMsg}`
+                        });
+                        
+                        // Show user-friendly error message
+                        setTimeout(() => {
+                            alert(`Analysis failed: ${errorMsg}\n\nPlease check your transcript format and try again.`);
+                            resetAnalysis();
+                        }, 2000);
+                    }
+                } catch (error) {
+                    console.error('Polling error:', error);
+                    // Don't stop polling immediately for network errors, but limit retries
+                    if (!window.pollingRetries) {
+                        window.pollingRetries = 0;
+                    }
+                    window.pollingRetries++;
+                    
+                    if (window.pollingRetries > 10) {
+                        stopPolling();
+                        alert('Lost connection to analysis service. Please refresh and try again.');
+                        resetAnalysis();
+                    }
+                }
+            }, 1000);
+        }
+        
+        function stopPolling() {
+            if (pollingInterval) {
+                clearInterval(pollingInterval);
+                pollingInterval = null;
+            }
+        }
+        
+        // Update progress UI
+        function updateProgress(status) {
+            const stage = status.stage || 'idle';
+            const progress = status.progress || 0;
+            const config = stageConfigs[stage] || stageConfigs['idle'];
+            
+            // Update stage icon with appropriate animation
+            const iconClass = `fas ${config.icon}`;
+            const shouldSpin = ['coding', 'aggregating', 'supervising', 'parsing'].includes(stage);
+            document.getElementById('stageIcon').className = shouldSpin ? `${iconClass} fa-spin` : iconClass;
+            
+            // Update stage name and description
+            document.getElementById('stageName').textContent = config.name;
+            
+            // Use detailed current_item if available, otherwise use default description
+            const description = status.current_item || config.desc;
+            document.getElementById('stageDescription').textContent = description;
+            
+            // Update progress bar
+            const progressBar = document.getElementById('progressBar');
+            progressBar.style.width = `${Math.max(progress, 0)}%`;
+            
+            // Add visual feedback for different stages
+            if (stage === 'error') {
+                progressBar.style.background = 'linear-gradient(90deg, #E74C3C, #C0392B)';
+                progressBar.classList.add('progress-bar-animated');
+            } else if (stage === 'complete') {
+                progressBar.style.background = 'linear-gradient(90deg, #27AE60, #2ECC71)';
+                progressBar.classList.remove('progress-bar-animated');
+            } else {
+                progressBar.style.background = 'linear-gradient(90deg, var(--primary-teal), var(--soft-seafoam))';
+                progressBar.classList.add('progress-bar-animated');
+            }
+            
+            // Reset polling retry counter on successful update
+            if (window.pollingRetries) {
+                window.pollingRetries = 0;
+            }
+        }
+        
+        // Display results
+        function displayResults(result) {
+            // Hide progress, show results
+            document.getElementById('progressSection').style.display = 'none';
+            document.getElementById('resultsSection').style.display = 'block';
+
+            // Proficiency score
+            document.getElementById('proficiencyScore').textContent =
+                result.proficiency_score ? Math.round(result.proficiency_score) : '--';
+
+            // Key metrics
+            const summary = result.summary;
+            document.getElementById('totalTurns').textContent =
+                summary.conversation_overview.total_turns;
+            document.getElementById('reflectionRatio').textContent =
+                summary.mi_quality_indicators.reflection_to_question_ratio;
+            document.getElementById('complexPercentage').textContent =
+                summary.mi_quality_indicators.complex_reflection_percentage;
+            document.getElementById('miAdherent').textContent =
+                summary.mi_quality_indicators.mi_adherent_ratio;
+
+            // Global ratings
+            const ratingsHtml = Object.entries(result.report.global_ratings).map(([key, rating]) => {
+                const name = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                return `
+                    <div class="rating-item">
+                        <span class="rating-score">${rating.score}</span>
+                        <strong>${name}</strong>
+                        <p class="mb-0 ms-5">${rating.rationale}</p>
+                    </div>
+                `;
+            }).join('');
+            document.getElementById('globalRatings').innerHTML = ratingsHtml;
+
+            // Patterns & recommendations
+            document.getElementById('strengths').textContent =
+                result.report.practitioner_patterns.strengths;
+            document.getElementById('challenges').textContent =
+                result.report.practitioner_patterns.challenge_areas;
+            document.getElementById('immediateFocus').textContent =
+                result.report.actionable_recommendations.immediate_focus;
+            document.getElementById('skillDevelopment').textContent =
+                result.report.actionable_recommendations.skill_development;
+        }
+        
+        // Download report
+        async function downloadReport(format) {
+            if (!currentJobId || !currentAnalysisResult) {
+                console.error('No analysis result available for download');
+                alert('No analysis result available. Please complete an analysis first.');
+                return;
+            }
+
+            try {
+                let content, mimeType, fileExtension;
+
+                if (format === 'json') {
+                    content = JSON.stringify(currentAnalysisResult, null, 2);
+                    mimeType = 'application/json';
+                    fileExtension = 'json';
+                } else if (format === 'html') {
+                    content = generateHTMLReport(currentAnalysisResult);
+                    mimeType = 'text/html';
+                    fileExtension = 'html';
+                } else if (format === 'txt') {
+                    content = generateTextReport(currentAnalysisResult);
+                    mimeType = 'text/plain';
+                    fileExtension = 'txt';
+                } else {
+                    throw new Error('Unsupported format');
+                }
+
+                // Create blob and download
+                const blob = new Blob([content], { type: mimeType });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `maps_analysis_${currentJobId}.${fileExtension}`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+
+                console.log(`Downloaded ${format} report successfully`);
+            } catch (error) {
+                console.error('Download failed:', error);
+                alert(`Failed to download report: ${error.message}`);
+            }
+        }
+
+        // Generate HTML report from result
+        function generateHTMLReport(result) {
+            const stats = result.statistics || {};
+            const report = result.report || {};
+            const globalRatings = report.global_ratings || {};
+
+            return `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MAPS Person-Centred Analysis Report</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; line-height: 1.6; color: #333; }
+        .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #7C9BF5; padding-bottom: 20px; }
+        .section { margin-bottom: 25px; padding: 15px; border-left: 4px solid #7C9BF5; background: #f8f9fa; }
+        .metric { display: inline-block; margin: 10px 15px; }
+        .metric-value { font-size: 1.5em; font-weight: bold; color: #7C9BF5; }
+        .metric-label { font-size: 0.9em; color: #666; }
+        .rating { margin: 10px 0; padding: 10px; background: white; border-radius: 5px; }
+        .score { font-weight: bold; color: #7C9BF5; }
+        h1 { color: #7C9BF5; }
+        h2 { color: #555; border-bottom: 1px solid #ddd; padding-bottom: 10px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>MAPS Person-Centred Analysis Report</h1>
+        <p>Generated: ${new Date().toLocaleString()}</p>
+        <p>Overall Quality Score: <span class="metric-value">${result.proficiency_score || 'N/A'}</span></p>
+    </div>
+
+    <div class="section">
+        <h2>Conversation Overview</h2>
+        <div class="metric">
+            <div class="metric-value">${stats.total_turns || 'N/A'}</div>
+            <div class="metric-label">Total Turns</div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>Global Ratings</h2>
+        ${Object.entries(globalRatings).map(([name, data]) => `
+            <div class="rating">
+                <strong>${name.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}:</strong>
+                <span class="score">${data.score || 'N/A'}/5</span>
+                <p>${data.rationale || 'No rationale provided'}</p>
+            </div>
+        `).join('')}
+    </div>
+
+    <div class="section">
+        <h2>Practitioner Patterns</h2>
+        <h3>Strengths</h3>
+        <p>${report.practitioner_patterns?.strengths || 'No data available'}</p>
+        <h3>Challenge Areas</h3>
+        <p>${report.practitioner_patterns?.challenge_areas || 'No data available'}</p>
+    </div>
+
+    <div class="section">
+        <h2>Recommendations</h2>
+        <h3>Immediate Focus</h3>
+        <p>${report.actionable_recommendations?.immediate_focus || 'No recommendations available'}</p>
+        <h3>Skill Development</h3>
+        <p>${report.actionable_recommendations?.skill_development || 'No recommendations available'}</p>
+    </div>
+
+    <div class="section" style="text-align: center; border-left: none; background: none;">
+        <p style="color: #999;">Generated by Persona AI Training System - MAPS Framework</p>
+    </div>
+</body>
+</html>`;
+        }
+
+        // Generate text report from result
+        function generateTextReport(result) {
+            const stats = result.statistics || {};
+            const report = result.report || {};
+            const globalRatings = report.global_ratings || {};
+
+            let text = `MAPS PERSON-CENTRED ANALYSIS REPORT\n`;
+            text += `${'='.repeat(60)}\n\n`;
+            text += `Generated: ${new Date().toLocaleString()}\n`;
+            text += `Overall Quality Score: ${result.proficiency_score || 'N/A'}\n\n`;
+
+            text += `CONVERSATION OVERVIEW\n`;
+            text += `${'-'.repeat(30)}\n`;
+            text += `Total Turns: ${stats.total_turns || 'N/A'}\n\n`;
+
+            text += `GLOBAL RATINGS\n`;
+            text += `${'-'.repeat(30)}\n`;
+            Object.entries(globalRatings).forEach(([name, data]) => {
+                text += `${name.replace(/_/g, ' ').toUpperCase()}: ${data.score || 'N/A'}/5\n`;
+                text += `  ${data.rationale || 'No rationale provided'}\n\n`;
+            });
+
+            text += `PRACTITIONER PATTERNS\n`;
+            text += `${'-'.repeat(30)}\n`;
+            text += `Strengths:\n${report.practitioner_patterns?.strengths || 'No data available'}\n\n`;
+            text += `Challenge Areas:\n${report.practitioner_patterns?.challenge_areas || 'No data available'}\n\n`;
+
+            text += `RECOMMENDATIONS\n`;
+            text += `${'-'.repeat(30)}\n`;
+            text += `Immediate Focus:\n${report.actionable_recommendations?.immediate_focus || 'No recommendations available'}\n\n`;
+            text += `Skill Development:\n${report.actionable_recommendations?.skill_development || 'No recommendations available'}\n\n`;
+
+            text += `${'='.repeat(60)}\n`;
+            text += `Generated by Persona AI Training System - MAPS Framework\n`;
+
+            return text;
+        }
+
+        // Go to reflection with analysis results
+        async function goToReflection() {
+            if (!currentJobId) {
+                alert('No completed analysis available to send to reflection');
+                return;
+            }
+
+            try {
+                // Get the latest status to ensure we have the result
+                const response = await fetch(`/api/v1/analysis/status/${currentJobId}`);
+                if (!response.ok) {
+                    throw new Error('Could not fetch analysis results');
+                }
+                
+                const statusData = await response.json();
+                if (statusData.status !== 'complete' || !statusData.result) {
+                    alert('Analysis is not complete or results are not available');
+                    return;
+                }
+                
+                const analysisResult = statusData.result;
+
+                // Format analysis report as text
+                let reportText = `Person-Centred Analysis Report\n`;
+                reportText += `==================\n\n`;
+                reportText += `Proficiency Score: ${analysisResult.proficiency_score || 'N/A'}\n\n`;
+
+                if (analysisResult.statistics && analysisResult.statistics.code_counts) {
+                    reportText += `Behavior Counts:\n`;
+                    Object.entries(analysisResult.statistics.code_counts).forEach(([behavior, count]) => {
+                        reportText += `  ${behavior}: ${count}\n`;
+                    });
+                    reportText += `\n`;
+                }
+
+                if (analysisResult.report && analysisResult.report.global_ratings) {
+                    reportText += `Global Ratings:\n`;
+                    Object.entries(analysisResult.report.global_ratings).forEach(([metric, ratingData]) => {
+                        const score = typeof ratingData === 'object' ? ratingData.score : ratingData;
+                        reportText += `  ${metric}: ${score}\n`;
+                    });
+                    reportText += `\n`;
+                }
+
+                if (analysisResult.report && analysisResult.report.actionable_recommendations) {
+                    reportText += `Recommendations:\n`;
+                    const recs = analysisResult.report.actionable_recommendations;
+                    if (recs.immediate_focus) {
+                        reportText += `  Immediate Focus: ${recs.immediate_focus}\n`;
+                    }
+                    if (recs.skill_development) {
+                        reportText += `  Skill Development: ${recs.skill_development}\n`;
+                    }
+                    reportText += `\n`;
+                }
+
+                if (analysisResult.summary) {
+                    reportText += `Summary:\n${JSON.stringify(analysisResult.summary, null, 2)}\n\n`;
+                }
+
+                // Store analysis report for reflection page
+                sessionStorage.setItem('analysisReportForReflection', reportText);
+
+                // Navigate to reflection page
+                window.location.href = '/reflection?from=analysis';
+
+            } catch (error) {
+                console.error('Failed to prepare analysis for reflection:', error);
+                alert('Failed to prepare analysis report for reflection');
+            }
+        }
+
+        // Reset analysis
+        function resetAnalysis() {
+            stopPolling();
+            currentJobId = null;
+            currentTranscript = '';
+            detectedSpeakers = [];
+            window.pollingRetries = 0; // Reset retry counter
+            document.getElementById('uploadSection').style.display = 'block';
+            document.getElementById('verificationSection').style.display = 'none';
+            document.getElementById('progressSection').style.display = 'none';
+            document.getElementById('resultsSection').style.display = 'none';
+            document.getElementById('transcriptText').value = '';
+            
+            // Remove any existing error alerts
+            const existingAlerts = document.querySelectorAll('.upload-section .alert, .verification-section .alert');
+            existingAlerts.forEach(alert => alert.remove());
+        }
+        
+        // Load sample transcript
+        function loadSampleTranscript() {
+            const sample = `Myrtle: Hello! I'm Myrtle - Confrontational & Direct. How can I help you today?
+
+You: How have things been Myrtle?
+
+Myrtle: Things? Whatever, just the same old stuff. You know how it is. Nobody told me it would be a walk in the park. What do you really want?
+
+You: Well, there have been some concerns about your attendance and professionalism in dealing with customers, as you know, that's why we're meeting today
+
+Myrtle: Come on, this is bull. Attendance issues? Seriously? Everyone does it. And professionalism? Nobody told me I had to babysit everyone. What's the real deal here?
+
+You: I understand your strength of feeling here Myrtle, but the real deal is concerns over unsanctioned absences and, as raised by your line manager, some compalints from customers in the pension product support you've offered.
+
+Myrtle: Seriously? Unsanctioned absences? Give me a break. You've got to be kidding me. If there are complaints, why didn't anyone come to me directly? This feels like a witch hunt. What's the real solution here?
+
+You: I am sorry you feel targeted Myrtle, I assure you this is a normal part of our process to address the concerns raised and seek a way forward together. We are discussing it directly now.  How have things been at work recently?
+
+Myrtle: Whatever. Work's been a grind, like always. But if we're addressing concerns, let's cut the fluff. What do you really want to know?
+
+You: I appreciate your willingness to seek a resolution, could you expand more on what makes work feel like a grind?
+
+Myrtle: Come on, that's ridiculous. It's the same tasks day in and day out. No variety, no excitement. It's not my fault if the job feels monotonous. What are you going to do about it?
+
+You: The job is monotonous to you and it lacks variety.  Could you say more about what aspects of the job are like that?
+
+Myrtle: Seriously? You want more details? This is bull. It's the same routine, same customers, same issues. It's draining. Everyone knows it, but nobody does anything. What's your plan to fix it?
+
+You: Thank you Myrtle. There is a sense that the lack of variety comes from the interactions with customers.  Is that right?
+
+Myrtle: Give me a break. Yeah, that's part of it. Same questions, same complaints. It gets old fast. You've got to be kidding if you think it's just me feeling this way. What are we going to do about it?
+
+You: That's a good question.  Let's look into what we could do about that.  How important is it for you to find a way through this lack of variety, on a scale of 1-10 where 10 is very important?
+
+Myrtle: Come on, are we really doing this? I'd say it's a solid 8. It matters, but it's not like I can just change everything overnight. You're the one here asking for solutions, so what's your move?
+
+You: What makes you say 8 and state it's important? And not 3 or 4 ?
+
+Myrtle: Seriously? Because I'm tired of feeling stuck. A 3 or 4 wouldn't cut it; I want to enjoy my work, not dread it. This isn't rocket science. You want to make it better, right? So what's next?
+
+You: You recognise that you want to change to not feel stuck.  Is there any other motivatoin you have for bringing about that change?
+
+Myrtle: Whatever, I just want to be engaged—like anyone would. It's not just about feeling stuck; it's about being effective and not wasting my time. Everyone wants to feel like they're actually contributing. What else do you need to know?
+
+You: That's a clear observation of wanting to be efficient, move forwards and be engaged.   Thinking about moving towards that, what things might you notice at work if it had more of those positive elements?
+
+Myrtle: You've got to be kidding. If things were better, I'd notice people actually enjoying their jobs, more collaboration, and fewer complaints. It wouldn't feel like a drag every day. But let's be real, what are we doing to make that happen?
+
+You: Thank you Myrtle.,  What would those elements look like in your role as the product manager of the pension service?
+
+Myrtle: Come on, it's not rocket science. I'd want clearer goals, better communication, and a team that's actually motivated. If we had that, it would make a huge difference. But right now, it feels like we're just going through the motions. What's the plan to change that?
+
+You: It's understandable we consider the team we work with Myrtle, but I'd like to focus on your role within the team.  Could you desribe what the customer relation part would look like if it was more effective for you and enoyable?
+
+Myrtle: This is bull. If customer relations were effective, I'd have clear feedback and fewer issues to deal with. I want proactive communication, not constant fire-fighting. It should feel like a partnership, not a hassle. But hey, what are we doing to make that a reality?
+
+You: Clear feedback and fewer issues.  What would that feeeback look like Myrtle?
+
+Myrtle: Seriously? Clear feedback would 6be specific and actionable—not just vague complaints. If I know exactly what's working and what's not, I can make changes. Right now, it's all over the place. So, what are we doing to fix that?
+
+You: Thank you Myrtle.  The specific complaints were around your tone, which was irritable and aggressive with clients and the repeated absences on Monday mornings.
+
+Myrtle: Give me a break. Everyone has their off days, and nobody told me it was such a big deal. As for the absences, life happens—it's not my fault. If we're going to talk about issues, let's look at the bigger picture here, alright?
+
+You: For today, I'd like to focus on those issues specifically.  You said it was important, an 8, that we find a solution.
+
+Myrtle: Whatever. If it's that important, let's get to it. I can tone it down with clients—just tell me what you need from me. As for Mondays, I'll do my best to be there, but I'm not making any promises. What else do you want?
+
+You: That's a start towards a solution, thank you.  If we were to meet again in 6 weeks, with you having toned it down, as you say, and also made more commitment to attendance on Monday mornings, what would you report at that point?
+
+Myrtle: You've got to be kidding. If I actually toned it down and showed up, I'd report that things are smoother with clients and maybe even a bit more productive. But honestly, let's see if the rest of the team steps up too. It can't just be on me, right? What are you doing to support that?`;
+            
+            document.getElementById('transcriptText').value = sample;
+            
+            // Show info about the sample
+            const infoDiv = document.createElement('div');
+            infoDiv.className = 'alert alert-success alert-dismissible fade show mt-2';
+            infoDiv.innerHTML = `
+                <i class="fas fa-info-circle"></i>
+                <strong>Performance Review Sample Loaded!</strong> This shows a manager-employee performance review conversation. 
+                The system will detect "You" (Manager) vs "Myrtle" (Employee) discussing attendance and professionalism issues.
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            document.querySelector('.upload-area').appendChild(infoDiv);
+        }
+    </script>
+    
+    <!-- Developer Footer -->
+    <div class="container">
+        <div class="text-center mt-5 pt-4" style="border-top: 1px solid rgba(124, 155, 245, 0.2);">
+            <small class="text-muted" style="font-size: 0.8rem; line-height: 1.4;">
+                ©VHL 2025
+            </small>
+        </div>
+    </div>
+    
+    <!-- Supabase SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Auth utilities -->
+    <script src="/static/js/supabaseClient.js"></script>
+    <script src="/static/js/authGuard.js"></script>
+    <script src="/static/js/navigation.js"></script>
+    
+    <script>
+        // Initialize FULL access requirement - BLOCKS until verified
+        (async function() {
+            try {
+                await initializeSupabase();
+                await requireFullAccess(); // Redirects CONTROL to /thank-you-locked
+                console.log('✅ FULL access verified for analysis page');
+                window.authCheckComplete();
+            } catch (error) {
+                console.error('Access denied:', error);
+            }
+        })();
+    </script>
+    
+</body>
+</html>

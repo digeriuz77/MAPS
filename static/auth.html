@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Authentication - 1-1 Practice Platform</title>
+    <!-- Supabase SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Auth utilities -->
+    <script src="/static/js/supabaseClient.js"></script>
+    <script src="/static/js/authGuard.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/teal-theme.css">
+    <style>
+        body {
+            padding-top: 0; /* No nav bar on auth screen */
+        }
+        
+        .auth-container {
+            max-width: 500px;
+            margin: 0 auto;
+            padding: var(--spacing-xl);
+        }
+        
+        .auth-card {
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            box-shadow: 0 8px 20px rgba(0, 76, 76, 0.15);
+        }
+        
+        h1 {
+            color: var(--dark-teal);
+            text-align: center;
+            margin-bottom: var(--spacing-lg);
+            font-size: 1.8em;
+            font-weight: 600;
+        }
+        
+        .form-group {
+            margin-bottom: var(--spacing-md);
+        }
+        
+        .form-group label {
+            display: block;
+            color: var(--dark-teal);
+            font-weight: 500;
+            margin-bottom: 8px;
+            font-size: 0.95em;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 14px 18px;
+            border: 2px solid var(--medium-teal);
+            border-radius: 12px;
+            font-size: 1em;
+            font-family: inherit;
+            transition: all 0.3s ease;
+            box-sizing: border-box;
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--primary-teal);
+            box-shadow: 0 4px 12px rgba(0, 128, 128, 0.15);
+        }
+        
+        .form-group input::placeholder {
+            color: #99cccc;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: var(--spacing-lg);
+        }
+        
+        .btn-auth {
+            flex: 1;
+            padding: 14px 30px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0, 128, 128, 0.2);
+        }
+        
+        .btn-signup {
+            background: var(--primary-teal);
+            color: white;
+        }
+        
+        .btn-signup:hover {
+            background: var(--dark-teal);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0, 128, 128, 0.3);
+        }
+        
+        .btn-login {
+            background: white;
+            color: var(--primary-teal);
+            border: 2px solid var(--primary-teal);
+        }
+        
+        .btn-login:hover {
+            background: var(--light-teal);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0, 128, 128, 0.3);
+        }
+        
+        .vhl-footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 40px;
+            background: linear-gradient(135deg, #b2d8d8 0%, #66b2b2 100%);
+        }
+        
+        .vhl-footer button {
+            background: var(--primary-teal);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0, 128, 128, 0.3);
+        }
+        
+        .vhl-footer button:disabled {
+            background: var(--medium-teal);
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+        
+        .vhl-footer button:not(:disabled):hover {
+            background: var(--dark-teal);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0, 128, 128, 0.4);
+        }
+        
+        .copyright {
+            color: var(--dark-teal);
+            font-size: 0.85em;
+        }
+        
+        @media (max-width: 768px) {
+            .auth-container {
+                padding: var(--spacing-md);
+            }
+            
+            .auth-card {
+                padding: 30px 25px;
+            }
+            
+            .button-group {
+                flex-direction: column;
+            }
+            
+            .vhl-footer {
+                padding: 15px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- No navigation bar on auth screen - user must log in first -->
+
+    <div class="auth-container">
+        <div class="auth-card">
+            <h1>1-1 Practice Platform</h1>
+            
+            <form id="authForm" onsubmit="handleAuth(event)">
+                <div class="form-group">
+                    <label for="name">Name</label>
+                    <input 
+                        type="text" 
+                        id="name" 
+                        name="name" 
+                        placeholder="Enter your name"
+                        required
+                    >
+                </div>
+                
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input 
+                        type="email" 
+                        id="email" 
+                        name="email" 
+                        placeholder="Enter your email"
+                        required
+                    >
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input 
+                        type="password" 
+                        id="password" 
+                        name="password" 
+                        placeholder="Enter your password"
+                        required
+                    >
+                </div>
+                
+                <div class="button-group">
+                    <button type="button" class="btn-auth btn-signup" onclick="handleSignUp()" disabled style="opacity: 0.5; cursor: not-allowed;" title="Sign up is managed by administrators">
+                        Sign Up (Disabled)
+                    </button>
+                    <button type="button" class="btn-auth btn-login" onclick="handleLogIn()">
+                        Log In
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <footer class="vhl-footer">
+        <button disabled>Previous</button>
+        <span class="copyright">©VHL 2025</span>
+        <button disabled>Next</button>
+    </footer>
+
+    <script>
+        let supabase = null;
+
+        // Initialize Supabase on page load
+        document.addEventListener('DOMContentLoaded', async function() {
+            try {
+                await initializeSupabase();
+                supabase = getSupabaseClient();
+                console.log('✅ Auth page initialized');
+
+                // Check if user is already logged in
+                const { data: { session } } = await supabase.auth.getSession();
+                if (session) {
+                    console.log('User already logged in, redirecting...');
+                    window.location.href = '/welcome';
+                }
+            } catch (error) {
+                console.error('Initialization error:', error);
+                showError('Failed to initialize authentication system');
+            }
+        });
+
+        async function handleSignUp() {
+            // Sign up is disabled - managed by administrators
+            showError('Sign up is managed by administrators. Please contact your administrator for access.');
+            return;
+
+            /* Original sign up code - kept for future use
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            if (!name || !email || !password) {
+                showError('Please fill in all fields');
+                return;
+            }
+
+            try {
+                showLoading('Creating account...');
+
+                const { data, error } = await supabase.auth.signUp({
+                    email: email,
+                    password: password,
+                    options: {
+                        data: {
+                            name: name
+                        }
+                    }
+                });
+
+                if (error) {
+                    throw error;
+                }
+
+                hideLoading();
+                console.log('✅ Sign up successful:', data);
+                
+                // The auth trigger will create the profile automatically
+                // Redirect to login page
+                showSuccess('Account created successfully! Redirecting...');
+                setTimeout(() => {
+                    window.location.href = '/login';
+                }, 1500);
+
+            } catch (error) {
+                hideLoading();
+                console.error('❌ Sign up error:', error);
+                showError(error.message || 'Sign up failed. Please try again.');
+            }
+            */
+        }
+        
+        async function handleLogIn() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            if (!email || !password) {
+                showError('Please enter your email and password');
+                return;
+            }
+
+            try {
+                showLoading('Logging in...');
+
+                const { data, error } = await supabase.auth.signInWithPassword({
+                    email: email,
+                    password: password
+                });
+
+                if (error) {
+                    throw error;
+                }
+
+                console.log('✅ Login successful:', data);
+
+                // Fetch user's role from profiles table
+                const role = await getUserRole(data.user.id);
+                console.log('✅ User role fetched:', role);
+
+                hideLoading();
+                
+                // Redirect to welcome page
+                showSuccess('Login successful! Redirecting...');
+                setTimeout(() => {
+                    window.location.href = '/welcome';
+                }, 1000);
+
+            } catch (error) {
+                hideLoading();
+                console.error('❌ Login error:', error);
+                showError(error.message || 'Login failed. Please check your credentials and try again.');
+            }
+        }
+        
+        function handleAuth(event) {
+            event.preventDefault();
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            if (!errorDiv) {
+                const div = document.createElement('div');
+                div.id = 'errorMessage';
+                div.style.cssText = 'background: #ffebee; color: #c62828; padding: 12px 20px; border-radius: 8px; margin-top: 15px; text-align: center; font-size: 0.9em;';
+                div.textContent = message;
+                document.querySelector('.auth-card form').appendChild(div);
+                
+                setTimeout(() => {
+                    div.remove();
+                }, 5000);
+            } else {
+                errorDiv.textContent = message;
+            }
+        }
+
+        function showSuccess(message) {
+            const successDiv = document.getElementById('successMessage');
+            if (!successDiv) {
+                const div = document.createElement('div');
+                div.id = 'successMessage';
+                div.style.cssText = 'background: #e8f5e9; color: #2e7d32; padding: 12px 20px; border-radius: 8px; margin-top: 15px; text-align: center; font-size: 0.9em;';
+                div.textContent = message;
+                document.querySelector('.auth-card form').appendChild(div);
+            } else {
+                successDiv.textContent = message;
+            }
+        }
+
+        function showLoading(message) {
+            const loadingDiv = document.getElementById('loadingMessage');
+            if (!loadingDiv) {
+                const div = document.createElement('div');
+                div.id = 'loadingMessage';
+                div.style.cssText = 'background: #e3f2fd; color: #1565c0; padding: 12px 20px; border-radius: 8px; margin-top: 15px; text-align: center; font-size: 0.9em;';
+                div.innerHTML = `<i class="fas fa-spinner fa-spin"></i> ${message}`;
+                document.querySelector('.auth-card form').appendChild(div);
+            }
+        }
+
+        function hideLoading() {
+            const loadingDiv = document.getElementById('loadingMessage');
+            if (loadingDiv) {
+                loadingDiv.remove();
+            }
+        }
+    </script>
+</body>
+</html>

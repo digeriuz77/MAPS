@@ -1,0 +1,181 @@
+# Python
+__pycache__/
+*.py[cod]
+*.class
+*.so
+.Python
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+.venv
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+
+# Translations
+*.mo
+*.pot
+
+# Django stuff:
+*.log
+local_settings.py
+db.sqlite3
+
+# Flask stuff:
+instance/
+.webassets-cache
+
+# Scrapy stuff:
+.scrapy
+
+# Sphinx documentation
+docs/_build/
+
+# PyBuilder
+target/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# pyenv
+.python-version
+
+# celery beat schedule file
+celerybeat-schedule
+
+# SageMath parsed files
+*.sage.py
+
+# Environments
+.env
+.env.local
+.env.*.local
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Spyder project settings
+.spyderproject
+.spyproject
+
+# Rope project settings
+.ropeproject
+
+# mkdocs documentation
+/site
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.pydevproject
+.settings/
+.sublime-workspace
+.sublime-project
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+logs/
+*.log
+app_logs.txt
+error_logs.txt
+
+# Backup files
+*.backup
+*.bak
+*.tmp
+
+# Claude
+.claude/
+
+# Archives
+archive/
+
+# PDF test documents (keep only in docs)
+*.pdf
+!docs/*.pdf
+
+# Test and debug files
+test_*.py
+debug_*.py
+check_*.py
+get_*.py
+demo_*.py
+comprehensive_debug.py
+*_debug.py
+*_test.py
+*_check.py
+*_get.py
+*_demo.py
+
+# Analysis and documentation files (informational only)
+analyze_*.py
+CLAUDE.md
+COACHING_SIMULATION_*.md
+CODE_DATABASE_*.md
+PROMPT_ANALYSIS_*.md
+REAL_DATA_*.md
+REMAINING_ISSUES_*.md
+
+# Migration files (already executed in Supabase)
+migrations/028_*.sql
+migrations/029_*.sql
+migrations/030_*.sql
+migrations/031_*.sql
+apply_coaching_simulation_fixes.py

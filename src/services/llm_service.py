@@ -1,0 +1,383 @@
+"""
+Service for LLM interactions with multiple providers
+"""
+import asyncio
+import logging
+from typing import Optional, List, Dict, Any
+import openai
+from openai import AsyncOpenAI
+import anthropic
+
+from src.config.settings import get_settings
+from src.models.schemas import Message
+from src.exceptions import LLMServiceError
+from src.core.constants import APIConstants
+
+logger = logging.getLogger(__name__)
+
+class LLMService:
+    """Service for LLM interactions"""
+    
+    def __init__(self):
+        self.settings = get_settings()
+        self.openai_client = AsyncOpenAI(api_key=self.settings.OPENAI_API_KEY)
+        self.anthropic_client = None
+        if self.settings.ANTHROPIC_API_KEY:
+            self.anthropic_client = anthropic.AsyncAnthropic(api_key=self.settings.ANTHROPIC_API_KEY)
+        
+        self.default_model = self.settings.DEFAULT_MODEL
+        self.max_retries = APIConstants.MAX_RETRIES
+        self.retry_delay = APIConstants.RETRY_DELAY_BASE
+        self.timeout_seconds = 30  # 30 second timeout for LLM calls
+        
+    async def generate_response(
+        self,
+        prompt: str,
+        system_prompt: Optional[str] = None,
+        model: Optional[str] = None,
+        temperature: Optional[float] = None,
+        max_tokens: Optional[int] = None,
+        stop_sequences: Optional[List[str]] = None,
+        conversation_history: Optional[List[Message]] = None
+    ) -> str:
+        """Generate response using LLM API"""
+        
+        model = model or self.default_model
+        temperature = temperature if temperature is not None else self.settings.TEMPERATURE
+        logger.debug(f"LLM Service - Model: {model}, Temperature: {temperature}, Max Tokens: {max_tokens}")
+        # Ensure temperature is within valid range (0.0 to 2.0 for OpenAI)
+        if temperature > 2.0:
+            logger.warning(f"Temperature {temperature} is too high, clamping to 2.0")
+            temperature = 2.0
+        elif temperature < 0.0:
+            logger.warning(f"Temperature {temperature} is too low, clamping to 0.0")
+            temperature = 0.0
+        max_tokens = max_tokens or self.settings.MAX_TOKENS
+        
+        # Build messages list with enhanced conversation history for ALL LLMs
+        messages = []
+        
+        # Add system prompt with stronger format for ALL LLMs (not just gpt-4o-mini)
+        if system_prompt:
+            # Extract persona name for consistent identity reinforcement across ALL LLMs
+            # Get persona name from system prompt - NO hardcoded defaults
+            persona_name = "Unknown"  # Will be overridden from Supabase system_prompt
+            if "You are " in system_prompt:
+                try:
+                    name_start = system_prompt.find("You are ") + 8
+                    name_end = system_prompt.find(",", name_start)
+                    if name_end == -1:
+                        name_end = system_prompt.find(".", name_start)
+                    if name_end > name_start:
+                        persona_name = system_prompt[name_start:name_end].strip()
+                except:
+                    pass
+            
+            # Use system prompt EXACTLY as provided from Supabase - no modifications
+            messages.append({"role": "system", "content": system_prompt})
+        
+        # Add conversation history with consistent limits across ALL LLMs
+        if conversation_history:
+            # Limit to last 16 messages (8 exchanges) for consistent rich context across ALL LLMs
+            for message in conversation_history[-16:]:  # Increased from -10
+                messages.append({
+                    "role": message.role.value,
+                    "content": message.content
+                })
+
+        # Add current prompt
+        messages.append({"role": "user", "content": prompt})
+
+        # Debug: Log what we're sending to LLM
+        logger.info(f"Sending to LLM - Model: {model}, Messages count: {len(messages)}, System prompt present: {bool(system_prompt)}")
+        if system_prompt:
+            logger.info(f"System prompt length: {len(system_prompt)} chars")
+
+        # Determine which API to use based on model name
+        if model.startswith("claude"):
+            return await self._generate_anthropic_response(
+                messages, model, temperature, max_tokens, stop_sequences
+            )
+        elif model.startswith("gemini"):
+            return await self._generate_gemini_response(
+                messages, model, temperature, max_tokens, stop_sequences
+            )
+        else:
+            return await self._generate_openai_response(
+                messages, model, temperature, max_tokens, stop_sequences
+            )
+    
+    async def _generate_openai_response(
+        self,
+        messages: List[Dict[str, str]],
+        model: str,
+        temperature: float,
+        max_tokens: int,
+        stop_sequences: Optional[List[str]] = None
+    ) -> str:
+        """Generate response using OpenAI API"""
+
+        for attempt in range(self.max_retries):
+            try:
+                async with asyncio.timeout(self.timeout_seconds):
+                    # Check if this is a GPT-5 reasoning model (NOT gpt-5-chat-latest)
+                    if model.lower() in ["gpt-5", "gpt-5-flash"] or (model.lower().startswith("gpt-5") and "chat" not in model.lower()):
+                        return await self._generate_gpt5_response(messages, model, max_tokens)
+
+                    # Debug: Log the exact messages being sent to OpenAI
+                    logger.info(f"OpenAI API Request - Model: {model}")
+                    for i, msg in enumerate(messages):
+                        logger.info(f"Message {i}: Role={msg['role']}, Content={msg['content'][:100]}...")
+
+                    # Prepare request params for GPT-4 and earlier models
+                    request_params = {
+                        "model": model,
+                        "messages": messages,
+                        "max_tokens": max_tokens
+                    }
+
+                    # Only add temperature if not using gpt-5 models (which require default temperature=1)
+                    if not model.lower().startswith("gpt-5"):
+                        request_params["temperature"] = temperature
+
+                    # Only add stop sequences if provided
+                    if stop_sequences:
+                        request_params["stop"] = stop_sequences
+
+                    response = await self.openai_client.chat.completions.create(**request_params)
+
+                    return response.choices[0].message.content.strip()
+
+            except asyncio.TimeoutError:
+                error_msg = f"OpenAI API call timed out after {self.timeout_seconds} seconds"
+                logger.error(error_msg)
+                raise LLMServiceError(error_msg, "openai")
+                
+            except Exception as e:
+                logger.warning(f"OpenAI API attempt {attempt + 1} failed: {e}")
+                if attempt < self.max_retries - 1:
+                    await asyncio.sleep(self.retry_delay * (attempt + 1))
+                else:
+                    raise LLMServiceError(str(e), "openai")
+
+    async def _generate_gpt5_response(
+        self,
+        messages: List[Dict[str, str]],
+        model: str,
+        max_tokens: int
+    ) -> str:
+        """Generate response using OpenAI GPT-5 responses API"""
+
+        for attempt in range(self.max_retries):
+            try:
+                async with asyncio.timeout(self.timeout_seconds):
+                    # Convert messages to GPT-5 format
+                    # Combine system prompt and user message into input
+                    system_content = ""
+                    user_content = ""
+
+                    for message in messages:
+                        if message["role"] == "system":
+                            system_content = message["content"]
+                        elif message["role"] == "user":
+                            user_content = message["content"]
+
+                    # Combine system and user content
+                    input_text = user_content
+                    if system_content:
+                        input_text = f"{system_content}\n\n{user_content}"
+
+                    # Use GPT-5 responses API (no temperature parameter)
+                    response = await self.openai_client.responses.create(
+                        model=model,
+                        input=input_text,
+                        reasoning={"effort": "low"},
+                        text={"verbosity": "low"}
+                    )
+
+                    return response.output_text.strip()
+
+            except asyncio.TimeoutError:
+                error_msg = f"GPT-5 API call timed out after {self.timeout_seconds} seconds"
+                logger.error(error_msg)
+                raise LLMServiceError(error_msg, "openai")
+
+            except Exception as e:
+                logger.warning(f"GPT-5 API attempt {attempt + 1} failed: {e}")
+                if attempt < self.max_retries - 1:
+                    await asyncio.sleep(self.retry_delay * (attempt + 1))
+                else:
+                    raise LLMServiceError(str(e), "openai")
+
+    async def _generate_anthropic_response(
+        self,
+        messages: List[Dict[str, str]],
+        model: str,
+        temperature: float,
+        max_tokens: int,
+        stop_sequences: Optional[List[str]] = None
+    ) -> str:
+        """Generate response using Anthropic API"""
+        
+        if not self.anthropic_client:
+            raise ValueError("Anthropic API key not configured")
+        
+        # Convert messages format for Anthropic
+        system = None
+        anthropic_messages = []
+        
+        for message in messages:
+            if message["role"] == "system":
+                system = message["content"]
+            else:
+                anthropic_messages.append({
+                    "role": message["role"],
+                    "content": message["content"]
+                })
+        
+        for attempt in range(self.max_retries):
+            try:
+                async with asyncio.timeout(self.timeout_seconds):
+                    response = await self.anthropic_client.messages.create(
+                        model=model,
+                        messages=anthropic_messages,
+                        system=system,
+                        temperature=temperature,
+                        max_tokens=max_tokens,
+                        stop_sequences=stop_sequences
+                    )
+                    
+                    return response.content[0].text.strip()
+            
+            except asyncio.TimeoutError:
+                error_msg = f"Anthropic API call timed out after {self.timeout_seconds} seconds"
+                logger.error(error_msg)
+                raise LLMServiceError(error_msg, "anthropic")
+                
+            except Exception as e:
+                logger.warning(f"Anthropic API attempt {attempt + 1} failed: {e}")
+                if attempt < self.max_retries - 1:
+                    await asyncio.sleep(self.retry_delay * (attempt + 1))
+                else:
+                    raise LLMServiceError(str(e), "anthropic")
+
+    async def _generate_gemini_response(
+        self,
+        messages: List[Dict[str, str]],
+        model: str,
+        temperature: float,
+        max_tokens: int,
+        stop_sequences: Optional[List[str]] = None
+    ) -> str:
+        """Generate response using Google Gemini API - TEMPORARY: old SDK with 2.5-flash only"""
+        if not self.settings.GEMINI_API_KEY:
+            logger.warning("Gemini API key not configured, falling back to OpenAI")
+            return await self._generate_openai_response(
+                messages, "gpt-4o-mini", temperature, max_tokens, stop_sequences
+            )
+        
+        try:
+            # TEMPORARY: Use old SDK until new one is deployed
+            import google.generativeai as genai
+            
+            genai.configure(api_key=self.settings.GEMINI_API_KEY)
+            
+            # ENFORCE: Only gemini-2.5-flash per user preference
+            model_mapping = {
+                "gemini": "gemini-2.5-flash",
+                "gemini-2.5-flash": "gemini-2.5-flash", 
+                # NO 1.5 Flash allowed
+            }
+            
+            gemini_model_name = model_mapping.get(model, "gemini-2.5-flash")
+            logger.info(f"Using Gemini model: {gemini_model_name} (enforced: no 1.5 Flash)")
+            
+            # Try new model first, fallback if not available
+            try:
+                gemini_model = genai.GenerativeModel(gemini_model_name)
+            except Exception as e:
+                logger.warning(f"gemini-2.5-flash not available ({e}), falling back to OpenAI")
+                return await self._generate_openai_response(
+                    messages, "gpt-4o-mini", temperature, max_tokens, stop_sequences
+                )
+            
+            # Enhanced prompt structure for consistent context retention across ALL LLMs
+            combined_content = ""
+            persona_name = "Assistant"  # Default
+            persona_instructions = ""
+            conversation_context = ""
+            
+            for message in messages:
+                if message["role"] == "system":
+                    persona_instructions = message['content']
+                    # Extract persona name for better identity retention (consistent with other LLMs)
+                    if "You are " in persona_instructions:
+                        try:
+                            name_start = persona_instructions.find("You are ") + 8
+                            name_end = persona_instructions.find(",", name_start)
+                            if name_end == -1:
+                                name_end = persona_instructions.find(".", name_start)
+                            if name_end > name_start:
+                                persona_name = persona_instructions[name_start:name_end].strip()
+                        except:
+                            pass
+                elif message["role"] == "user":
+                    conversation_context += f"User: {message['content']}\n"
+                elif message["role"] == "assistant":
+                    conversation_context += f"{persona_name}: {message['content']}\n"
+            
+            # Build enhanced prompt for consistent context retention across ALL LLMs
+            combined_content = f"""IDENTITY: {persona_instructions}
+
+IMPORTANT: You are {persona_name}. Stay in character throughout this conversation. Do not introduce yourself again unless specifically asked.
+
+CONVERSATION HISTORY:
+{conversation_context}
+
+Respond as {persona_name} based on your established identity and the conversation context above."""
+            
+            # Add recent user message if provided separately
+            if messages and messages[-1]["role"] == "user":
+                combined_content += f"\n\nUser: {messages[-1]['content']}\n{persona_name}:"
+            
+            # Use old API temporarily
+            generation_config = genai.types.GenerationConfig(
+                temperature=temperature,
+                max_output_tokens=max_tokens,
+                stop_sequences=stop_sequences
+            )
+            
+            response = await gemini_model.generate_content_async(
+                combined_content,
+                generation_config=generation_config
+            )
+            
+            logger.info(f"Gemini API call successful - Model: {gemini_model_name}")
+            return response.text.strip()
+            
+        except Exception as e:
+            logger.error(f"Gemini 2.5 Flash API error: {e}")
+            # Do NOT fallback to 1.5 Flash per user preference - fallback to OpenAI instead
+            logger.warning("Gemini 2.5 Flash failed, falling back to OpenAI (user preference: no 1.5 Flash)")
+            return await self._generate_openai_response(
+                messages, "gpt-4o-mini", temperature, max_tokens, stop_sequences
+            )
+    
+    async def generate_embedding(self, text: str, model: Optional[str] = None) -> List[float]:
+        """Generate text embedding"""
+        model = model or self.settings.EMBEDDING_MODEL
+        
+        try:
+            response = await self.openai_client.embeddings.create(
+                model=model,
+                input=text
+            )
+            return response.data[0].embedding
+        except Exception as e:
+            logger.error(f"Embedding generation failed: {e}")
+            raise
+    
+    def estimate_token_count(self, text: str) -> int:
+        """Estimate the number of tokens in the given text"""
+        # Simple estimation: ~4 characters per token
+        return len(text) // 4

@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>1-1 Platform - Select Persona</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #b2d8d8 0%, #66b2b2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            width: 100%;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        h1 {
+            color: #004c4c;
+            text-align: center;
+            margin-bottom: 40px;
+            font-size: 2em;
+            font-weight: 600;
+        }
+
+        .subtitle {
+            color: #006666;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+
+        .personas-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .persona-card {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 8px 20px rgba(0, 76, 76, 0.15);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 3px solid transparent;
+        }
+
+        .persona-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 30px rgba(0, 76, 76, 0.25);
+            border-color: #008080;
+        }
+
+        .persona-card.selected {
+            border-color: #008080;
+            background: linear-gradient(135deg, #ffffff 0%, #e6f5f5 100%);
+        }
+
+        .persona-name {
+            color: #004c4c;
+            font-size: 1.8em;
+            font-weight: 700;
+            margin-bottom: 15px;
+        }
+
+        .persona-description {
+            color: #006666;
+            font-size: 1em;
+            line-height: 1.6;
+        }
+
+        .footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: auto;
+            padding: 20px 0;
+        }
+
+        .footer button {
+            background: #008080;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0, 128, 128, 0.3);
+        }
+
+        .footer button:hover:not(:disabled) {
+            background: #006666;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0, 128, 128, 0.4);
+        }
+
+        .footer button:disabled {
+            background: #66b2b2;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .copyright {
+            color: #004c4c;
+            font-size: 0.85em;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.5em;
+                margin-bottom: 30px;
+            }
+
+            .personas-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .persona-card {
+                padding: 25px;
+            }
+
+            .footer {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Who would you like to talk with?</h1>
+        <p class="subtitle">(click to choose)</p>
+
+        <div class="personas-grid">
+            <div class="persona-card" onclick="selectPersona(this, 'Mary')">
+                <div class="persona-name">Mary</div>
+                <div class="persona-description">
+                    New team member who needs support building confidence and developing professional skills.
+                </div>
+            </div>
+
+            <div class="persona-card" onclick="selectPersona(this, 'Jan')">
+                <div class="persona-name">Jan</div>
+                <div class="persona-description">
+                    Underperforming and you're not sure why.
+                </div>
+            </div>
+
+            <div class="persona-card" onclick="selectPersona(this, 'Terry')">
+                <div class="persona-name">Terry</div>
+                <div class="persona-description">
+                    Communication with colleagues and team members might be improved. Somewhat abrupt.
+                </div>
+            </div>
+
+            <div class="persona-card" onclick="selectPersona(this, 'Vic')">
+                <div class="persona-name">Vic</div>
+                <div class="persona-description">
+                    Performs well but believes he is better than he is. May benefit from improving in 1-2 areas.
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <button onclick="goBack()">Previous</button>
+            <span class="copyright">©VHL 2025</span>
+            <button id="nextBtn" disabled onclick="startConversation()">Next</button>
+        </div>
+    </div>
+
+    <script>
+        let selectedPersona = null;
+
+        function selectPersona(card, name) {
+            // Remove selection from all cards
+            document.querySelectorAll('.persona-card').forEach(c => {
+                c.classList.remove('selected');
+            });
+
+            // Add selection to clicked card
+            card.classList.add('selected');
+            selectedPersona = name;
+
+            // Enable next button
+            document.getElementById('nextBtn').disabled = false;
+        }
+
+        function startConversation() {
+            if (selectedPersona) {
+                console.log('Starting conversation with:', selectedPersona);
+                // Navigate to chat screen
+            }
+        }
+
+        function goBack() {
+            console.log('Going back');
+            // Navigate to previous screen
+        }
+    </script>
+</body>
+</html>

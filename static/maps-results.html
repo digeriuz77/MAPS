@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analysis Results - MAPS Framework</title>
+    
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- Teal Theme CSS -->
+    <link rel="stylesheet" href="/static/css/teal-theme.css">
+    
+    <style>
+        body {
+            padding-top: 70px;
+            background: var(--light-mist);
+        }
+        
+        .nav-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: var(--primary-teal);
+            padding: 15px 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+        }
+        
+        .nav-bar a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            transition: opacity 0.2s;
+        }
+        
+        .nav-bar a:hover {
+            opacity: 0.8;
+        }
+        
+        .nav-bar a.active {
+            border-bottom: 2px solid white;
+        }
+        
+        .results-container {
+            max-width: 900px;
+            margin: 2rem auto;
+            padding: 0 1rem 100px;
+        }
+        
+        .page-title {
+            text-align: center;
+            color: var(--primary-teal);
+            margin-bottom: 2rem;
+        }
+        
+        .screen-tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            justify-content: center;
+        }
+        
+        .tab-button {
+            padding: 12px 24px;
+            background: white;
+            border: 2px solid var(--primary-teal);
+            border-radius: 25px;
+            color: var(--primary-teal);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .tab-button:hover {
+            background: var(--light-teal);
+        }
+        
+        .tab-button.active {
+            background: var(--primary-teal);
+            color: white;
+        }
+        
+        .screen {
+            display: none;
+        }
+        
+        .screen.active {
+            display: block;
+            animation: fadeIn 0.4s;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .assessment-card {
+            background: white;
+            border-radius: 15px;
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .card-title {
+            color: var(--primary-teal);
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--light-teal);
+        }
+        
+        .condition-item {
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+            background: var(--light-mist);
+            border-radius: 10px;
+        }
+        
+        .condition-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+        
+        .condition-name {
+            font-weight: 600;
+            color: var(--dark-teal);
+        }
+        
+        .score-badge {
+            background: var(--primary-teal);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-weight: 600;
+        }
+        
+        .score-badge.high {
+            background: #28a745;
+        }
+        
+        .score-badge.medium {
+            background: #ffc107;
+            color: #333;
+        }
+        
+        .score-badge.low {
+            background: #dc3545;
+        }
+        
+        .evidence {
+            font-size: 0.9rem;
+            color: #555;
+            font-style: italic;
+            margin-top: 0.5rem;
+        }
+        
+        .notes {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 0.5rem;
+        }
+        
+        .overall-score {
+            text-align: center;
+            padding: 2rem;
+            background: linear-gradient(135deg, var(--primary-teal), var(--medium-teal));
+            color: white;
+            border-radius: 15px;
+            margin-bottom: 2rem;
+        }
+        
+        .overall-score-value {
+            font-size: 4rem;
+            font-weight: bold;
+            margin: 1rem 0;
+        }
+        
+        .pattern-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .pattern-item {
+            padding: 0.75rem 1rem;
+            margin-bottom: 0.5rem;
+            background: var(--light-mist);
+            border-left: 4px solid var(--medium-teal);
+            border-radius: 5px;
+        }
+        
+        .strength-item {
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background: #e7f9ed;
+            border-left: 4px solid #28a745;
+            border-radius: 5px;
+        }
+        
+        .strength-title {
+            font-weight: 600;
+            color: #155724;
+            margin-bottom: 0.5rem;
+        }
+        
+        .strength-example {
+            font-size: 0.9rem;
+            color: #666;
+            font-style: italic;
+        }
+        
+        .opportunity-item {
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            border-radius: 5px;
+        }
+        
+        .opportunity-title {
+            font-weight: 600;
+            color: #856404;
+            margin-bottom: 0.5rem;
+        }
+        
+        .opportunity-suggestion {
+            font-size: 0.9rem;
+            color: #666;
+        }
+        
+        .focus-item {
+            padding: 1rem;
+            margin-bottom: 0.5rem;
+            background: #e7f1ff;
+            border-left: 4px solid #0056b3;
+            border-radius: 5px;
+            color: #004085;
+        }
+        
+        .maps-values-box {
+            background: linear-gradient(135deg, #e6f2f2, #d4ebeb);
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin-top: 1.5rem;
+            border: 2px solid var(--medium-teal);
+        }
+        
+        .maps-value-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            margin: 0.25rem;
+            background: var(--primary-teal);
+            color: white;
+            border-radius: 15px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body class="teal-theme">
+    <!-- Navigation Bar -->
+    <nav class="nav-bar">
+        <a href="/welcome"><i class="fas fa-sign-in-alt"></i> Welcome</a>
+        <a href="/persona-select"><i class="fas fa-users"></i> Personas</a>
+        <a href="/analysis" class="active"><i class="fas fa-chart-line"></i> Analysis</a>
+        <a href="/reflection"><i class="fas fa-lightbulb"></i> Reflection</a>
+        <a href="/feedback"><i class="fas fa-comment-dots"></i> Feedback</a>
+    </nav>
+    
+    <div class="results-container">
+        <h1 class="page-title"><i class="fas fa-chart-bar"></i> Person-Centred Analysis Results</h1>
+        
+        <!-- Overall Score -->
+        <div class="overall-score">
+            <div style="font-size: 1.2rem; opacity: 0.9;">Overall Quality Score</div>
+            <div class="overall-score-value" id="overallScore">-</div>
+            <div style="font-size: 1rem; opacity: 0.9;">out of 10</div>
+        </div>
+        
+        <!-- Screen Tabs -->
+        <div class="screen-tabs">
+            <button class="tab-button active" onclick="showScreen(1)">
+                <i class="fas fa-heart"></i> Core Assessment
+            </button>
+            <button class="tab-button" onclick="showScreen(2)">
+                <i class="fas fa-lightbulb"></i> Insights & Development
+            </button>
+        </div>
+        
+        <!-- Screen 1: Core Assessment -->
+        <div class="screen active" id="screen1">
+            <!-- Conditions for Change -->
+            <div class="assessment-card">
+                <h2 class="card-title"><i class="fas fa-seedling"></i> Conditions for Change</h2>
+                <p style="color: #666; margin-bottom: 1.5rem;">
+                    How well did the coach create an environment conducive to change?
+                </p>
+                
+                <div id="conditionsForChange"></div>
+            </div>
+            
+            <!-- Person-Centred Core Conditions -->
+            <div class="assessment-card">
+                <h2 class="card-title"><i class="fas fa-hands-helping"></i> Person-Centred Core Conditions</h2>
+                <p style="color: #666; margin-bottom: 1.5rem;">
+                    Based on Carl Rogers' person-centred approach
+                </p>
+                
+                <div id="personCentredConditions"></div>
+            </div>
+        </div>
+        
+        <!-- Screen 2: Insights & Development -->
+        <div class="screen" id="screen2">
+            <!-- Patterns Observed -->
+            <div class="assessment-card">
+                <h2 class="card-title"><i class="fas fa-search"></i> Patterns Observed</h2>
+                
+                <h3 style="color: var(--dark-teal); margin-top: 1rem;">Coach Patterns</h3>
+                <ul class="pattern-list" id="coachPatterns"></ul>
+                
+                <h3 style="color: var(--dark-teal); margin-top: 1.5rem;">Person Patterns</h3>
+                <ul class="pattern-list" id="personPatterns"></ul>
+                
+                <div style="margin-top: 1.5rem; padding: 1rem; background: var(--light-mist); border-radius: 8px;">
+                    <strong>Interaction Dynamics:</strong>
+                    <p id="interactionDynamics" style="margin: 0.5rem 0 0 0;"></p>
+                </div>
+            </div>
+            
+            <!-- Strengths -->
+            <div class="assessment-card">
+                <h2 class="card-title"><i class="fas fa-star"></i> Strengths</h2>
+                <div id="strengths"></div>
+            </div>
+            
+            <!-- Opportunities -->
+            <div class="assessment-card">
+                <h2 class="card-title"><i class="fas fa-chart-line"></i> Opportunities for Growth</h2>
+                <div id="opportunities"></div>
+            </div>
+            
+            <!-- Next Session Focus -->
+            <div class="assessment-card">
+                <h2 class="card-title"><i class="fas fa-forward"></i> Suggestions for Next Session</h2>
+                <div id="nextSessionFocus"></div>
+            </div>
+            
+            <!-- MAPS Alignment -->
+            <div class="maps-values-box">
+                <h3 style="color: var(--darkest-teal); margin-bottom: 1rem;">
+                    <i class="fas fa-check-circle"></i> MAPS Values Alignment
+                </h3>
+                <div style="margin-bottom: 1rem;">
+                    <span class="maps-value-badge"><i class="fas fa-sync"></i> Transforming</span>
+                    <span class="maps-value-badge"><i class="fas fa-heart"></i> Caring</span>
+                    <span class="maps-value-badge"><i class="fas fa-link"></i> Connecting</span>
+                </div>
+                <p id="mapsAlignment" style="color: #555;"></p>
+            </div>
+        </div>
+    </div>
+    
+    <footer class="vhl-footer">
+        <button class="btn-teal-secondary" onclick="location.href='/analysis'">Back to Analysis</button>
+        <span class="copyright">©VHL 2025</span>
+        <button class="btn-teal-secondary" onclick="location.href='/reflection'">Next: Reflection</button>
+    </footer>
+    
+    <script>
+        // Get job ID from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const jobId = urlParams.get('job_id');
+        
+        // Screen switching
+        function showScreen(screenNumber) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
+            
+            document.getElementById(`screen${screenNumber}`).classList.add('active');
+            document.querySelectorAll('.tab-button')[screenNumber - 1].classList.add('active');
+        }
+        
+        // Load analysis results
+        async function loadResults() {
+            if (!jobId) {
+                alert('No analysis job ID provided');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/v1/analysis/status/${jobId}`);
+                if (!response.ok) throw new Error('Failed to load results');
+                
+                const data = await response.json();
+                
+                if (data.status !== 'complete') {
+                    alert('Analysis not yet complete. Please wait...');
+                    return;
+                }
+                
+                displayResults(data.result);
+                
+            } catch (error) {
+                console.error('Failed to load results:', error);
+                alert('Failed to load analysis results');
+            }
+        }
+        
+        function displayResults(result) {
+            // Overall score
+            document.getElementById('overallScore').textContent = result.overall_quality_score.toFixed(1);
+            
+            // Conditions for Change
+            const cfc = result.conditions_for_change;
+            const cfcHTML = ['safety_trust', 'empowerment', 'autonomy', 'clarity', 'confidence_building'].map(key => {
+                const item = cfc[key];
+                const scoreClass = item.score >= 4 ? 'high' : item.score >= 3 ? 'medium' : 'low';
+                return `
+                    <div class="condition-item">
+                        <div class="condition-header">
+                            <span class="condition-name">${formatKey(key)}</span>
+                            <span class="score-badge ${scoreClass}">${item.score}/5</span>
+                        </div>
+                        ${item.evidence ? `<div class="evidence">"${item.evidence}"</div>` : ''}
+                        ${item.notes ? `<div class="notes">${item.notes}</div>` : ''}
+                    </div>
+                `;
+            }).join('');
+            document.getElementById('conditionsForChange').innerHTML = cfcHTML;
+            
+            // Person-Centred Conditions
+            const pcc = result.person_centred_conditions;
+            const pccHTML = ['genuineness', 'positive_regard', 'empathic_understanding', 'active_listening', 'collaboration'].map(key => {
+                const item = pcc[key];
+                const scoreClass = item.score >= 4 ? 'high' : item.score >= 3 ? 'medium' : 'low';
+                return `
+                    <div class="condition-item">
+                        <div class="condition-header">
+                            <span class="condition-name">${formatKey(key)}</span>
+                            <span class="score-badge ${scoreClass}">${item.score}/5</span>
+                        </div>
+                        ${item.evidence ? `<div class="evidence">"${item.evidence}"</div>` : ''}
+                        ${item.notes ? `<div class="notes">${item.notes}</div>` : ''}
+                    </div>
+                `;
+            }).join('');
+            document.getElementById('personCentredConditions').innerHTML = pccHTML;
+            
+            // Patterns
+            const patterns = result.patterns_observed;
+            document.getElementById('coachPatterns').innerHTML = patterns.coach_patterns.map(p => 
+                `<li class="pattern-item">${p}</li>`
+            ).join('');
+            document.getElementById('personPatterns').innerHTML = patterns.person_patterns.map(p => 
+                `<li class="pattern-item">${p}</li>`
+            ).join('');
+            document.getElementById('interactionDynamics').textContent = patterns.interaction_dynamics;
+            
+            // Strengths
+            const sas = result.strengths_and_suggestions;
+            document.getElementById('strengths').innerHTML = sas.strengths.map(s => `
+                <div class="strength-item">
+                    <div class="strength-title">${s.strength}</div>
+                    <div class="strength-example">${s.example}</div>
+                </div>
+            `).join('');
+            
+            // Opportunities
+            document.getElementById('opportunities').innerHTML = sas.opportunities.map(o => `
+                <div class="opportunity-item">
+                    <div class="opportunity-title">${o.area}</div>
+                    <div class="opportunity-suggestion">${o.suggestion}</div>
+                </div>
+            `).join('');
+            
+            // Next session focus
+            document.getElementById('nextSessionFocus').innerHTML = sas.next_session_focus.map(f => 
+                `<div class="focus-item">${f}</div>`
+            ).join('');
+            
+            // MAPS alignment
+            document.getElementById('mapsAlignment').textContent = sas.maps_alignment;
+        }
+        
+        function formatKey(key) {
+            return key.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+        }
+        
+        // Load results on page load
+        loadResults();
+    </script>
+</body>
+</html>

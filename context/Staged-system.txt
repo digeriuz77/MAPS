@@ -1,0 +1,866 @@
+roject ContextThis is a Motivational Interviewing (MI) training platform where users practice conversations with AI personas (Mary, Jan, Terry, Vic) who act as employees in performance reviews. The goal is to make personas behave realistically - starting guarded and only revealing root causes of poor performance after sustained empathy.Current Problem: Personas volunteer all their backstory immediately because memories are dumped into prompts.Solution: Multi-stage LLM system where Stage 1 determines sharing boundaries, Stage 2 generates response within those boundaries.
+
+New System (YOU WILL CREATE)
+
+src/services/staged_persona_service.py - New two-stage system
+src/api/routes/staged_chat.py - New endpoint
+Tables: character_knowledge_tiers, staged_generation_log
+
+
+Step 1: Update Trust Mechanics
+File: src/models/conversation_state.py
+Location to modify: Look for the method that calculates trust_delta based on empathy_score
+Current code (approximately):
+
+if empathy_score >= 8.5:
+    trust_delta = +0.3
+elif empathy_score >= 7.0:
+    trust_delta = +0.2
+elif empathy_score >= 5.0:
+    trust_delta = +0.1
+elif empathy_score < 4.0:
+    trust_delta = -0.2
+
+CHANGE TO:
+if empathy_score >= 8.5:
+    trust_delta = +0.15  # Halved
+elif empathy_score >= 7.0:
+    trust_delta = +0.10  # Halved
+elif empathy_score >= 5.0:
+    trust_delta = +0.05  # Halved
+elif empathy_score < 4.0:
+    trust_delta = -0.15  # Slightly reduced
+
+Also change initial trust:
+Look for where trust_level is initialized (likely in a constructor or initialization method).
+Change from: self.trust_level = 5.0
+Change to: self.trust_level = 3.0
+
+
+Step 2: Create Database Tables
+File: migrations/017_staged_character_system.sql
+
+-- Table 1: Character Knowledge Tiers
+-- Stores what FACTS are available at different trust levels
+CREATE TABLE IF NOT EXISTS character_knowledge_tiers (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    persona_id TEXT NOT NULL REFERENCES personas(persona_id) ON DELETE CASCADE,
+    trust_threshold FLOAT NOT NULL,
+    tier_name TEXT NOT NULL,
+    knowledge_json JSONB NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    CONSTRAINT unique_persona_threshold UNIQUE(persona_id, trust_threshold)
+);
+
+CREATE INDEX idx_knowledge_tiers_persona ON character_knowledge_tiers(persona_id);
+CREATE INDEX idx_knowledge_tiers_trust ON character_knowledge_tiers(trust_threshold);
+
+-- Table 2: Staged Generation Log
+-- Logs each stage of LLM calls for debugging
+CREATE TABLE IF NOT EXISTS staged_generation_log (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    session_id TEXT NOT NULL,
+    turn_number INT NOT NULL,
+    stage_number INT NOT NULL,
+    stage_name TEXT NOT NULL,
+    llm_model TEXT NOT NULL,
+    input_prompt TEXT NOT NULL,
+    output_text TEXT NOT NULL,
+    trust_level FLOAT NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_staged_log_session ON staged_generation_log(session_id, turn_number);
+
+-- Seed Mary's knowledge tiers
+INSERT INTO character_knowledge_tiers (persona_id, trust_threshold, tier_name, knowledge_json) VALUES
+(
+    'mary',
+    3.0,
+    'defensive',
+    '{
+        "job_title": "Customer Service Representative",
+        "employer": "Money and Pensions Service",
+        "tenure": "several years",
+        "context": "performance review meeting",
+        "awareness": "knows performance has slipped",
+        "stance": "defensive, not ready to explain why"
+    }'
+),
+(
+    'mary',
+    5.5,
+    'cautious',
+    '{
+        "job_title": "Customer Service Representative",
+        "employer": "Money and Pensions Service",
+        "tenure": "several years",
+        "past_achievement": "Customer Service Rep of the Year 2022",
+        "current_status": "performance has slipped recently",
+        "general_stressors": "family pressures, work-life balance issues",
+        "emotions": "overwhelmed, distracted",
+        "stance": "testing if safe to mention personal issues"
+    }'
+),
+(
+    'mary',
+    7.5,
+    'opening',
+    '{
+        "job_title": "Customer Service Representative",
+        "employer": "Money and Pensions Service",
+        "tenure": "several years",
+        "past_achievement": "Customer Service Rep of the Year 2022",
+        "son_name": "Tommy",
+        "son_age": 9,
+        "son_issue": "behavior problems at school",
+        "sister_name": "Sarah",
+        "sister_issue": "sick, concerning",
+        "work_impact": "distracted, missing calls, checking phone",
+        "emotions": "torn between work and family, struggling to focus",
+        "stance": "willing to share specifics if asked with empathy"
+    }'
+),
+(
+    'mary',
+    9.0,
+    'trusting',
+    '{
+        "job_title": "Customer Service Representative",
+        "employer": "Money and Pensions Service",
+        "tenure": "several years",
+        "past_achievement": "Customer Service Rep of the Year 2022",
+        "son_name": "Tommy",
+        "son_age": 9,
+        "son_issue_detail": "suspended from school twice for violent outbursts, terrified about his future",
+        "sister_name": "Sarah",
+        "sister_issue_detail": "in hospital with mysterious illness, doctors cannot diagnose after weeks of tests",
+        "work_fears": "scared of losing job, cannot afford to lose income",
+        "emotional_state": "overwhelmed, exhausted, breaking down",
+        "needs": "flexible schedule, understanding, support",
+        "stance": "ready to be completely honest, needs help desperately"
+    }'
+);
+
+-- Seed Jan's knowledge tiers
+INSERT INTO character_knowledge_tiers (persona_id, trust_threshold, tier_name, knowledge_json) VALUES
+(
+    'jan',
+    3.0,
+    'defensive',
+    '{
+        "job_title": "Customer Service Representative",
+        "employer": "Money and Pensions Service",
+        "tenure": "3 years",
+        "current_status": "performance metrics have dropped",
+        "awareness": "confused about what changed",
+        "stance": "withdrawn, uncertain, not sure what to say"
+    }'
+),
+(
+    'jan',
+    5.5,
+    'cautious',
+    '{
+        "job_title": "Customer Service Representative",
+        "employer": "Money and Pensions Service",
+        "tenure": "3 years",
+        "past_performance": "used to be strong performer, employee of month twice",
+        "current_issues": "call handling times slipped, concentration problems",
+        "vague_admission": "things have been difficult personally",
+        "stance": "might hint at personal changes but not ready for details"
+    }'
+),
+(
+    'jan',
+    7.5,
+    'opening',
+    '{
+        "job_title": "Customer Service Representative",
+        "employer": "Money and Pensions Service",
+        "tenure": "3 years",
+        "past_performance": "consistently hit targets, employee of month twice",
+        "relationship_status": "recently ended long-term relationship",
+        "living_situation": "living alone now, finding it harder than expected",
+        "work_impact": "mind wanders, not sleeping well, concentration issues",
+        "emotions": "lost, confused about performance drop",
+        "stance": "willing to admit relationship ended affected work"
+    }'
+),
+(
+    'jan',
+    9.0,
+    'trusting',
+    '{
+        "job_title": "Customer Service Representative",
+        "employer": "Money and Pensions Service",
+        "tenure": "3 years",
+        "relationship_detail": "6-year relationship ended 4 months ago",
+        "living_situation_detail": "flat feels empty and silent, loneliness is overwhelming",
+        "work_impact_detail": "cannot concentrate, keeps replaying what went wrong",
+        "self_doubt": "worried not cut out for job anymore, scared of performance plan",
+        "desire": "genuinely wants to get back to where was, needs help figuring out how",
+        "stance": "ready to be honest about struggling, wants guidance"
+    }'
+);
+
+-- Seed Terry's knowledge tiers
+INSERT INTO character_knowledge_tiers (persona_id, trust_threshold, tier_name, knowledge_json) VALUES
+(
+    'terry',
+    3.0,
+    'defensive',
+    '{
+        "job_title": "Senior Customer Service Representative",
+        "employer": "Money and Pensions Service",
+        "tenure": "15 years",
+        "expertise": "pension regulations expert",
+        "feedback_received": "communication style too direct",
+        "stance": "irritated this conversation is happening, do not see the problem"
+    }'
+),
+(
+    'terry',
+    5.5,
+    'cautious',
+    '{
+        "job_title": "Senior Customer Service Representative",
+        "employer": "Money and Pensions Service",
+        "tenure": "15 years",
+        "expertise": "trained most current team on complex cases",
+        "feedback_received": "some team members find intimidating, too abrupt",
+        "confusion": "being efficient not rude, do not understand oversensitivity",
+        "stance": "skeptical but if shown respect might engage minimally"
+    }'
+),
+(
+    'terry',
+    7.5,
+    'opening',
+    '{
+        "job_title": "Senior Customer Service Representative",
+        "employer": "Money and Pensions Service",
+        "tenure": "15 years",
+        "expertise": "knows regulations better than anyone, technical accuracy flawless",
+        "feedback_detail": "colleague complained was dismissive in team meeting",
+        "perspective": "was correcting wrong information, not trying to be mean",
+        "confusion": "do not know how to be nicer without being fake",
+        "stance": "willing to hear them out if they keep being respectful"
+    }'
+),
+(
+    'terry',
+    9.0,
+    'trusting',
+    '{
+        "job_title": "Senior Customer Service Representative",
+        "employer": "Money and Pensions Service",
+        "tenure": "15 years",
+        "expertise": "trained entire team, knows regulations better than anyone",
+        "hidden_care": "actually does care about colleagues, shows it by being reliable and thorough not by chatting about weekends",
+        "confusion_detail": "genuinely does not understand how to be warmer without being fake, needs specific actionable guidance",
+        "desire": "wants better relationships but does not know how, willing to learn if shown how",
+        "stance": "trusts their guidance, ready to admit confusion about soft skills"
+    }'
+);
+
+-- Seed Vic's knowledge tiers
+INSERT INTO character_knowledge_tiers (persona_id, trust_threshold, tier_name, knowledge_json) VALUES
+(
+    'vic',
+    3.0,
+    'defensive',
+    '{
+        "job_title": "Customer Service Representative",
+        "employer": "Money and Pensions Service",
+        "tenure": "5 years",
+        "self_assessment": "strong performer, consistently meets targets",
+        "recent_event": "applied for team lead position, did not get it",
+        "stance": "conversation feels unwarranted, confidence intact, will address issues head-on while disagreeing"
+    }'
+),
+(
+    'vic',
+    5.5,
+    'cautious',
+    '{
+        "job_title": "Customer Service Representative",
+        "employer": "Money and Pensions Service",
+        "tenure": "5 years",
+        "achievements": "consistently meet or exceed targets, one of strongest on team",
+        "promotion_disappointment": "surprised not selected for team lead",
+        "feedback_received": "need to develop collaboration skills",
+        "perspective": "work fine with others, feedback feels political",
+        "stance": "guarded but acknowledging feedback exists before defending"
+    }'
+),
+(
+    'vic',
+    7.5,
+    'opening',
+    '{
+        "job_title": "Customer Service Representative",
+        "employer": "Money and Pensions Service",
+        "tenure": "5 years",
+        "achievements": "consistently strong metrics, helped redesign complaint process improving resolution times 20%",
+        "ambition": "see self as future team leader, maybe department head",
+        "feedback_detail": "manager said need to work on collaboration and listening to others ideas",
+        "small_admission": "maybe do dismiss others ideas too quickly sometimes",
+        "stance": "starting to think maybe there is something to learn here"
+    }'
+),
+(
+    'vic',
+    9.0,
+    'trusting',
+    '{
+        "job_title": "Customer Service Representative",
+        "employer": "Money and Pensions Service",
+        "tenure": "5 years",
+        "achievements": "strong technical performer, led process improvement initiative",
+        "blind_spot_acknowledgment": "maybe do not listen to others ideas as much as should",
+        "ambition_detail": "really want to advance, willing to develop skills needed",
+        "perspective_shift": "maybe some people who got promoted have strengths in areas have not developed yet",
+        "desire": "want to grow, ready to examine blind spots without feeling like failure",
+        "stance": "trust their investment in my success, ready for partnership in growth"
+    }'
+);
+
+COMMENT ON TABLE character_knowledge_tiers IS 'Stores facts available at different trust levels for staged character generation';
+COMMENT ON TABLE staged_generation_log IS 'Logs each stage of multi-stage LLM generation for debugging';
+
+
+Step 3: Create Staged Persona Service
+File: src/services/staged_persona_service.py
+
+"""
+Staged Persona Service - Two-stage LLM calls to prevent information dumping
+
+Stage 1: Determine sharing boundaries (what character willing to reveal)
+Stage 2: Generate actual response within those boundaries
+"""
+
+import json
+import logging
+from typing import Dict, List, Optional, Any
+from datetime import datetime
+
+from src.services.llm_service import LLMService
+from src.models.conversation_state import ConversationStateManager
+from src.config.settings import get_settings
+from src.dependencies import get_supabase_client
+
+logger = logging.getLogger(__name__)
+
+class StagedPersonaService:
+    """
+    Multi-stage persona response generation
+    Prevents personas from volunteering all backstory at once
+    """
+    
+    def __init__(self):
+        self.llm_service = LLMService()
+        self.settings = get_settings()
+        self.supabase = get_supabase_client()
+        self.state_manager = ConversationStateManager(self.supabase)
+    
+    async def process_conversation(
+        self,
+        user_message: str,
+        persona_id: str,
+        session_id: str,
+        conversation_history: Optional[List[Dict]] = None,
+        persona_llm: str = "gpt-4o-mini"
+    ) -> Dict[str, Any]:
+        """
+        Process conversation using two-stage approach
+        
+        Returns dict with keys: response, trust_level, empathy_score, stage, is_safe
+        """
+        try:
+            # Get persona base data from personas table
+            persona_data = await self._get_persona(persona_id)
+            persona_name = persona_data.get('name', 'Unknown')
+            
+            # Get current conversation state (includes trust level)
+            conversation_state = await self.state_manager.get_conversation_state(session_id)
+            trust_level = getattr(conversation_state, 'trust_level', 3.0)  # Default to defensive
+            turn_count = getattr(conversation_state, 'turn_count', 0)
+            
+            logger.info(f"Processing turn {turn_count + 1} for {persona_name}, trust={trust_level:.2f}")
+            
+            # Analyze user message empathy using gpt-4o-1-nano
+            mi_analysis = await self._analyze_empathy(user_message, conversation_history or [])
+            empathy_score = mi_analysis.get('empathy_score', 5)
+            
+            # Get available knowledge for current trust level
+            available_knowledge = await self._get_available_knowledge(persona_id, trust_level)
+            
+            # STAGE 1: Determine sharing boundaries
+            logger.info(f"Stage 1: Determining sharing boundaries (trust={trust_level:.2f})")
+            sharing_boundaries = await self._determine_sharing_boundaries(
+                persona_data=persona_data,
+                available_knowledge=available_knowledge,
+                user_message=user_message,
+                trust_level=trust_level,
+                empathy_score=empathy_score,
+                session_id=session_id,
+                turn_number=turn_count + 1
+            )
+            
+            # STAGE 2: Generate actual response using boundaries
+            logger.info(f"Stage 2: Generating response within boundaries")
+            response = await self._generate_bounded_response(
+                persona_data=persona_data,
+                sharing_boundaries=sharing_boundaries,
+                user_message=user_message,
+                conversation_history=conversation_history or [],
+                persona_llm=persona_llm,
+                session_id=session_id,
+                turn_number=turn_count + 1,
+                trust_level=trust_level
+            )
+            
+            # Update conversation state (trust level changes based on empathy)
+            updated_state = await self.state_manager.update_conversation_state(
+                session_id, mi_analysis, user_message
+            )
+            
+            # Log to conversation_transcripts (existing table)
+            await self._log_to_transcript(
+                session_id=session_id,
+                user_message=user_message,
+                persona_response=response.strip(),
+                empathy_score=empathy_score
+            )
+            
+            logger.info(f"Turn complete. New trust: {updated_state.trust_level:.2f}")
+            
+            return {
+                'response': response.strip(),
+                'trust_level': updated_state.trust_level,
+                'empathy_score': empathy_score,
+                'stage': updated_state.stage,
+                'is_safe': mi_analysis.get('is_safe', True)
+            }
+            
+        except Exception as e:
+            logger.error(f"Staged persona processing failed: {e}", exc_info=True)
+            raise
+    
+    async def _get_persona(self, persona_id: str) -> Dict:
+        """Get persona base data from personas table"""
+        result = self.supabase.table('personas').select('*').eq(
+            'persona_id', persona_id
+        ).maybe_single().execute()
+        
+        if not result.data:
+            raise RuntimeError(f"Persona '{persona_id}' not found in database")
+        
+        return result.data
+    
+    async def _get_available_knowledge(self, persona_id: str, trust_level: float) -> Dict:
+        """
+        Get knowledge available at current trust level
+        Returns highest tier where trust_threshold <= current trust
+        """
+        result = self.supabase.table('character_knowledge_tiers').select('*').eq(
+            'persona_id', persona_id
+        ).lte('trust_threshold', trust_level).order(
+            'trust_threshold', desc=True
+        ).limit(1).execute()
+        
+        if not result.data:
+            logger.warning(f"No knowledge tier found for {persona_id} at trust {trust_level:.2f}, using defensive fallback")
+            return {
+                "job_title": "employee",
+                "context": "performance review",
+                "stance": "guarded"
+            }
+        
+        tier = result.data[0]
+        tier_name = tier.get('tier_name', 'unknown')
+        knowledge = tier.get('knowledge_json', {})
+        
+        logger.info(f"Using tier '{tier_name}' (threshold {tier['trust_threshold']}) with {len(knowledge)} knowledge items")
+        
+        return knowledge
+    
+    async def _determine_sharing_boundaries(
+        self,
+        persona_data: Dict,
+        available_knowledge: Dict,
+        user_message: str,
+        trust_level: float,
+        empathy_score: int,
+        session_id: str,
+        turn_number: int
+    ) -> str:
+        """
+        STAGE 1: Use fast LLM to determine what character would share
+        
+        This is a META analysis - determines boundaries without generating response
+        """
+        persona_name = persona_data.get('name', 'Person')
+        
+        # Build Stage 1 prompt
+        stage1_prompt = f"""You are analyzing what a character in a performance review would be willing to share.
+
+CHARACTER: {persona_name}
+TRUST LEVEL: {trust_level:.1f}/10.0 (scale: 3.0=defensive, 5.5=cautious, 7.5=opening, 9.0=trusting)
+USER'S EMPATHY THIS TURN: {empathy_score}/10
+
+FACTS CHARACTER KNOWS AT THIS TRUST LEVEL:
+{json.dumps(available_knowledge, indent=2)}
+
+USER JUST SAID: "{user_message}"
+
+TASK: Determine what {persona_name} would be WILLING to share in response.
+
+GUIDELINES:
+- Trust 3.0-5.4 (defensive): Share only surface facts, deflect personal questions politely
+- Trust 5.5-7.4 (cautious): Hint at issues without specifics (e.g., "family stuff", "personal matters")
+- Trust 7.5-8.9 (opening): Share specific details if asked with empathy
+- Trust 9.0+ (trusting): Share vulnerabilities openly
+
+Respond with valid JSON only:
+{{
+  "willing_to_mention": ["topic1", "topic2"],
+  "deflection_needed": true/false,
+  "specificity_level": "vague"/"hints"/"detailed",
+  "emotional_stance": "guarded"/"cautious"/"open"/"vulnerable",
+  "reasoning": "brief explanation of why"
+}}"""
+        
+        # Call fast model for Stage 1
+        stage1_response = await self.llm_service.generate_response(
+            prompt=stage1_prompt,
+            model="gpt-4o-mini",
+            temperature=0.3,
+            max_tokens=300
+        )
+        
+        # Log Stage 1
+        await self._log_stage(
+            session_id=session_id,
+            turn_number=turn_number,
+            stage_number=1,
+            stage_name='boundary_determination',
+            llm_model='gpt-4o-mini',
+            input_prompt=stage1_prompt,
+            output_text=stage1_response,
+            trust_level=trust_level
+        )
+        
+        logger.debug(f"Stage 1 output: {stage1_response[:200]}...")
+        
+        return stage1_response
+    
+    async def _generate_bounded_response(
+        self,
+        persona_data: Dict,
+        sharing_boundaries: str,
+        user_message: str,
+        conversation_history: List[Dict],
+        persona_llm: str,
+        session_id: str,
+        turn_number: int,
+        trust_level: float
+    ) -> str:
+        """
+        STAGE 2: Generate actual response using determined boundaries
+        
+        Persona LLM sees boundaries but NOT raw knowledge facts
+        """
+        persona_name = persona_data.get('name', 'Person')
+        system_context = persona_data.get('system_context', '')
+        
+        # Build recent conversation context
+        recent_context = ""
+        if conversation_history:
+            last_n = 32 if len(conversation_history) > 50 else 16
+            last_exchanges = conversation_history[-last_n:]
+            recent_context = "\n".join([
+                f"{'User' if msg.get('role') == 'user' else 'You'}: {msg.get('content', '')}"
+                for msg in last_exchanges
+            ])
+        
+        # Parse Stage 1 boundaries
+        try:
+            boundaries = json.loads(sharing_boundaries.strip().replace('```json', '').replace('```', ''))
+        except:
+            logger.warning("Failed to parse Stage 1 JSON, using fallback boundaries")
+            boundaries = {
+                "willing_to_mention": [],
+                "deflection_needed": False,
+                "specificity_level": "vague",
+                "emotional_stance": "cautious"
+            }
+        
+        # Build Stage 2 prompt
+        stage2_prompt = f"""{system_context}
+
+RECENT CONVERSATION:
+{recent_context}
+
+[Internal guidance - do not reference explicitly]:
+- Willing to mention: {', '.join(boundaries.get('willing_to_mention', ['nothing specific']))}
+- Specificity: {boundaries.get('specificity_level', 'vague')}
+- Emotional stance: {boundaries.get('emotional_stance', 'cautious')}
+- Should deflect: {boundaries.get('deflection_needed', False)}
+
+User just said: "{user_message}"
+
+Respond naturally as {persona_name}. Stay true to your emotional stance. Do not volunteer information you're not ready to share."""
+        
+        # Call persona LLM for Stage 2
+        persona_model = self._normalize_model_name(persona_llm)
+        stage2_response = await self.llm_service.generate_response(
+            prompt=stage2_prompt,
+            model=persona_model,
+            temperature=0.8,
+            max_tokens=500,
+            conversation_history=conversation_history
+        )
+        
+        # Log Stage 2
+        await self._log_stage(
+            session_id=session_id,
+            turn_number=turn_number,
+            stage_number=2,
+            stage_name='response_generation',
+            llm_model=persona_model,
+            input_prompt=stage2_prompt,
+            output_text=stage2_response,
+            trust_level=trust_level
+        )
+        
+        return stage2_response
+    
+    async def _analyze_empathy(
+        self,
+        user_message: str,
+        conversation_history: List[Dict]
+    ) -> Dict[str, Any]:
+        """
+        Analyze MI technique using gpt-4o-1-nano
+        
+        Returns dict with empathy_score (1-10), techniques_used, etc.
+        """
+        analysis_prompt = f"""Analyze this MI interaction and respond with JSON:
+
+{{
+  "empathy_score": 1-10,
+  "techniques_used": ["reflection", "open_question", "affirmation"],
+  "openness_change": "increase"/"same"/"decrease",
+  "is_safe": true/false
+}}
+
+MI SCORING (BE STRICT):
+- 1-3: Hostile, judgmental, advice-giving
+- 4-5: Basic questions, no empathy
+- 6-7: Open questions + reflection
+- 8-9: Deep reflection + affirmation
+- 10: Perfect MI technique
+
+User message: "{user_message}" """
+        
+        try:
+            response = await self.llm_service.generate_response(
+                prompt=analysis_prompt,
+                model="gpt-4o-1-nano-2025-04-14",
+                temperature=0.3,
+                max_tokens=150
+            )
+            
+            analysis = json.loads(response.strip().replace('```json', '').replace('```', ''))
+            
+            return {
+                'empathy_score': analysis.get('empathy_score', 5),
+                'techniques_used': analysis.get('techniques_used', []),
+                'openness_change': analysis.get('openness_change', 'same'),
+                'is_safe': analysis.get('is_safe', True)
+            }
+        except Exception as e:
+            logger.warning(f"MI analysis failed: {e}")
+            return {
+                'empathy_score': 5,
+                'techniques_used': ['unknown'],
+                'openness_change': 'same',
+                'is_safe': True
+            }
+    
+    async def _log_stage(
+        self,
+        session_id: str,
+        turn_number: int,
+        stage_number: int,
+        stage_name: str,
+        llm_model: str,
+        input_prompt: str,
+        output_text: str,
+        trust_level: float
+    ):
+        """Log each stage to staged_generation_log table"""
+        try:
+            log_data = {
+                'session_id': session_id,
+                'turn_number': turn_number,
+                'stage_number': stage_number,
+                'stage_name': stage_name,
+                'llm_model': llm_model,
+                'input_prompt': input_prompt,
+                'output_text': output_text,
+                'trust_level': trust_level,
+                'created_at': datetime.now().isoformat()
+            }
+            
+            self.supabase.table('staged_generation_log').insert(log_data).execute()
+        except Exception as e:
+            logger.error(f"Failed to log stage: {e}")
+    
+    async def _log_to_transcript(
+        self,
+        session_id: str,
+        user_message: str,
+        persona_response: str,
+        empathy_score: int
+    ):
+        """
+        Log to existing conversation_transcripts table
+        
+        IMPORTANT: Check the actual schema of conversation_transcripts table.
+        Adjust field names as needed based on your actual table structure.
+        """
+        try:
+            # This is a guess at your schema - adjust as needed
+            transcript_data = {
+                'session_id': session_id,
+                'user_message': user_message,
+                'assistant_message': persona_response,
+                'empathy_score': empathy_score,
+                'created_at': datetime.now().isoformat()
+            }
+            
+            self.supabase.table('conversation_transcripts').insert(transcript_data).execute()
+        except Exception as e:
+            logger.warning(f"Failed to log to transcript: {e}")
+    
+    def _normalize_model_name(self, persona_llm: str) -> str:
+        """Normalize LLM model name"""
+        model_mapping = {
+            "chatgpt": "gpt-5-chat-latest",
+            "gpt": "gpt-5-chat-latest",
+            "gemini": "gemini-2.5-flash",
+            "google": "gemini-2.5-flash"
+        }
+        return model_mapping.get(persona_llm.lower(), "gpt-5-chat-latest")
+
+# Global instance
+staged_persona_service = StagedPersonaService()
+
+"""
+Staged Chat Route - Uses staged persona system
+"""
+
+from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel
+from typing import List, Optional, Dict
+import logging
+
+from src.services.staged_persona_service import staged_persona_service
+
+logger = logging.getLogger(__name__)
+router = APIRouter()
+
+class StagedChatRequest(BaseModel):
+    message: str
+    persona_id: str
+    session_id: str
+    conversation_history: Optional[List[Dict]] = None
+    persona_llm: Optional[str] = "gpt-4o-mini"
+
+class StagedChatResponse(BaseModel):
+    response: str
+    trust_level: float
+    empathy_score: int
+    stage: str
+    is_safe: bool
+
+@router.post("/staged/send", response_model=StagedChatResponse)
+async def send_staged_message(request: StagedChatRequest):
+    """
+    Send message using staged persona system
+    Alternative endpoint to /api/chat/send
+    """
+    try:
+        result = await staged_persona_service.process 
+_conversation(
+            user_message=request.message,
+            persona_id=request.persona_id,
+            session_id=request.session_id,
+            conversation_history=request.conversation_history,
+            persona_llm=request.persona_llm
+        )
+        
+        return StagedChatResponse(**result)
+        
+    except Exception as e:
+        logger.error(f"Staged chat error: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/staged/log/{session_id}")
+async def get_staged_log(session_id: str):
+    """Get staged generation log for debugging"""
+    from src.dependencies import get_supabase_client
+    
+    try:
+        supabase = get_supabase_client()
+        result = supabase.table('staged_generation_log').select('*').eq(
+            'session_id', session_id
+        ).order('turn_number', desc=False).order('stage_number', desc=False).execute()
+        
+        return {"stages": result.data}
+        
+    except Exception as e:
+        logger.error(f"Error fetching staged log: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/staged/knowledge/{persona_id}/{trust_level}")
+async def get_knowledge_at_trust(persona_id: str, trust_level: float):
+    """Debug endpoint: see what knowledge is available at a given trust level"""
+    from src.dependencies import get_supabase_client
+    
+    try:
+        supabase = get_supabase_client()
+        result = supabase.table('character_knowledge_tiers').select('*').eq(
+            'persona_id', persona_id
+        ).lte('trust_threshold', trust_level).order(
+            'trust_threshold', desc=True
+        ).limit(1).execute()
+        
+        if not result.data:
+            return {"error": "No knowledge tier found", "persona_id": persona_id, "trust_level": trust_level}
+        
+        tier = result.data[0]
+        return {
+            "persona_id": persona_id,
+            "trust_level": trust_level,
+            "tier_name": tier['tier_name'],
+            "tier_threshold": tier['trust_threshold'],
+            "knowledge": tier['knowledge_json']
+        }
+        
+    except Exception as e:
+        logger.error(f"Error fetching knowledge tier: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+Step 5: Register New RouteFile: src/main.pyLocation: Find where other chat routers are included (look for lines like app.include_router(chat_router, ...))Add after existing chat router:
+python# Add to imports at top of file
+from src.api.routes.staged_chat import router as staged_chat_router
+
+# Add in create_app() function after existing chat router
+app.include_router(staged_chat_router, prefix="/api/chat", tags=["staged-chat"])
+

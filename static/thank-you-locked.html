@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Feature Locked - 1-1 Practice Platform</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/teal-theme.css">
+    <style>
+        body {
+            padding-top: 70px;
+        }
+        
+        .nav-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: var(--primary-teal);
+            padding: 15px 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+        }
+        
+        .nav-bar a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            transition: opacity 0.2s;
+        }
+        
+        .nav-bar a:hover {
+            opacity: 0.8;
+        }
+        
+        .locked-container {
+            max-width: 700px;
+            margin: 0 auto;
+            padding: var(--spacing-xl);
+        }
+        
+        .locked-card {
+            background: white;
+            border-radius: 16px;
+            padding: 50px 40px;
+            box-shadow: 0 8px 20px rgba(0, 76, 76, 0.15);
+            text-align: center;
+        }
+        
+        .lock-icon {
+            font-size: 4em;
+            color: var(--medium-teal);
+            margin-bottom: var(--spacing-lg);
+        }
+        
+        h1 {
+            color: var(--dark-teal);
+            margin-bottom: var(--spacing-md);
+            font-size: 2em;
+            font-weight: 600;
+        }
+        
+        .message {
+            color: var(--dark-gray);
+            font-size: 1.1em;
+            line-height: 1.6;
+            margin-bottom: var(--spacing-xl);
+        }
+        
+        .button-group {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: var(--spacing-lg);
+        }
+        
+        .btn-action {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.05em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0, 128, 128, 0.2);
+        }
+        
+        .btn-primary {
+            background: var(--primary-teal);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: var(--dark-teal);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0, 128, 128, 0.3);
+        }
+        
+        .btn-secondary {
+            background: white;
+            color: var(--primary-teal);
+            border: 2px solid var(--primary-teal);
+        }
+        
+        .btn-secondary:hover {
+            background: var(--light-teal);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0, 128, 128, 0.3);
+        }
+        
+        .btn-logout {
+            background: var(--medium-teal);
+            color: white;
+        }
+        
+        .btn-logout:hover {
+            background: var(--dark-teal);
+            transform: translateY(-2px);
+        }
+        
+        .vhl-footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 40px;
+            background: linear-gradient(135deg, #b2d8d8 0%, #66b2b2 100%);
+        }
+        
+        .vhl-footer button {
+            background: var(--primary-teal);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0, 128, 128, 0.3);
+        }
+        
+        .vhl-footer button:disabled {
+            background: var(--medium-teal);
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+        
+        .vhl-footer button:not(:disabled):hover {
+            background: var(--dark-teal);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0, 128, 128, 0.4);
+        }
+        
+        .copyright {
+            color: var(--dark-teal);
+            font-size: 0.85em;
+        }
+        
+        @media (max-width: 768px) {
+            .locked-container {
+                padding: var(--spacing-md);
+            }
+            
+            .locked-card {
+                padding: 40px 30px;
+            }
+            
+            .vhl-footer {
+                padding: 15px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="nav-bar">
+        <a href="/welcome"><i class="fas fa-sign-in-alt"></i> Welcome</a>
+        <a href="/persona-select"><i class="fas fa-users"></i> Personas</a>
+        <a href="/feedback"><i class="fas fa-comment-dots"></i> Feedback</a>
+    </nav>
+
+    <div class="locked-container">
+        <div class="locked-card">
+            <div class="lock-icon">
+                <i class="fas fa-lock"></i>
+            </div>
+            
+            <h1>Thank You for Practicing!</h1>
+            
+            <p class="message">
+                You've completed your practice session. Analysis and reflection features 
+                are not available in your current access level.
+            </p>
+            
+            <div class="button-group">
+                <button class="btn-action btn-primary" onclick="window.location.href='/feedback'">
+                    <i class="fas fa-comment-dots"></i> Give Feedback
+                </button>
+                
+                <button class="btn-action btn-secondary" onclick="window.location.href='/persona-select'">
+                    <i class="fas fa-redo"></i> Practice Again
+                </button>
+                
+                <button class="btn-action btn-logout" onclick="handleLogout()">
+                    <i class="fas fa-sign-out-alt"></i> Log Out
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <footer class="vhl-footer">
+        <button onclick="window.location.href='/persona-select'">Previous</button>
+        <span class="copyright">©VHL 2025</span>
+        <button disabled>Next</button>
+    </footer>
+
+    <!-- Supabase SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="/static/js/supabaseClient.js"></script>
+    <script src="/static/js/authGuard.js"></script>
+    
+    <script>
+        // Initialize and verify authentication
+        document.addEventListener('DOMContentLoaded', async function() {
+            try {
+                await initializeSupabase();
+                await requireAuth();
+                console.log('✅ Feature locked page initialized');
+            } catch (error) {
+                console.error('Auth check failed:', error);
+                // requireAuth will redirect to /auth if not authenticated
+            }
+        });
+
+        async function handleLogout() {
+            await logout();
+        }
+    </script>
+</body>
+</html>
