@@ -23,6 +23,10 @@ from src.config.settings import get_settings
 from src.dependencies import get_supabase_client
 from src.services.llm_interaction_analyzer import llm_interaction_analyzer, InteractionContext
 from src.services.behavioral_tier_service import behavioral_tier_service
+from src.services.character_vector_service import character_vector_service
+from src.services.character_consistency_service import character_consistency_service
+from src.services.memory_summarization_service import memory_summarization_service
+from src.services.memory_scoring_service import memory_scoring_service, RetrievalContext
 
 logger = logging.getLogger(__name__)
 
@@ -229,10 +233,17 @@ class EnhancedPersonaService:
                 stage=conversation_state.stage
             )
             
-            # STEP 6: Character consistency validation
-            validated_response = self.consistency_engine.validate_character_response(
-                persona_data, response, trust_level, interaction_context
+            # STEP 6: Enhanced Character consistency validation and correction
+            validated_response, was_corrected, violations = await character_consistency_service.validate_and_correct(
+                persona_id=persona_id,
+                response=response,
+                trust_level=trust_level,
+                user_input=user_message,
+                interaction_quality=interaction_context.interaction_quality
             )
+            
+            if was_corrected:
+                logger.info(f"🔧 Response corrected for {persona_id} ({len(violations)} violations)")
             
             # STEP 7: Update conversation state with natural empathy assessment
             natural_mi_analysis = self._convert_to_mi_format(interaction_context)
@@ -405,13 +416,27 @@ class EnhancedPersonaService:
         session_id: str = None,
         stage: str = "cautious"
     ) -> str:
-        """Generate elegant persona response using enhanced persona structure"""
+        """Generate elegant persona response using enhanced persona structure with character depth"""
         
         persona_name = persona_data.get('name', 'Person')
         persona_id = persona_data.get('persona_id', '')
         
-        # Retrieve what's been shared so far (dynamic progression)
-        recent_memories = await self._get_recent_memories(session_id)
+        # Get character-specific context from vector service
+        character_context = character_vector_service.get_character_context(
+            persona_id=persona_id,
+            user_input=user_message,
+            trust_level=trust_level,
+            interaction_quality=interaction_context.interaction_quality
+        )
+        
+        # Get intelligently scored relevant memories from all sources
+        relevant_memories = await self._get_intelligent_memories(
+            persona_id=persona_id,
+            user_message=user_message,
+            session_id=session_id,
+            trust_level=trust_level,
+            interaction_quality=interaction_context.interaction_quality
+        )
         
         # Get behavioral context (includes core_identity modulated by trust)
         knowledge, tier_name, behavioral_prompt = await self._get_available_knowledge_behavioral(
@@ -421,29 +446,47 @@ class EnhancedPersonaService:
         # Stage-specific guidance for natural progression
         stage_guidance = self._get_stage_guidance(stage, trust_level)
         
-        # Streamlined prompt: behavioral context + memories + stage guidance
+        # Build enhanced prompt with character depth
+        character_memories_text = ""
+        if character_context["relevant_memories"]:
+            memories_list = []
+            for mem in character_context["relevant_memories"]:
+                memories_list.append(f"- {mem['content']} (emotional weight: {mem['emotional_weight']})")
+            character_memories_text = f"\n\n═══ YOUR RELEVANT EXPERIENCES ═══\n" + "\n".join(memories_list)
+        
+        response_guidance = ""
+        if character_context["response_pattern"]:
+            pattern = character_context["response_pattern"]
+            response_guidance = f"\n\n═══ RESPONSE GUIDANCE ═══\nStyle: {pattern['style']}\nTone: {pattern['emotional_tone']}\nSharing Level: {pattern['sharing_level']}"
+            if pattern['example_responses']:
+                response_guidance += f"\nExample approaches: {'; '.join(pattern['example_responses'][:2])}"
+        
+        # Streamlined prompt: behavioral context + character depth + intelligent memories + stage guidance
         response_prompt = f"""═══ CONVERSATION CONTEXT ═══
 Stage: {stage.replace('_', ' ').title()} (Trust: {trust_level:.2f})
 
 {stage_guidance}
 
-{recent_memories}
+{relevant_memories}{character_memories_text}
 
 ═══ YOUR CHARACTER ═══
-{behavioral_prompt}
+{behavioral_prompt}{response_guidance}
 
 ═══ CURRENT INTERACTION ═══
 User: "{user_message}"
 
 Respond naturally as {persona_name} (1-3 sentences):"""
         
-        # Generate response
+        # Generate response with anti-repetition mechanisms
         persona_model = self._normalize_model_name(persona_llm)
         response = await self.llm_service.generate_response(
             prompt=response_prompt,
             model=persona_model,
             temperature=0.8,
-            max_tokens=120
+            max_tokens=120,
+            session_id=session_id,
+            frequency_penalty=0.7,
+            presence_penalty=0.6
         )
         
         # Remove unwanted prefixes like "You:" or persona name prefixes
@@ -472,8 +515,41 @@ Respond naturally as {persona_name} (1-3 sentences):"""
         return guidance.get(stage, "Respond naturally based on where you are in building trust.")
     
     
-    async def _get_recent_memories(self, session_id: str) -> str:
-        """Retrieve recent memories for character continuity and consistency"""
+    async def _get_intelligent_memories(self, persona_id: str, user_message: str,
+                                      session_id: str, trust_level: float, 
+                                      interaction_quality: str) -> str:
+        """Get intelligently scored and ranked memories from all sources"""
+        try:
+            # Create retrieval context for memory scoring
+            context = RetrievalContext(
+                user_input=user_message,
+                session_id=session_id,
+                persona_id=persona_id,
+                trust_level=trust_level,
+                interaction_quality=interaction_quality,
+                max_memories=8  # Get top 8 most relevant memories
+            )
+            
+            # Get intelligently scored memories
+            scored_memories = await memory_scoring_service.retrieve_relevant_memories(context)
+            
+            if not scored_memories:
+                return "(This is your first conversation together)"
+            
+            # Format memories for prompt with relevance indicators
+            memory_context = memory_scoring_service.format_memories_for_prompt(
+                scored_memories, max_length=400
+            )
+            
+            return memory_context
+            
+        except Exception as e:
+            logger.error(f"Failed to retrieve intelligent memories: {e}")
+            # Fallback to simple recent memories
+            return await self._get_recent_memories_fallback(session_id)
+    
+    async def _get_recent_memories_fallback(self, session_id: str) -> str:
+        """Fallback method for memory retrieval"""
         try:
             # Get 7 most recent memories (recency > importance for natural progression)
             result = self.supabase.table('conversation_memories').select('key_insights').eq(
@@ -601,6 +677,9 @@ Respond naturally as {persona_name} (1-3 sentences):"""
             logger.info(f"💭 Contextual memory formed: {memory_text[:100]}... " +
                        f"(importance: {importance:.1f})")
             
+            # Check if we need to summarize memories (after we've added this memory)
+            await self._check_and_summarize_memories(session_id)
+            
         except Exception as e:
             logger.error(f"Failed to form natural memory: {e}", exc_info=True)
     
@@ -668,6 +747,52 @@ Respond naturally as {persona_name} (1-3 sentences):"""
             base_importance += 1.0
         
         return min(10.0, base_importance)
+    
+    async def _check_and_summarize_memories(self, session_id: str) -> None:
+        """Check if we need to trigger memory summarization"""
+        try:
+            # Check how many memories exist for this session
+            count_result = self.supabase.table('conversation_memories') \
+                .select('id', count='exact') \
+                .eq('session_id', session_id) \
+                .execute()
+            
+            memory_count = count_result.count if count_result.count is not None else 0
+            
+            # Trigger summarization if we have more than 10 memories and haven't summarized recently
+            if memory_count > 10:
+                logger.info(f"📋 Checking summarization for session {session_id}: {memory_count} memories")
+                
+                # Check when we last summarized
+                summary_check = self.supabase.table('conversation_summaries') \
+                    .select('created_at') \
+                    .eq('session_id', session_id) \
+                    .order('created_at', desc=True) \
+                    .limit(1) \
+                    .execute()
+                
+                last_summary_time = None
+                if summary_check.data:
+                    last_summary_time = summary_check.data[0]['created_at']
+                
+                # Count memories since last summary
+                memories_since_summary = memory_count
+                if last_summary_time:
+                    recent_memories = self.supabase.table('conversation_memories') \
+                        .select('id', count='exact') \
+                        .eq('session_id', session_id) \
+                        .gt('created_at', last_summary_time) \
+                        .execute()
+                    
+                    memories_since_summary = recent_memories.count if recent_memories.count is not None else 0
+                
+                # Summarize if we have 10+ memories since last summary
+                if memories_since_summary >= 10:
+                    await memory_summarization_service.create_summary(session_id)
+                    logger.info(f"✅ Triggered memory summarization for session {session_id}")
+        
+        except Exception as e:
+            logger.error(f"Failed to check memory summarization: {e}")
     
     # Removed: _extract_core_beliefs_from_persona_data
     # No longer needed - we use core_identity and current_situation directly from the database

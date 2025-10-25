@@ -17,6 +17,8 @@ from datetime import datetime
 
 from src.services.enhanced_persona_service import enhanced_persona_service, PersonaResponse, InteractionContext
 from src.dependencies import get_supabase_client
+from src.services.short_term_memory_service import short_term_memory
+from src.services.analytics_service import analytics
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -119,6 +121,9 @@ async def start_enhanced_conversation(request: StartConversationRequest):
             # Fallback greeting if no greetings in database
             random_greeting = "Hi there! It's good to connect with you today. How are things going?"
         
+        # Start analytics tracking
+        analytics.start_session(session_id=session_id, persona_id=request.persona_id)
+        
         logger.info(f"✅ Started enhanced conversation: session={session_id}, persona={request.persona_id}")
         
         return StartConversationResponse(
@@ -172,21 +177,25 @@ async def send_enhanced_message(request: EnhancedChatRequest):
             'timestamp': datetime.utcnow().isoformat()
         }).execute()
         
-        # Load ACTUAL conversation history from transcript
-        transcript_result = supabase.table('conversation_transcripts') \
-            .select('role, message') \
-            .eq('conversation_id', conversation_id) \
-            .order('turn_number') \
-            .order('timestamp') \
-            .execute()
+        # Add user message to short-term memory
+        short_term_memory.add_message(
+            session_id=conversation_id,
+            role='user',
+            content=request.message,
+            turn_number=turn_number
+        )
         
-        conversation_history = []
-        if transcript_result.data:
-            for msg in transcript_result.data:
-                conversation_history.append({
-                    'role': 'user' if msg['role'] == 'user' else 'assistant',
-                    'content': msg['message']
-                })
+        # Track user message in analytics
+        analytics.add_message(
+            session_id=conversation_id,
+            role='user'
+        )
+        
+        # Get recent conversation history from short-term memory (fast)
+        conversation_history = short_term_memory.get_recent_messages(
+            session_id=conversation_id,
+            limit=12  # Keep last 12 messages for context
+        )
         
         logger.info(f"📨 Processing enhanced turn {turn_number} for persona={persona_id}, conv={conversation_id}")
         
@@ -207,6 +216,23 @@ async def send_enhanced_message(request: EnhancedChatRequest):
             'message': result.response,
             'timestamp': datetime.utcnow().isoformat()
         }).execute()
+        
+        # Add persona response to short-term memory
+        short_term_memory.add_message(
+            session_id=conversation_id,
+            role='persona',
+            content=result.response,
+            turn_number=turn_number
+        )
+        
+        # Track persona response with analytics
+        analytics.add_message(
+            session_id=conversation_id,
+            role='persona',
+            trust_level=result.trust_level,
+            interaction_quality=result.interaction_context.interaction_quality,
+            knowledge_tier=result.knowledge_tier_used
+        )
         
         # Log enhanced interaction details
         logger.info(f"🎭 Enhanced interaction complete:")
@@ -299,25 +325,55 @@ async def get_enhanced_conversation(conversation_id: str):
             if persona_result.data:
                 persona_data = persona_result.data
 
-        # Get transcript
-        transcript_result = supabase.table('conversation_transcripts').select('*').eq(
-            'conversation_id', conversation_id
-        ).order('turn_number').order('timestamp').execute()
+        # Try to get recent messages from short-term memory first (faster)
+        recent_messages = short_term_memory.get_recent_messages(conversation_id)
+        
+        if recent_messages:
+            # Use cached messages and supplement with older ones from database if needed
+            messages = []
+            for msg in recent_messages:
+                messages.append({
+                    'role': msg['role'],
+                    'message': msg['content'],  # Convert from 'content' to 'message'
+                    'turn_number': msg['turn_number'],
+                    'timestamp': msg['timestamp']
+                })
+            
+            # If we have fewer than 20 messages in cache, get older ones from database
+            if len(messages) < 20:
+                transcript_result = supabase.table('conversation_transcripts').select('*').eq(
+                    'conversation_id', conversation_id
+                ).order('turn_number').order('timestamp').execute()
+                
+                # Add older messages not in short-term memory
+                cached_turn_numbers = {msg['turn_number'] for msg in recent_messages}
+                for msg in transcript_result.data:
+                    if msg['turn_number'] not in cached_turn_numbers:
+                        messages.insert(0, {  # Insert at beginning for chronological order
+                            'role': msg['role'],
+                            'message': msg['message'],
+                            'turn_number': msg['turn_number'],
+                            'timestamp': msg['timestamp']
+                        })
+        else:
+            # Fallback to database if no short-term memory
+            transcript_result = supabase.table('conversation_transcripts').select('*').eq(
+                'conversation_id', conversation_id
+            ).order('turn_number').order('timestamp').execute()
+            
+            messages = []
+            for msg in transcript_result.data:
+                messages.append({
+                    'role': msg['role'],
+                    'message': msg['message'],
+                    'turn_number': msg['turn_number'],
+                    'timestamp': msg['timestamp']
+                })
         
         # Get conversation memories for context
         memories_result = supabase.table('conversation_memories').select('*').eq(
             'session_id', conversation_id
         ).order('importance_score', desc=True).limit(10).execute()
-        
-        # Format response
-        messages = []
-        for msg in transcript_result.data:
-            messages.append({
-                'role': msg['role'],
-                'message': msg['message'],  # Frontend expects 'message' not 'content'
-                'turn_number': msg['turn_number'],
-                'timestamp': msg['timestamp']
-            })
         
         return {
             'conversation_id': conversation_id,  # Frontend expects snake_case
@@ -471,8 +527,113 @@ async def get_character_knowledge_tiers(persona_id: str):
             'total_tiers': len(result.data)
         }
         
+    except Exception as e:
+        logger.error(f"❌ Error fetching character knowledge: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/debug/short-term-memory")
+async def get_short_term_memory_stats():
+    """
+    Debug endpoint: Get short-term memory usage statistics
+    """
+    try:
+        usage_stats = short_term_memory.get_memory_usage()
+        active_sessions = short_term_memory.get_all_sessions()
+        
+        session_details = []
+        for session_id in active_sessions[:10]:  # Show details for first 10 sessions
+            stats = short_term_memory.get_session_stats(session_id)
+            session_details.append({
+                'session_id': session_id[:8] + '...',  # Truncate for privacy
+                **stats
+            })
+        
+        return {
+            'memory_usage': usage_stats,
+            'active_sessions_count': len(active_sessions),
+            'session_details': session_details,
+            'system_info': {
+                'max_messages_per_session': short_term_memory.max_messages,
+                'cleanup_interval_hours': short_term_memory._cleanup_interval / 3600
+            }
+        }
+        
+    except Exception as e:
+        logger.error(f"❌ Error getting short-term memory stats: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/analytics/dashboard")
+async def get_analytics_dashboard():
+    """
+    Analytics dashboard with overall statistics
+    """
+    try:
+        # Get overall stats for last 7 days
+        overall_stats = analytics.get_overall_stats(days=7)
+        
+        # Get today's stats
+        today_stats = analytics.get_daily_stats()
+        
+        # Get trust analysis
+        trust_analysis = analytics.get_trust_analysis(days=7)
+        
+        return {
+            'overall_stats': overall_stats,
+            'today_stats': today_stats,
+            'trust_analysis': trust_analysis,
+            'generated_at': datetime.utcnow().isoformat()
+        }
+        
+    except Exception as e:
+        logger.error(f"❌ Error generating analytics dashboard: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/analytics/session/{session_id}")
+async def get_session_analytics(session_id: str):
+    """
+    Get detailed analytics for a specific session
+    """
+    try:
+        session_stats = analytics.get_session_stats(session_id)
+        
+        if not session_stats:
+            raise HTTPException(status_code=404, detail="Session not found in analytics")
+        
+        # Also get short-term memory stats for comparison
+        memory_stats = short_term_memory.get_session_stats(session_id)
+        
+        return {
+            'analytics': session_stats,
+            'memory_stats': memory_stats,
+            'session_id': session_id
+        }
+        
     except HTTPException:
         raise
     except Exception as e:
+        logger.error(f"❌ Error getting session analytics: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/analytics/persona/{persona_id}")
+async def get_persona_analytics(persona_id: str, days: int = 7):
+    """
+    Get analytics for a specific persona
+    """
+    try:
+        # Get trust analysis for this persona
+        trust_analysis = analytics.get_trust_analysis(persona_id=persona_id, days=days)
+        
+        # Get overall stats filtered by this persona would require additional method
+        # For now, return trust analysis
+        return {
+            'persona_id': persona_id,
+            'period_days': days,
+            'trust_analysis': trust_analysis,
+            'generated_at': datetime.utcnow().isoformat()
+        }
+        
+    except Exception as e:
+        logger.error(f"❌ Error getting persona analytics: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
         logger.error(f"❌ Error getting character knowledge: {e}")
         raise HTTPException(status_code=500, detail=str(e))

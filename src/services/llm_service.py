@@ -7,6 +7,8 @@ from typing import Optional, List, Dict, Any
 import openai
 from openai import AsyncOpenAI
 import anthropic
+import numpy as np
+from difflib import SequenceMatcher
 
 from src.config.settings import get_settings
 from src.models.schemas import Message
@@ -30,6 +32,11 @@ class LLMService:
         self.retry_delay = APIConstants.RETRY_DELAY_BASE
         self.timeout_seconds = 30  # 30 second timeout for LLM calls
         
+        # Anti-repetition mechanisms - track last responses
+        self.recent_responses = {}  # session_id -> list of recent responses
+        self.max_recent_responses = 10  # Track last 10 responses
+        self.similarity_threshold = 0.7  # Reject responses with >70% similarity
+        
     async def generate_response(
         self,
         prompt: str,
@@ -38,13 +45,22 @@ class LLMService:
         temperature: Optional[float] = None,
         max_tokens: Optional[int] = None,
         stop_sequences: Optional[List[str]] = None,
-        conversation_history: Optional[List[Message]] = None
+        conversation_history: Optional[List[Message]] = None,
+        session_id: Optional[str] = None,
+        frequency_penalty: Optional[float] = None,
+        presence_penalty: Optional[float] = None
     ) -> str:
         """Generate response using LLM API"""
         
         model = model or self.default_model
         temperature = temperature if temperature is not None else self.settings.TEMPERATURE
+        
+        # Set anti-repetition penalty defaults
+        frequency_penalty = frequency_penalty if frequency_penalty is not None else 0.7
+        presence_penalty = presence_penalty if presence_penalty is not None else 0.6
+        
         logger.debug(f"LLM Service - Model: {model}, Temperature: {temperature}, Max Tokens: {max_tokens}")
+        logger.debug(f"Anti-repetition - Frequency penalty: {frequency_penalty}, Presence penalty: {presence_penalty}")
         # Ensure temperature is within valid range (0.0 to 2.0 for OpenAI)
         if temperature > 2.0:
             logger.warning(f"Temperature {temperature} is too high, clamping to 2.0")
@@ -93,19 +109,42 @@ class LLMService:
         if system_prompt:
             logger.info(f"System prompt length: {len(system_prompt)} chars")
 
-        # Determine which API to use based on model name
-        if model.startswith("claude"):
-            return await self._generate_anthropic_response(
-                messages, model, temperature, max_tokens, stop_sequences
-            )
-        elif model.startswith("gemini"):
-            return await self._generate_gemini_response(
-                messages, model, temperature, max_tokens, stop_sequences
-            )
-        else:
-            return await self._generate_openai_response(
-                messages, model, temperature, max_tokens, stop_sequences
-            )
+        # Anti-repetition retry loop
+        max_attempts = 3
+        for attempt in range(max_attempts):
+            # Determine which API to use based on model name
+            if model.startswith("claude"):
+                response = await self._generate_anthropic_response(
+                    messages, model, temperature, max_tokens, stop_sequences,
+                    frequency_penalty, presence_penalty
+                )
+            elif model.startswith("gemini"):
+                response = await self._generate_gemini_response(
+                    messages, model, temperature, max_tokens, stop_sequences,
+                    frequency_penalty, presence_penalty
+                )
+            else:
+                response = await self._generate_openai_response(
+                    messages, model, temperature, max_tokens, stop_sequences,
+                    frequency_penalty, presence_penalty
+                )
+            
+            # Check for repetition if session_id provided
+            if session_id and self._is_response_repetitive(response, session_id):
+                logger.info(f"Attempt {attempt + 1}: Response too repetitive, retrying...")
+                if attempt < max_attempts - 1:
+                    # Increase penalties for retry
+                    frequency_penalty = min(1.0, frequency_penalty + 0.1)
+                    presence_penalty = min(1.0, presence_penalty + 0.1)
+                    continue
+                else:
+                    logger.warning("Max anti-repetition attempts reached, using last response")
+            
+            # Response is acceptable, add to history and return
+            if session_id:
+                self._add_response_to_history(response, session_id)
+            
+            return response
     
     async def _generate_openai_response(
         self,
@@ -113,7 +152,9 @@ class LLMService:
         model: str,
         temperature: float,
         max_tokens: int,
-        stop_sequences: Optional[List[str]] = None
+        stop_sequences: Optional[List[str]] = None,
+        frequency_penalty: float = 0.0,
+        presence_penalty: float = 0.0
     ) -> str:
         """Generate response using OpenAI API"""
 
@@ -133,7 +174,9 @@ class LLMService:
                     request_params = {
                         "model": model,
                         "messages": messages,
-                        "max_tokens": max_tokens
+                        "max_tokens": max_tokens,
+                        "frequency_penalty": frequency_penalty,
+                        "presence_penalty": presence_penalty
                     }
 
                     # Only add temperature if not using gpt-5 models (which require default temperature=1)
@@ -215,7 +258,9 @@ class LLMService:
         model: str,
         temperature: float,
         max_tokens: int,
-        stop_sequences: Optional[List[str]] = None
+        stop_sequences: Optional[List[str]] = None,
+        frequency_penalty: float = 0.0,
+        presence_penalty: float = 0.0
     ) -> str:
         """Generate response using Anthropic API"""
         
@@ -267,7 +312,9 @@ class LLMService:
         model: str,
         temperature: float,
         max_tokens: int,
-        stop_sequences: Optional[List[str]] = None
+        stop_sequences: Optional[List[str]] = None,
+        frequency_penalty: float = 0.0,
+        presence_penalty: float = 0.0
     ) -> str:
         """Generate response using Google Gemini API - TEMPORARY: old SDK with 2.5-flash only"""
         if not self.settings.GEMINI_API_KEY:
@@ -381,3 +428,31 @@ Respond as {persona_name} based on your established identity and the conversatio
         """Estimate the number of tokens in the given text"""
         # Simple estimation: ~4 characters per token
         return len(text) // 4
+    
+    def _calculate_similarity(self, text1: str, text2: str) -> float:
+        """Calculate similarity between two text responses"""
+        # Use sequence matcher for quick similarity check
+        return SequenceMatcher(None, text1.lower().strip(), text2.lower().strip()).ratio()
+    
+    def _is_response_repetitive(self, response: str, session_id: str) -> bool:
+        """Check if response is too similar to recent responses"""
+        if session_id not in self.recent_responses:
+            return False
+        
+        for recent_response in self.recent_responses[session_id]:
+            similarity = self._calculate_similarity(response, recent_response)
+            if similarity > self.similarity_threshold:
+                logger.warning(f"Rejecting repetitive response (similarity: {similarity:.2f})")
+                return True
+        
+        return False
+    
+    def _add_response_to_history(self, response: str, session_id: str):
+        """Add response to history for anti-repetition tracking"""
+        if session_id not in self.recent_responses:
+            self.recent_responses[session_id] = []
+        
+        # Add new response and keep only last N responses
+        self.recent_responses[session_id].append(response)
+        if len(self.recent_responses[session_id]) > self.max_recent_responses:
+            self.recent_responses[session_id].pop(0)
