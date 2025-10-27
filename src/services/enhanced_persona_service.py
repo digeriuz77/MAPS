@@ -27,6 +27,8 @@ from src.services.character_vector_service import character_vector_service
 from src.services.character_consistency_service import character_consistency_service
 from src.services.memory_summarization_service import memory_summarization_service
 from src.services.memory_scoring_service import memory_scoring_service, RetrievalContext
+from src.services.mi_response_mapper import MIResponseMapper
+from src.utils.logging import track_step
 
 logger = logging.getLogger(__name__)
 
@@ -196,69 +198,77 @@ class EnhancedPersonaService:
             logger.info(f"🎭 Processing turn {turn_count + 1} for {persona_name}, trust={trust_level:.2f}")
             
             # STEP 1: Natural interaction assessment (replaces mechanistic scoring)
-            interaction_context = await self.emotional_tracker.assess_interaction_quality(
-                user_message, conversation_history or []
-            )
+            async with track_step("interaction_assessment", {"session_id": session_id, "persona_id": persona_id}):
+                interaction_context = await self.emotional_tracker.assess_interaction_quality(
+                    user_message, conversation_history or []
+                )
             
             logger.info(f"💡 Interaction quality: {interaction_context.interaction_quality}, " +
                        f"empathy: {interaction_context.empathy_tone}, " +
                        f"approach: {interaction_context.user_approach}")
             
             # STEP 2: Get available knowledge for current trust level
-            available_knowledge, tier_name = await self._get_available_knowledge(persona_id, trust_level)
+            async with track_step("knowledge_selection", {"session_id": session_id, "persona_id": persona_id}):
+                available_knowledge, tier_name = await self._get_available_knowledge(persona_id, trust_level)
             
             # STEP 3: Get micro-behavioral adjustments
-            behavioral_adjustments = self.micro_context_manager.get_behavioral_adjustments(
-                interaction_context, trust_level, conversation_state
-            )
+            async with track_step("behavioral_adjustments", {"session_id": session_id, "persona_id": persona_id}):
+                behavioral_adjustments = self.micro_context_manager.get_behavioral_adjustments(
+                    interaction_context, trust_level, conversation_state
+                )
             
             logger.info(f"🎯 Behavioral adjustments: {behavioral_adjustments}")
             
             # STEP 4: Determine sharing boundaries (simplified from staged approach)
-            sharing_boundaries = self._determine_natural_boundaries(
-                interaction_context, trust_level, behavioral_adjustments, available_knowledge
-            )
+            async with track_step("sharing_boundaries", {"session_id": session_id, "persona_id": persona_id}):
+                sharing_boundaries = self._determine_natural_boundaries(
+                    interaction_context, trust_level, behavioral_adjustments, available_knowledge
+                )
             
             # STEP 5: Generate persona response with all context
-            response = await self._generate_natural_response(
-                persona_data=persona_data,
-                sharing_boundaries=sharing_boundaries,
-                user_message=user_message,
-                conversation_history=conversation_history or [],
-                interaction_context=interaction_context,
-                behavioral_adjustments=behavioral_adjustments,
-                persona_llm=persona_llm,
-                trust_level=trust_level,
-                session_id=session_id,
-                stage=conversation_state.stage
-            )
+            async with track_step("generate_response", {"session_id": session_id, "persona_id": persona_id}):
+                response = await self._generate_natural_response(
+                    persona_data=persona_data,
+                    sharing_boundaries=sharing_boundaries,
+                    user_message=user_message,
+                    conversation_history=conversation_history or [],
+                    interaction_context=interaction_context,
+                    behavioral_adjustments=behavioral_adjustments,
+                    persona_llm=persona_llm,
+                    trust_level=trust_level,
+                    session_id=session_id,
+                    stage=conversation_state.stage
+                )
             
             # STEP 6: Enhanced Character consistency validation and correction
-            validated_response, was_corrected, violations = await character_consistency_service.validate_and_correct(
-                persona_id=persona_id,
-                response=response,
-                trust_level=trust_level,
-                user_input=user_message,
-                interaction_quality=interaction_context.interaction_quality
-            )
+            async with track_step("character_consistency", {"session_id": session_id, "persona_id": persona_id}):
+                validated_response, was_corrected, violations = await character_consistency_service.validate_and_correct(
+                    persona_id=persona_id,
+                    response=response,
+                    trust_level=trust_level,
+                    user_input=user_message,
+                    interaction_quality=interaction_context.interaction_quality
+                )
             
             if was_corrected:
                 logger.info(f"🔧 Response corrected for {persona_id} ({len(violations)} violations)")
             
             # STEP 7: Update conversation state with natural empathy assessment
             natural_mi_analysis = self._convert_to_mi_format(interaction_context)
-            updated_state = await self.state_manager.update_conversation_state(
-                session_id, natural_mi_analysis, user_message, persona_id=persona_id
-            )
+            async with track_step("update_conversation_state", {"session_id": session_id, "persona_id": persona_id}):
+                updated_state = await self.state_manager.update_conversation_state(
+                    session_id, natural_mi_analysis, user_message, persona_id=persona_id
+                )
             
             # STEP 8: Form dynamic memory (contextual, not mechanistic)
-            await self._form_natural_memory(
-                session_id=session_id,
-                user_message=user_message,
-                interaction_context=interaction_context,
-                persona_response=validated_response,
-                persona_name=persona_name
-            )
+            async with track_step("form_memory", {"session_id": session_id, "persona_id": persona_id}):
+                await self._form_natural_memory(
+                    session_id=session_id,
+                    user_message=user_message,
+                    interaction_context=interaction_context,
+                    persona_response=validated_response,
+                    persona_name=persona_name
+                )
             
             logger.info(f"✅ Turn complete. New trust: {updated_state.trust_level:.2f}, " +
                        f"stage: {updated_state.stage}")
@@ -460,6 +470,14 @@ class EnhancedPersonaService:
             response_guidance = f"\n\n═══ RESPONSE GUIDANCE ═══\nStyle: {pattern['style']}\nTone: {pattern['emotional_tone']}\nSharing Level: {pattern['sharing_level']}"
             if pattern['example_responses']:
                 response_guidance += f"\nExample approaches: {'; '.join(pattern['example_responses'][:2])}"
+
+        # NEW: MI behavioral cue derived from interaction context
+        mi_analysis = self._convert_to_mi_format(interaction_context)
+        mi_behavioral_cue = MIResponseMapper.get_behavioral_cue(
+            techniques_used=mi_analysis.get('techniques_used', []),
+            user_approach=interaction_context.user_approach
+        )
+        mi_cue_text = f"\n\n═══ MI RESPONSE CUE ═══\n{mi_behavioral_cue.strip()}" if mi_behavioral_cue else ""
         
         # Streamlined prompt: behavioral context + character depth + intelligent memories + stage guidance
         response_prompt = f"""═══ CONVERSATION CONTEXT ═══
@@ -470,7 +488,7 @@ Stage: {stage.replace('_', ' ').title()} (Trust: {trust_level:.2f})
 {relevant_memories}{character_memories_text}
 
 ═══ YOUR CHARACTER ═══
-{behavioral_prompt}{response_guidance}
+{behavioral_prompt}{response_guidance}{mi_cue_text}
 
 ═══ CURRENT INTERACTION ═══
 User: "{user_message}"
@@ -679,6 +697,18 @@ Respond naturally as {persona_name} (1-3 sentences):"""
             
             # Check if we need to summarize memories (after we've added this memory)
             await self._check_and_summarize_memories(session_id)
+
+            # Schedule async consolidation into long-term memory (non-blocking)
+            try:
+                from src.services.memory_consolidation_service import memory_consolidation_service
+                await memory_consolidation_service.schedule_consolidation(
+                    session_id=session_id,
+                    persona_id=persona_id,
+                    user_message=user_message,
+                    persona_response=persona_response
+                )
+            except Exception as e:
+                logger.warning(f"Memory consolidation scheduling failed: {e}")
             
         except Exception as e:
             logger.error(f"Failed to form natural memory: {e}", exc_info=True)

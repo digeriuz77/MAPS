@@ -29,6 +29,14 @@ async def lifespan(app: FastAPI):
     from src.services.enhanced_persona_service import enhanced_persona_service
     logger.info("EnhancedPersonaService initialized - ready for conversations")
 
+    # Start periodic forgetting/decay task (non-blocking)
+    try:
+        from src.services.memory_decay_service import memory_decay_service
+        memory_decay_service.start_periodic()
+        logger.info("Memory decay service started")
+    except Exception as e:
+        logger.warning(f"Memory decay service not started: {e}")
+
     app_state.is_initialized = True
     logger.info("AI Persona System started successfully")
     
@@ -66,6 +74,13 @@ def create_app() -> FastAPI:
     from src.api.routes.analysis import router as analysis_router
     app.include_router(analysis_router, tags=["analysis"])
 
+    # METRICS ROUTES
+    try:
+        from src.api.routes.metrics import router as metrics_router
+        app.include_router(metrics_router)
+    except Exception:
+        pass
+
     # FEEDBACK SYSTEM ROUTES
     from src.api.routes.feedback import router as feedback_router
     app.include_router(feedback_router, tags=["feedback"])
@@ -86,6 +101,23 @@ def create_app() -> FastAPI:
             supabase_client = get_supabase_client()
             personas_result = supabase_client.table('personas').select('persona_id').limit(1).execute()
             database_status = "healthy" if personas_result.data else "unhealthy"
+
+            # Metrics summary (best-effort)
+            metrics_summary = {}
+            try:
+                from src.services.metrics_service import metrics
+                m = metrics.get_metrics()
+                metrics_summary = {
+                    "llm_calls_total": m.get("llm", {}).get("calls_total", 0),
+                    "errors_total": m.get("llm", {}).get("errors_total", 0),
+                    "summaries_created": m.get("memory", {}).get("summaries_created", 0),
+                    "consolidations": {
+                        "added": m.get("memory", {}).get("consolidations_added", 0),
+                        "updated": m.get("memory", {}).get("consolidations_updated", 0)
+                    }
+                }
+            except Exception:
+                metrics_summary = {}
             
             return {
                 "status": "healthy" if database_status == "healthy" else "degraded",
@@ -93,7 +125,8 @@ def create_app() -> FastAPI:
                 "environment": settings.ENVIRONMENT,
                 "timestamp": datetime.utcnow().isoformat(),
                 "database_status": database_status,
-                "api_status": "running"
+                "api_status": "running",
+                "metrics": metrics_summary
             }
         except Exception as e:
             return {

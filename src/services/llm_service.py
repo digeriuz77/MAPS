@@ -9,6 +9,8 @@ from openai import AsyncOpenAI
 import anthropic
 import numpy as np
 from difflib import SequenceMatcher
+import time
+from src.services.metrics_service import metrics
 
 from src.config.settings import get_settings
 from src.models.schemas import Message
@@ -187,7 +189,13 @@ class LLMService:
                     if stop_sequences:
                         request_params["stop"] = stop_sequences
 
+                    t0 = time.time()
                     response = await self.openai_client.chat.completions.create(**request_params)
+                    latency_ms = (time.time() - t0) * 1000.0
+                    try:
+                        metrics.record_llm_call("openai", model, True, latency_ms)
+                    except Exception:
+                        pass
 
                     return response.choices[0].message.content.strip()
 
@@ -197,6 +205,12 @@ class LLMService:
                 raise LLMServiceError(error_msg, "openai")
                 
             except Exception as e:
+                try:
+                    # best-effort latency if t0 defined
+                    latency_ms = (time.time() - t0) * 1000.0 if 't0' in locals() else 0.0
+                    metrics.record_llm_call("openai", model, False, latency_ms)
+                except Exception:
+                    pass
                 logger.warning(f"OpenAI API attempt {attempt + 1} failed: {e}")
                 if attempt < self.max_retries - 1:
                     await asyncio.sleep(self.retry_delay * (attempt + 1))
@@ -231,12 +245,18 @@ class LLMService:
                         input_text = f"{system_content}\n\n{user_content}"
 
                     # Use GPT-5 responses API (no temperature parameter)
+                    t0 = time.time()
                     response = await self.openai_client.responses.create(
                         model=model,
                         input=input_text,
                         reasoning={"effort": "low"},
                         text={"verbosity": "low"}
                     )
+                    latency_ms = (time.time() - t0) * 1000.0
+                    try:
+                        metrics.record_llm_call("openai", model, True, latency_ms)
+                    except Exception:
+                        pass
 
                     return response.output_text.strip()
 
@@ -246,6 +266,11 @@ class LLMService:
                 raise LLMServiceError(error_msg, "openai")
 
             except Exception as e:
+                try:
+                    latency_ms = (time.time() - t0) * 1000.0 if 't0' in locals() else 0.0
+                    metrics.record_llm_call("openai", model, False, latency_ms)
+                except Exception:
+                    pass
                 logger.warning(f"GPT-5 API attempt {attempt + 1} failed: {e}")
                 if attempt < self.max_retries - 1:
                     await asyncio.sleep(self.retry_delay * (attempt + 1))
@@ -283,6 +308,7 @@ class LLMService:
         for attempt in range(self.max_retries):
             try:
                 async with asyncio.timeout(self.timeout_seconds):
+                    t0 = time.time()
                     response = await self.anthropic_client.messages.create(
                         model=model,
                         messages=anthropic_messages,
@@ -291,6 +317,11 @@ class LLMService:
                         max_tokens=max_tokens,
                         stop_sequences=stop_sequences
                     )
+                    latency_ms = (time.time() - t0) * 1000.0
+                    try:
+                        metrics.record_llm_call("anthropic", model, True, latency_ms)
+                    except Exception:
+                        pass
                     
                     return response.content[0].text.strip()
             
@@ -300,6 +331,11 @@ class LLMService:
                 raise LLMServiceError(error_msg, "anthropic")
                 
             except Exception as e:
+                try:
+                    latency_ms = (time.time() - t0) * 1000.0 if 't0' in locals() else 0.0
+                    metrics.record_llm_call("anthropic", model, False, latency_ms)
+                except Exception:
+                    pass
                 logger.warning(f"Anthropic API attempt {attempt + 1} failed: {e}")
                 if attempt < self.max_retries - 1:
                     await asyncio.sleep(self.retry_delay * (attempt + 1))
@@ -394,15 +430,27 @@ Respond as {persona_name} based on your established identity and the conversatio
                 stop_sequences=stop_sequences
             )
             
+            t0 = time.time()
             response = await gemini_model.generate_content_async(
                 combined_content,
                 generation_config=generation_config
             )
+            latency_ms = (time.time() - t0) * 1000.0
+            
+            try:
+                metrics.record_llm_call("gemini", gemini_model_name, True, latency_ms)
+            except Exception:
+                pass
             
             logger.info(f"Gemini API call successful - Model: {gemini_model_name}")
             return response.text.strip()
             
         except Exception as e:
+            try:
+                latency_ms = (time.time() - t0) * 1000.0 if 't0' in locals() else 0.0
+                metrics.record_llm_call("gemini", model, False, latency_ms)
+            except Exception:
+                pass
             logger.error(f"Gemini 2.5 Flash API error: {e}")
             # Do NOT fallback to 1.5 Flash per user preference - fallback to OpenAI instead
             logger.warning("Gemini 2.5 Flash failed, falling back to OpenAI (user preference: no 1.5 Flash)")

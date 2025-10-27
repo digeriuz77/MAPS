@@ -1,7 +1,7 @@
 # Character AI Chat - Improvement Plan & Progress
 
-**Last Updated**: October 25, 2024  
-**Status**: Phase 1 Complete ✅ | Phase 2 In Progress 🔄
+**Last Updated**: October 27, 2025  
+**Status**: Phase 1-2 Complete ✅ | Observability Complete ✅ | Phase 3 Kickoff 🔄
 
 ## ✅ **COMPLETED - Phase 1: Quick Wins** 
 
@@ -236,3 +236,77 @@
 ---
 
 **🏆 RECOMMENDATION: Option A - Continue with Vector Database Integration as the next priority. This creates the foundation for advanced memory features while the current improvements settle in.**
+
+**Also, add some code for observability - for example: # Add this 20-line enhancement for better observability:
+import structlog
+from contextlib import asynccontextmanager
+
+@asynccontextmanager
+async def track_step(step_name: str, context: Dict):
+    """Track pipeline step execution"""
+    start = time.time()
+    log = structlog.get_logger()
+    
+    log.info("step_start", step=step_name, session_id=context.get('session_id'))
+    try:
+        yield
+        duration = time.time() - start
+        log.info("step_complete", step=step_name, duration=duration)
+    except Exception as e:
+        log.error("step_failed", step=step_name, error=str(e))
+        raise
+
+# Use in your existing pipeline:
+async with track_step("analyze_interaction", context):
+    interaction_context = await self.emotional_tracker.assess_interaction_quality(...)
+
+"
+
+---
+
+## ✅ Completed (since last update)
+
+- MI Response Mapping integrated
+  - New: `src/services/mi_response_mapper.py`
+  - Injected “MI RESPONSE CUE” into persona prompt (guides how to react; does not prescribe content)
+  - Backward compatible: neutral when no specific technique detected
+- Metrics and instrumentation
+  - New: `GET /api/metrics` with LLM call counts/latency, errors, memory pipeline stats
+  - Health extended with a compact metrics snapshot
+  - track_step wrappers added around interaction_assessment, knowledge_selection, behavioral_adjustments,
+    sharing_boundaries, generate_response, character_consistency, update_conversation_state, form_memory,
+    plus summarization stages
+  - LLM providers instrumented (OpenAI/Anthropic/Gemini) with latency and success/failure tracking
+- Memory pipeline scaffolding
+  - Added consolidation and decay services (non-blocking). DB migrations still pending
+
+---
+
+## 🚀 Immediate Next Steps (Current Sprint)
+
+1) Ship DB migrations and guardrails
+- Create tables: `long_term_memories`, `memory_audit_log` (+ indexes on persona_id, session_id, hash, last_accessed)
+- Verify consolidation/decay paths end-to-end; keep audit non-fatal
+
+2) Debug/admin endpoints
+- `GET /api/memory/{session_id}/summaries` (recent summaries)
+- `GET /api/memory/scoring?session_id=...&persona_id=...` (top-N scored memories)
+- `POST /api/memory/decay/run` (one-off decay pass for ops)
+
+3) Multi-user isolation
+- Thread `user_id` through conversations, summaries, consolidation; filter retrieval by `user_id`
+
+4) Metrics expansion
+- Per-route timing (add track_step on API handlers as needed)
+- Optional Prometheus exposition (query param `format=prom`)
+
+5) Tests
+- MI cue behavior: advice_giving vs ask_share_ask vs neutral (same persona/trust)
+- Metrics sanity: LLM call counters and latency increase on traffic
+- Summarization/consolidation happy path; decay “prune when cold and low importance”
+
+6) Docs
+- Update README with `/api/metrics`, MI cue behavior, and health snapshot fields
+
+Acceptance
+- Migrations applied; consolidation writes; decay updates/prunes; metrics reflect real traffic; tests pass.

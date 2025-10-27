@@ -55,6 +55,14 @@ class Settings(BaseSettings):
     ENABLE_ANALYSIS_CACHE: bool = True
     USE_DATABASE_ENHANCED_ANALYSIS: bool = True  # Enable database-enhanced analysis
     
+    # Memory Consolidation & Forgetting
+    ENABLE_MEMORY_CONSOLIDATION: bool = True
+    CONSOLIDATION_DELAY_SECONDS: int = 30  # Run consolidation ~30s after events
+    CONSOLIDATION_BATCH_SIZE: int = 50
+    FORGETTING_DECAY_LAMBDA: float = 0.05  # Daily decay rate for long-term memories
+    FORGETTING_INACTIVE_DAYS: int = 60  # Prune memories unused for N days if low importance
+    MEMORY_CAP_PER_PERSONA: int = 500  # Soft cap for long-term memories per persona
+    
     # Monitoring
     SENTRY_DSN: Optional[str] = None
     PROMETHEUS_PORT: int = 8001

@@ -11,6 +11,7 @@ from dataclasses import dataclass, asdict
 from src.services.llm_service import LLMService
 from src.services.short_term_memory_service import short_term_memory
 from src.dependencies import get_supabase_client
+from src.utils.logging import track_step
 
 logger = logging.getLogger(__name__)
 
@@ -110,14 +111,16 @@ class MemorySummarizationService:
             Generated conversation summary
         """
         # Get conversation messages for the range
-        messages = await self._get_conversation_range(session_id, start_turn, end_turn)
+        async with track_step("fetch_conversation_range", {"session_id": session_id}):
+            messages = await self._get_conversation_range(session_id, start_turn, end_turn)
         
         if not messages:
             logger.warning(f"No messages found for session {session_id} range {start_turn}-{end_turn}")
             return None
         
         # Generate summary using LLM
-        summary_data = await self._generate_summary(messages, persona_id)
+        async with track_step("summarization_llm", {"persona_id": persona_id}):
+            summary_data = await self._generate_summary(messages, persona_id)
         
         # Create summary object
         summary = ConversationSummary(
@@ -138,6 +141,13 @@ class MemorySummarizationService:
         
         # Store summary
         await self._store_summary(summary)
+
+        # Metrics
+        try:
+            from src.services.metrics_service import metrics
+            metrics.record_summary_created()
+        except Exception:
+            pass
         
         logger.info(f"✅ Created summary for {session_id}: {len(summary.key_topics)} topics, " +
                    f"{len(summary.user_preferences)} preferences, {len(summary.emotional_moments)} emotional moments")
