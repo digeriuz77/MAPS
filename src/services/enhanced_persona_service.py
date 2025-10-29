@@ -13,6 +13,7 @@ This service provides a unified, natural approach to persona interactions
 
 import json
 import logging
+import re
 from typing import Dict, List, Optional, Any, Tuple
 from datetime import datetime
 from dataclasses import dataclass
@@ -478,6 +479,10 @@ class EnhancedPersonaService:
             user_approach=interaction_context.user_approach
         )
         mi_cue_text = f"\n\n═══ MI RESPONSE CUE ═══\n{mi_behavioral_cue.strip()}" if mi_behavioral_cue else ""
+
+        # NEW: Voice fingerprint derived from persona traits and stage
+        voice_fingerprint = self._get_voice_fingerprint(persona_data, stage, interaction_context)
+        vf_block = f"\n\n═══ VOICE FINGERPRINT ═══\n{voice_fingerprint}" if voice_fingerprint else ""
         
         # Streamlined prompt: behavioral context + character depth + intelligent memories + stage guidance
         response_prompt = f"""═══ CONVERSATION CONTEXT ═══
@@ -488,7 +493,7 @@ Stage: {stage.replace('_', ' ').title()} (Trust: {trust_level:.2f})
 {relevant_memories}{character_memories_text}
 
 ═══ YOUR CHARACTER ═══
-{behavioral_prompt}{response_guidance}{mi_cue_text}
+{behavioral_prompt}{response_guidance}{mi_cue_text}{vf_block}
 
 ═══ CURRENT INTERACTION ═══
 User: "{user_message}"
@@ -513,8 +518,64 @@ Respond naturally as {persona_name} (1-3 sentences):"""
         elif response.startswith(f'{persona_name}: '):
             response = response[len(f'{persona_name}: '):]
         
-        return response.strip()
+        # Apply deterministic voice sanitizer (no extra LLM)
+        response = self._apply_voice_sanitizer(response.strip(), persona_data, stage, interaction_context)
+        return response
     
+    def _get_voice_fingerprint(self, persona_data: Dict, stage: str, interaction_context: InteractionContext) -> str:
+        """Build a concise voice fingerprint block based on traits.speech_patterns and current stage.
+        Hostile/poor interactions map to a defensive style; trusting/opening map to trusting style.
+        """
+        traits = persona_data.get('traits') or {}
+        sp = traits.get('speech_patterns') or {}
+        # Choose style key
+        is_hostile = (getattr(interaction_context, 'empathy_tone', '') == 'hostile') or \
+                     (getattr(interaction_context, 'interaction_quality', '') == 'poor')
+        if is_hostile:
+            key = 'when_defensive'
+        else:
+            stage_l = (stage or '').lower()
+            if stage_l in ('opening_up', 'full_trust', 'trusting', 'opening'):
+                key = 'when_trusting'
+            else:
+                key = 'when_defensive'
+        style = sp.get(key, '')
+        never = sp.get('never_says', []) or []
+        sigs  = sp.get('signature_phrases', []) or []
+        lines: List[str] = []
+        if style:
+            lines.append(f"Style now: {style}")
+        if never:
+            lines.append(f"Never say: {', '.join(never)}")
+        if sigs:
+            lines.append(f"Signature phrases (use sparingly): {', '.join(sigs)}")
+        return "\n".join(lines)
+
+    def _apply_voice_sanitizer(self, text: str, persona_data: Dict, stage: str, interaction_context: InteractionContext) -> str:
+        """Deterministic last‑mile adjustments: avoid banned phrases, keep defensive turns brief,
+        and do not force progress under hostility."""
+        traits = persona_data.get('traits') or {}
+        sp = traits.get('speech_patterns') or {}
+        # Remove banned phrases
+        for banned in sp.get('never_says', []) or []:
+            if not banned:
+                continue
+            text = text.replace(banned, '').replace(banned.capitalize(), '')
+        # Sentence-level shaping
+        sents = [s.strip() for s in re.split(r'(?<=[.!?])\s+', text) if s.strip()]
+        is_hostile = (getattr(interaction_context, 'empathy_tone', '') == 'hostile') or \
+                     (getattr(interaction_context, 'interaction_quality', '') == 'poor')
+        stage_l = (stage or '').lower()
+        # Defensive/hostile: cap verbosity
+        if is_hostile or stage_l in ('defensive', 'cautious'):
+            if len(sents) > 3:
+                sents = sents[:3]
+            return ' '.join(sents)
+        # Trusting: allow slightly longer if too short, but do not invent “progress” under hostility
+        if stage_l in ('opening', 'opening_up', 'trusting') and len(sents) < 2 and not is_hostile:
+            sents = sents + ["I could use a bit of help figuring this out."]
+        return ' '.join(sents)
+
     def _get_stage_guidance(self, stage: str, trust_level: float) -> str:
         """Provide stage-specific guidance for natural conversation progression"""
         
