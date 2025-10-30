@@ -1,42 +1,32 @@
-# Core FastAPI and Web Framework
-fastapi==0.109.0
-uvicorn[standard]==0.27.0
-starlette==0.35.1
-python-multipart==0.0.6
+# Core FastAPI
+fastapi>=0.109.0,<0.110.0
+uvicorn[standard]>=0.27.0,<0.28.0
+python-multipart>=0.0.6
 
-# Pydantic for data validation
-pydantic==2.5.3
-pydantic-settings==2.1.0
+# Pydantic
+pydantic>=2.5.0,<3.0.0
+pydantic-settings>=2.1.0,<3.0.0
 
-# Supabase and Database
-supabase==2.3.0
-postgrest==0.13.0
+# Supabase (requires httpx<0.25.0)
+supabase>=2.3.0,<3.0.0
+postgrest>=0.13.0,<0.14.0
+httpx>=0.24.0,<0.25.0
 
 # LLM Providers
-openai==1.12.0
-anthropic==0.18.1
+openai>=1.12.0,<2.0.0
+anthropic>=0.18.0,<0.19.0
+google-generativeai>=0.3.0,<0.4.0
 
-# LangChain and related
-langchain==0.1.6
-langchain-core==0.1.20
-langchain-community==0.0.20
-langchain-openai==0.0.5
+# LangChain (for vector store)
+langchain>=0.1.0,<0.2.0
+langchain-core>=0.1.0,<0.2.0
+langchain-community>=0.0.20,<0.1.0
 
-# HTTP and Async
-aiohttp==3.9.3
-httpx>=0.24.0,<0.25.0
-requests==2.31.0
+# HTTP Client
+aiohttp>=3.9.0,<4.0.0
 
-# Numerical computing
-numpy==1.26.3
-
-# Google AI (for Gemini)
-google-generativeai==0.3.2
+# Data Processing
+numpy>=1.26.0,<2.0.0
 
 # Utilities
-python-dotenv==1.0.1
-python-jose[cryptography]==3.3.0
-passlib[bcrypt]==1.7.4
-
-# Logging and monitoring
-colorlog==6.8.2
+python-dotenv>=1.0.0
