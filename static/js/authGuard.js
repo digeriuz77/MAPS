@@ -173,7 +173,8 @@ async function canAccessRoute(route) {
  */
 async function authenticatedFetch(url, options = {}) {
     try {
-        const supabase = window.getSupabaseClient();
+        // Ensure Supabase is initialized before making authenticated requests
+        const supabase = await window.initializeSupabase();
         const { data: { session }, error } = await supabase.auth.getSession();
 
         if (error || !session) {

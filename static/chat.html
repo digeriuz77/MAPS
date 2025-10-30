@@ -345,41 +345,47 @@
         let messageCount = 0;
         let conversationHistory = [];  // Store all messages for persistence and download
 
+        // Store persona loading logic to run after auth is complete
+        let pendingPersonaLoad = null;
+        
         // Auto-load persona from URL or restore from sessionStorage
-        document.addEventListener('DOMContentLoaded', async function() {
+        document.addEventListener('DOMContentLoaded', function() {
             // Check URL for persona parameter first
             const urlParams = new URLSearchParams(window.location.search);
             const personaId = urlParams.get('persona');
 
-            // Try to restore existing conversation from sessionStorage
-            const savedConversation = sessionStorage.getItem('currentConversation');
+            // Store the loading logic to run after auth
+            pendingPersonaLoad = async function() {
+                // Try to restore existing conversation from sessionStorage
+                const savedConversation = sessionStorage.getItem('currentConversation');
 
-            if (savedConversation) {
-                try {
-                    const data = JSON.parse(savedConversation);
+                if (savedConversation) {
+                    try {
+                        const data = JSON.parse(savedConversation);
 
-                    // CRITICAL FIX: Only restore if persona matches OR no new persona requested
-                    if (!personaId || personaId === data.personaId) {
-                        console.log('🔄 Restoring conversation from sessionStorage');
-                        await restoreConversation(data);
-                        console.log('✅ Conversation restored successfully');
-                        return; // Don't start a new conversation
-                    } else {
-                        // Different persona requested - clear old conversation
-                        console.log('🆕 Different persona requested, clearing old conversation');
+                        // CRITICAL FIX: Only restore if persona matches OR no new persona requested
+                        if (!personaId || personaId === data.personaId) {
+                            console.log('🔄 Restoring conversation from sessionStorage');
+                            await restoreConversation(data);
+                            console.log('✅ Conversation restored successfully');
+                            return; // Don't start a new conversation
+                        } else {
+                            // Different persona requested - clear old conversation
+                            console.log('🆕 Different persona requested, clearing old conversation');
+                            sessionStorage.removeItem('currentConversation');
+                        }
+                    } catch (error) {
+                        console.error('❌ Failed to restore conversation:', error);
                         sessionStorage.removeItem('currentConversation');
                     }
-                } catch (error) {
-                    console.error('❌ Failed to restore conversation:', error);
-                    sessionStorage.removeItem('currentConversation');
                 }
-            }
 
-            // Start new conversation if persona specified
-            if (personaId) {
-                console.log('🆕 Starting new conversation with persona:', personaId);
-                await startConversation(personaId);
-            }
+                // Start new conversation if persona specified
+                if (personaId) {
+                    console.log('🆕 Starting new conversation with persona:', personaId);
+                    await startConversation(personaId);
+                }
+            };
         });
         
         // Restore a conversation from saved data
@@ -673,6 +679,12 @@ Conversation ID: ${currentConversationId}
                 await requireAuth();
                 console.log('✅ Chat page protected by auth');
                 window.authCheckComplete();
+                
+                // Now that auth is complete, execute pending persona load
+                if (pendingPersonaLoad) {
+                    await pendingPersonaLoad();
+                    pendingPersonaLoad = null; // Clean up
+                }
             } catch (error) {
                 console.error('Auth failed:', error);
             }
