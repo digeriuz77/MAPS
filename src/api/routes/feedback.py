@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 from typing import Optional
 from src.dependencies import get_supabase_client
-from src.auth.auth_dependencies import AuthenticatedUser, require_full_access
+from src.auth.auth_dependencies import AuthenticatedUser, get_current_user
 import uuid
 from datetime import datetime
 import logging
@@ -27,13 +27,13 @@ class FeedbackSubmission(BaseModel):
 @router.post("/submit")
 async def submit_feedback(
     feedback: FeedbackSubmission,
-    current_user: AuthenticatedUser = Depends(require_full_access),
+    current_user: AuthenticatedUser = Depends(get_current_user),
     supabase = Depends(get_supabase_client)
 ):
     """
     Submit user feedback after practice session.
     
-    Requires: FULL role access
+    Accessible by: Both FULL and CONTROL users
     Stores feedback in Supabase user_feedback table.
     """
     try:

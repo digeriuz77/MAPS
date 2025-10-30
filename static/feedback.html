@@ -107,16 +107,16 @@
         // Wait for Supabase initialization from navigation.js to complete
         // navigation.js already calls initializeSupabase
         window.addEventListener('DOMContentLoaded', async function() {
-            // Verify FULL access required for feedback
+            // Verify authentication (all users can give feedback)
             try {
-                await requireFullAccess();
-                console.log('✅ Feedback page - FULL access verified');
+                await requireAuth();
+                console.log('✅ Feedback page - auth verified (all users welcome)');
                 if (typeof window.authCheckComplete === 'function') {
                     window.authCheckComplete();
                 }
             } catch (error) {
-                console.error('FULL access check failed:', error);
-                // requireFullAccess already handles redirect
+                console.error('Auth verification failed:', error);
+                // requireAuth already handles redirect
             }
         });
     </script>

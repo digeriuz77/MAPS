@@ -119,23 +119,22 @@
                 
                 // Hide FULL-only features for CONTROL users
                 if (role === 'CONTROL') {
-                    // Hide navigation items
+                    // Hide FULL-only navigation items (Analysis and Reflection)
                     const analysisNav = document.getElementById('nav-analysis');
                     const reflectionNav = document.getElementById('nav-reflection');
-                    const feedbackNav = document.getElementById('nav-feedback');
                     
                     if (analysisNav) analysisNav.style.display = 'none';
                     if (reflectionNav) reflectionNav.style.display = 'none';
-                    if (feedbackNav) feedbackNav.style.display = 'none';
+                    // Note: Feedback is available to all users, so we don't hide it
                     
-                    // Hide list items 3 and 4
+                    // Hide list items 3 and 4 (Analysis and Reflection)
                     const feedbackItem = document.getElementById('feedback-item');
                     const reflectionItem = document.getElementById('reflection-item');
                     
                     if (feedbackItem) feedbackItem.style.display = 'none';
                     if (reflectionItem) reflectionItem.style.display = 'none';
                     
-                    console.log('✅ CONTROL view: Hidden feedback and reflection features');
+                    console.log('✅ CONTROL view: Hidden analysis and reflection features (feedback still available)');
                 } else {
                     console.log('✅ FULL access: All features visible');
                 }

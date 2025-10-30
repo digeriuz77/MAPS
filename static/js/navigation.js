@@ -22,6 +22,7 @@ async function updateNavigationForRole() {
         if (role === 'CONTROL') {
             const analysisLink = navBar.querySelector('a[href="/analysis"]');
             const reflectionLink = navBar.querySelector('a[href="/reflection"]');
+            // Note: Feedback is available to all users
             
             if (analysisLink) {
                 analysisLink.style.display = 'none';
