@@ -45,6 +45,8 @@ async def generate_reflection_summary(
     """
     try:
         logger.info(f"Reflection summary request received for session {request.session_id}")
+        logger.info(f"Request data: persona={request.persona_practiced}")
+        logger.info(f"Response lengths: q1={len(request.question1_response)}, q2={len(request.question2_response)}, q3={len(request.question3_response)}")
         
         # Get the reflection summary prompt from Supabase with error handling
         prompt_result = None
@@ -166,6 +168,8 @@ Provide an encouraging, professional summary that highlights key insights and gr
         
     except Exception as e:
         logger.error(f"Failed to generate reflection summary: {e}", exc_info=True)
+        logger.error(f"Exception type: {type(e).__name__}")
+        logger.error(f"Exception args: {e.args}")
         
         # Provide specific error messages for common issues
         error_msg = str(e).lower()
