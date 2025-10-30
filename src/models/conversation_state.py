@@ -55,15 +55,21 @@ class ConversationStateManager:
         # Try to load from database (if we add a conversation_state table later)
         # For now, create default state
 
-        # Get persona-specific starting trust level if persona_id provided
+        # Get persona-specific starting trust level from enhanced_personas table
         starting_trust = 0.3  # Default fallback
         if persona_id:
             try:
-                trust_config = await self.trust_config_service.get_persona_trust_config(persona_id)
-                starting_trust = trust_config.trust_starting_level
-                logger.info(f"Starting conversation with {persona_id} at trust_level={starting_trust:.2f} (persona-specific)")
+                result = self.supabase.table('enhanced_personas').select('trust_starting_level').eq(
+                    'persona_id', persona_id
+                ).execute()
+
+                if result.data and len(result.data) > 0:
+                    starting_trust = result.data[0].get('trust_starting_level', 0.3)
+                    logger.info(f"Starting conversation with {persona_id} at trust_level={starting_trust:.2f} (persona-specific)")
+                else:
+                    logger.warning(f"No persona data found for {persona_id}, using default 0.3")
             except Exception as e:
-                logger.warning(f"Could not get persona trust config for {persona_id}: {e}, using default 0.3")
+                logger.warning(f"Could not get starting trust for {persona_id}: {e}, using default 0.3")
 
         state = ConversationState(
             session_id=session_id,
@@ -78,18 +84,34 @@ class ConversationStateManager:
         self._state_cache[session_id] = state
         return state
     
-    async def update_conversation_state(self, session_id: str, mi_analysis: Dict, user_message: str, persona_id: str = None) -> ConversationState:
-        """Update conversation state based on latest interaction"""
+    async def update_conversation_state(self, session_id: str, interaction_context_or_mi: Dict, user_message: str, persona_id: str = None) -> ConversationState:
+        """Update conversation state based on latest interaction
+
+        Args:
+            interaction_context_or_mi: Can be either an InteractionContext object or legacy MI analysis dict
+        """
         state = await self.get_conversation_state(session_id)
         state.turn_count += 1
-        
+
+        # Check if we received InteractionContext or legacy MI analysis
+        if hasattr(interaction_context_or_mi, 'interaction_quality'):
+            # New path: InteractionContext with rich parameters
+            interaction_context = interaction_context_or_mi
+            # Convert to MI format for legacy compatibility
+            mi_analysis = self._interaction_context_to_mi_format(interaction_context)
+        else:
+            # Legacy path: MI analysis dict
+            mi_analysis = interaction_context_or_mi
+            # Create approximate InteractionContext for trust calculation
+            interaction_context = self._mi_format_to_interaction_context(mi_analysis)
+
         empathy_score = mi_analysis.get('empathy_score', 5)
         openness_change = mi_analysis.get('openness_change', 'same')
-        
+
         # Calculate emotional metrics
         openness_level = self._calculate_openness(mi_analysis, state)
         resistance_level = self._calculate_resistance(mi_analysis, state)
-        trust_delta = await self._calculate_trust_delta_from_db(empathy_score, state, persona_id)
+        trust_delta = await self._calculate_trust_delta_from_db(interaction_context, state, persona_id)
         
         # STAGED SYSTEM: Apply calculated trust delta
         state.trust_level = max(0.0, min(1.0, state.trust_level + trust_delta))
@@ -178,25 +200,105 @@ class ConversationStateManager:
         
         return trust_delta
     
-    async def _calculate_trust_delta_from_db(self, empathy_score: float, state: ConversationState, persona_id: str = None) -> float:
-        """Calculate trust delta using persona-specific configuration from database"""
+    async def _calculate_trust_delta_from_db(
+        self,
+        interaction_context,
+        state: ConversationState,
+        persona_id: str = None
+    ) -> float:
+        """Calculate trust delta using persona-specific configuration from database with rich parameters"""
         if persona_id is None:
             logger.warning("No persona_id provided, using legacy hardcoded deltas")
+            # Convert interaction_context to empathy_score for fallback
+            empathy_score = self._interaction_context_to_empathy_score(interaction_context)
             return self._calculate_trust_delta_staged(empathy_score, state)
-        
+
         try:
             # Get persona-specific trust configuration from database
-            trust_config = await self.trust_config_service.get_persona_trust_config(persona_id)
-            
-            # Calculate delta using TrustConfigurationService
-            trust_delta = self.trust_config_service.calculate_trust_delta(empathy_score, trust_config)
-            
-            logger.debug(f"Calculated trust_delta={trust_delta:.3f} for empathy={empathy_score:.1f} using persona {persona_id}")
+            trust_config = self.trust_config_service.get_persona_trust_config(persona_id)
+
+            # Calculate delta using TrustConfigurationService with rich multiplier system
+            trust_delta = self.trust_config_service.calculate_trust_delta(
+                quality=interaction_context.interaction_quality,      # "excellent", "good", "adequate", "poor"
+                empathy_tone=interaction_context.empathy_tone,        # "supportive", "neutral", "hostile"
+                approach=interaction_context.user_approach,           # "collaborative", "questioning", "directive"
+                trajectory=interaction_context.trust_trajectory,      # "building", "stable", "declining"
+                trust_config=trust_config
+            )
+
+            logger.debug(
+                f"Calculated trust_delta={trust_delta:.3f} for persona {persona_id} "
+                f"(quality={interaction_context.interaction_quality}, "
+                f"empathy={interaction_context.empathy_tone}, "
+                f"approach={interaction_context.user_approach}, "
+                f"trajectory={interaction_context.trust_trajectory})"
+            )
             return trust_delta
-            
+
         except Exception as e:
             logger.error(f"Failed to get trust delta from DB for persona {persona_id}: {e}, using legacy fallback")
+            empathy_score = self._interaction_context_to_empathy_score(interaction_context)
             return self._calculate_trust_delta_staged(empathy_score, state)
+
+    def _interaction_context_to_empathy_score(self, interaction_context) -> float:
+        """Convert InteractionContext to empathy_score for legacy fallback"""
+        # Map interaction quality to approximate empathy score
+        quality_map = {
+            "excellent": 9.0,
+            "good": 7.5,
+            "adequate": 5.5,
+            "poor": 3.0
+        }
+        base_score = quality_map.get(interaction_context.interaction_quality, 5.0)
+
+        # Adjust based on empathy tone
+        if interaction_context.empathy_tone == "supportive":
+            base_score += 0.5
+        elif interaction_context.empathy_tone == "hostile":
+            base_score -= 2.0
+
+        return max(0.0, min(10.0, base_score))
+
+    def _interaction_context_to_mi_format(self, interaction_context) -> Dict:
+        """Convert InteractionContext to legacy MI format for backward compatibility"""
+        empathy_score = self._interaction_context_to_empathy_score(interaction_context)
+
+        return {
+            'empathy_score': empathy_score,
+            'openness_change': 'up' if interaction_context.trust_trajectory == 'building' else 'same',
+            'interaction_quality': interaction_context.interaction_quality,
+            'empathy_tone': interaction_context.empathy_tone,
+            'user_approach': interaction_context.user_approach
+        }
+
+    def _mi_format_to_interaction_context(self, mi_analysis: Dict):
+        """Convert legacy MI format to InteractionContext for trust calculation"""
+        from src.models.interaction_context import InteractionContext
+
+        # Map empathy score to quality/tone
+        empathy_score = mi_analysis.get('empathy_score', 5)
+        if empathy_score >= 8:
+            quality = "excellent"
+            tone = "supportive"
+        elif empathy_score >= 6:
+            quality = "good"
+            tone = "supportive"
+        elif empathy_score >= 4:
+            quality = "adequate"
+            tone = "neutral"
+        else:
+            quality = "poor"
+            tone = "hostile"
+
+        openness_change = mi_analysis.get('openness_change', 'same')
+        trajectory = 'building' if openness_change == 'up' else 'stable'
+
+        return InteractionContext(
+            interaction_quality=mi_analysis.get('interaction_quality', quality),
+            empathy_tone=mi_analysis.get('empathy_tone', tone),
+            user_approach=mi_analysis.get('user_approach', 'questioning'),
+            trust_trajectory=trajectory
+        )
     
     def _determine_dominant_emotion(self, openness: float, resistance: float, trust_delta: float) -> str:
         """Determine dominant emotional state"""

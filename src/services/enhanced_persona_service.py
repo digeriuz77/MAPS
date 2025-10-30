@@ -254,11 +254,10 @@ class EnhancedPersonaService:
             if was_corrected:
                 logger.info(f"🔧 Response corrected for {persona_id} ({len(violations)} violations)")
             
-            # STEP 7: Update conversation state with natural empathy assessment
-            natural_mi_analysis = self._convert_to_mi_format(interaction_context)
+            # STEP 7: Update conversation state with rich interaction context
             async with track_step("update_conversation_state", {"session_id": session_id, "persona_id": persona_id}):
                 updated_state = await self.state_manager.update_conversation_state(
-                    session_id, natural_mi_analysis, user_message, persona_id=persona_id
+                    session_id, interaction_context, user_message, persona_id=persona_id
                 )
             
             # STEP 8: Form dynamic memory (contextual, not mechanistic)
@@ -433,7 +432,7 @@ class EnhancedPersonaService:
         persona_id = persona_data.get('persona_id', '')
         
         # Get character-specific context from vector service
-        character_context = character_vector_service.get_character_context(
+        character_context = await character_vector_service.get_character_context(
             persona_id=persona_id,
             user_input=user_message,
             trust_level=trust_level,
@@ -459,18 +458,18 @@ class EnhancedPersonaService:
         
         # Build enhanced prompt with character depth
         character_memories_text = ""
-        if character_context["relevant_memories"]:
+        if character_context.get("memories"):
             memories_list = []
-            for mem in character_context["relevant_memories"]:
+            for mem in character_context["memories"]:
                 memories_list.append(f"- {mem['content']} (emotional weight: {mem['emotional_weight']})")
             character_memories_text = f"\n\n═══ YOUR RELEVANT EXPERIENCES ═══\n" + "\n".join(memories_list)
-        
+
         response_guidance = ""
-        if character_context["response_pattern"]:
-            pattern = character_context["response_pattern"]
-            response_guidance = f"\n\n═══ RESPONSE GUIDANCE ═══\nStyle: {pattern['style']}\nTone: {pattern['emotional_tone']}\nSharing Level: {pattern['sharing_level']}"
-            if pattern['example_responses']:
-                response_guidance += f"\nExample approaches: {'; '.join(pattern['example_responses'][:2])}"
+        if character_context.get("response_guidance"):
+            guidance = character_context["response_guidance"]
+            response_guidance = f"\n\n═══ RESPONSE GUIDANCE ═══\nStyle: {guidance['style']}\nTone: {guidance['emotional_tone']}\nSharing Level: {guidance['sharing_level']}"
+            if guidance.get('example_approaches'):
+                response_guidance += f"\nExample approaches: {'; '.join(guidance['example_approaches'][:2])}"
 
         # NEW: MI behavioral cue derived from interaction context
         mi_analysis = self._convert_to_mi_format(interaction_context)
@@ -764,7 +763,7 @@ Respond naturally as {persona_name} (1-3 sentences):"""
                 from src.services.memory_consolidation_service import memory_consolidation_service
                 await memory_consolidation_service.schedule_consolidation(
                     session_id=session_id,
-                    persona_id=persona_id,
+                    persona_id=persona_name,  # Fixed: was persona_id, should be persona_name
                     user_message=user_message,
                     persona_response=persona_response
                 )

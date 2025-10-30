@@ -14,6 +14,20 @@ from datetime import datetime
 from src.config.settings import get_settings
 from src.dependencies import get_app_state, get_supabase_client
 
+# Initialize database-driven services at MODULE level BEFORE any imports that use them
+_supabase = get_supabase_client()
+
+from src.services.character_consistency_service import initialize_character_consistency_service
+initialize_character_consistency_service(_supabase)
+
+from src.services.character_vector_service import initialize_character_vector_service
+initialize_character_vector_service(_supabase)
+
+from src.services.trust_configuration_service import initialize_trust_configuration_service
+initialize_trust_configuration_service(_supabase)
+
+# NOW routes can import enhanced_persona_service safely
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifespan management"""
@@ -24,7 +38,8 @@ async def lifespan(app: FastAPI):
     logging.basicConfig(level=settings.LOG_LEVEL)
     logger = logging.getLogger(__name__)
     logger.info("Starting AI Persona System")
-    
+    logger.info("Database-driven services already initialized at module level")
+
     # Pre-warm enhanced_persona_service by importing it
     from src.services.enhanced_persona_service import enhanced_persona_service
     logger.info("EnhancedPersonaService initialized - ready for conversations")

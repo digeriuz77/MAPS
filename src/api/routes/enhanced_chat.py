@@ -8,7 +8,7 @@ Uses the enhanced persona service with:
 - Character consistency validation
 """
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 from typing import List, Optional, Dict, Any
 import logging
@@ -19,6 +19,7 @@ from src.services.enhanced_persona_service import enhanced_persona_service, Pers
 from src.dependencies import get_supabase_client
 from src.services.short_term_memory_service import short_term_memory
 from src.services.analytics_service import analytics
+from src.auth import AuthenticatedUser, get_current_user, require_full_access
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -71,11 +72,17 @@ class StartConversationResponse(BaseModel):
     initial_greeting: str
 
 @router.post("/start", response_model=StartConversationResponse)
-async def start_enhanced_conversation(request: StartConversationRequest):
+async def start_enhanced_conversation(
+    request: StartConversationRequest,
+    current_user: AuthenticatedUser = Depends(require_full_access)
+):
     """
     Start a new enhanced conversation with natural empathy assessment
+
+    Requires: FULL role access
     """
     try:
+        logger.info(f"User {current_user.email} starting conversation with persona {request.persona_id}")
         supabase = get_supabase_client()
         
         # Get enhanced persona details
@@ -141,9 +148,14 @@ async def start_enhanced_conversation(request: StartConversationRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/send", response_model=EnhancedChatResponse)
-async def send_enhanced_message(request: EnhancedChatRequest):
+async def send_enhanced_message(
+    request: EnhancedChatRequest,
+    current_user: AuthenticatedUser = Depends(require_full_access)
+):
     """
     Send message using enhanced persona system with natural empathy assessment
+
+    Requires: FULL role access
     """
     try:
         supabase = get_supabase_client()
