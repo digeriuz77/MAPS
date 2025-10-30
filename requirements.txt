@@ -7,10 +7,11 @@ python-multipart>=0.0.6
 pydantic>=2.5.0,<3.0.0
 pydantic-settings>=2.1.0,<3.0.0
 
-# Supabase (requires httpx<0.25.0)
-supabase>=2.3.0,<3.0.0
-postgrest>=0.13.0,<0.14.0
-httpx>=0.24.0,<0.25.0
+# Supabase (stable versions)
+supabase>=2.0.0,<2.4.0
+postgrest>=0.12.0,<0.14.0
+httpx>=0.23.0,<0.25.0
+gotrue>=2.0.0,<2.5.0
 
 # LLM Providers
 openai>=1.12.0,<2.0.0
