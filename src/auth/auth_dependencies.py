@@ -73,8 +73,22 @@ async def get_current_user(
         user_id = user.id
         email = user.email
 
-        # Fetch user profile from profiles table
-        profile_response = supabase.table('profiles').select('role').eq('id', user_id).execute()
+        # Fetch user profile from profiles table using user's JWT token
+        # Create a user-authenticated client to respect RLS policies
+        from supabase import create_client
+        from src.config.settings import get_settings
+        settings = get_settings()
+        
+        # Create client with anon key and set user's JWT for RLS
+        user_supabase = create_client(
+            settings.SUPABASE_URL, 
+            settings.SUPABASE_ANON_KEY
+        )
+        
+        # Set the authorization header with user's token
+        user_supabase.postgrest.auth(token)
+        
+        profile_response = user_supabase.table('profiles').select('role').eq('id', user_id).execute()
 
         if not profile_response.data or len(profile_response.data) == 0:
             logger.error(f"User {user_id} authenticated but no profile found in database")
