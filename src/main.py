@@ -215,6 +215,13 @@ def create_app() -> FastAPI:
             return FileResponse(feedback_path)
         raise HTTPException(status_code=404, detail="Feedback page not found")
     
+    @app.get("/thank-you-locked")
+    async def thank_you_locked_page():
+        locked_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "static", "thank-you-locked.html")
+        if os.path.exists(locked_path):
+            return FileResponse(locked_path)
+        raise HTTPException(status_code=404, detail="Thank you page not found")
+    
     return app
 
 app = create_app()
