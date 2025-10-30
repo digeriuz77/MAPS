@@ -74,12 +74,12 @@ class StartConversationResponse(BaseModel):
 @router.post("/start", response_model=StartConversationResponse)
 async def start_enhanced_conversation(
     request: StartConversationRequest,
-    current_user: AuthenticatedUser = Depends(require_full_access)
+    current_user: AuthenticatedUser = Depends(get_current_user)
 ):
     """
     Start a new enhanced conversation with natural empathy assessment
 
-    Requires: FULL role access
+    Accessible by: Both FULL and CONTROL users
     """
     try:
         logger.info(f"User {current_user.email} starting conversation with persona {request.persona_id}")
@@ -150,12 +150,12 @@ async def start_enhanced_conversation(
 @router.post("/send", response_model=EnhancedChatResponse)
 async def send_enhanced_message(
     request: EnhancedChatRequest,
-    current_user: AuthenticatedUser = Depends(require_full_access)
+    current_user: AuthenticatedUser = Depends(get_current_user)
 ):
     """
     Send message using enhanced persona system with natural empathy assessment
 
-    Requires: FULL role access
+    Accessible by: Both FULL and CONTROL users
     """
     try:
         supabase = get_supabase_client()
