@@ -103,9 +103,9 @@ Provide an encouraging, professional summary that highlights key insights and gr
         model_to_use = "gpt-4o-mini"  # Default fallback (valid OpenAI model)
         temperature_to_use = 0.7
         max_tokens_to_use = 600
-        
+
         # If we got the prompt from database, use its recommended settings
-        if prompt_result.data:
+        if prompt_result and prompt_result.data:
             model_to_use = prompt_result.data.get('model_recommended', model_to_use)
             temperature_to_use = prompt_result.data.get('temperature', temperature_to_use)
             max_tokens_to_use = prompt_result.data.get('max_tokens', max_tokens_to_use)
@@ -201,11 +201,12 @@ class EmailReflectionRequest(BaseModel):
 
 @router.post("/send-email")
 async def send_reflection_email(
-    request: EmailReflectionRequest
+    request: EmailReflectionRequest,
+    supabase = Depends(get_supabase_client)
 ):
     """
     Send reflection results via email.
-    
+
     Note: Email service requires SMTP configuration.
     If not configured, returns success but doesn't send email.
     """
