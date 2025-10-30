@@ -46,13 +46,22 @@ async def get_current_user(
     """
     # Extract token from Authorization header or HTTPBearer
     token = None
+    
+    # Debug: Log what we're receiving
+    logger.info(f"Authorization header: {authorization}")
+    logger.info(f"HTTPBearer credentials: {credentials}")
+    
     if authorization and authorization.startswith("Bearer "):
         token = authorization.replace("Bearer ", "")
+        logger.info(f"Token extracted from Authorization header: {token[:10]}...")
     elif credentials:
         token = credentials.credentials
+        logger.info(f"Token extracted from HTTPBearer: {token[:10]}...")
 
     if not token:
         logger.warning("No authentication token provided")
+        logger.warning(f"Authorization header was: {authorization}")
+        logger.warning(f"Credentials were: {credentials}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Not authenticated - missing token"
