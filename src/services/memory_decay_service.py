@@ -5,7 +5,7 @@ Applies time-based decay and optional pruning to long-term memories.
 import asyncio
 import logging
 import math
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from src.config.settings import get_settings
 from src.dependencies import get_supabase_client
@@ -29,7 +29,7 @@ class MemoryDecayService:
             result = self.supabase.table("long_term_memories").select("id, importance, last_accessed, created_at").limit(1000).execute()
             if not result.data:
                 return
-            now = datetime.utcnow()
+            now = datetime.now(timezone.utc)
             pruned = 0
             updated = 0
             for row in result.data:
