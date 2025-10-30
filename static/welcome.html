@@ -67,9 +67,9 @@
     <nav class="nav-bar">
         <a href="/welcome" class="active"><i class="fas fa-sign-in-alt"></i> Welcome</a>
         <a href="/persona-select"><i class="fas fa-users"></i> Personas</a>
-        <a href="/analysis"><i class="fas fa-chart-line"></i> Analysis</a>
-        <a href="/reflection"><i class="fas fa-lightbulb"></i> Reflection</a>
-        <a href="/feedback"><i class="fas fa-comment-dots"></i> Feedback</a>
+        <a href="/analysis" id="nav-analysis"><i class="fas fa-chart-line"></i> Analysis</a>
+        <a href="/reflection" id="nav-reflection"><i class="fas fa-lightbulb"></i> Reflection</a>
+        <a href="/feedback" id="nav-feedback"><i class="fas fa-comment-dots"></i> Feedback</a>
     </nav>
     <div class="login-container">
         <div class="teal-card login-card">
@@ -79,11 +79,11 @@
                 Here you will be able to:
             </p>
             
-            <ol class="intro-list">
+            <ol class="intro-list" id="intro-list">
                 <li>Select someone to talk with in a 1-1</li>
                 <li>Practice your feedback giving skills</li>
-                <li>Get some feedback on your performance</li>
-                <li>Reflect on what went well and what you might do differently next time</li>
+                <li id="feedback-item">Get some feedback on your performance</li>
+                <li id="reflection-item">Reflect on what went well and what you might do differently next time</li>
             </ol>
             
             <button type="button" class="btn-teal-primary" onclick="location.href='/persona-select'" style="font-size: 18px; padding: 14px 40px; margin-top: var(--spacing-md);">
@@ -110,8 +110,35 @@
         (async function() {
             try {
                 await initializeSupabase();
-                await requireAuth(); // Will redirect if not authenticated
+                const session = await requireAuth(); // Will redirect if not authenticated
                 console.log('✅ Welcome page protected by auth');
+                
+                // Get user role and adjust content
+                const role = await getUserRole(session.user.id);
+                console.log('User role:', role);
+                
+                // Hide FULL-only features for CONTROL users
+                if (role === 'CONTROL') {
+                    // Hide navigation items
+                    const analysisNav = document.getElementById('nav-analysis');
+                    const reflectionNav = document.getElementById('nav-reflection');
+                    const feedbackNav = document.getElementById('nav-feedback');
+                    
+                    if (analysisNav) analysisNav.style.display = 'none';
+                    if (reflectionNav) reflectionNav.style.display = 'none';
+                    if (feedbackNav) feedbackNav.style.display = 'none';
+                    
+                    // Hide list items 3 and 4
+                    const feedbackItem = document.getElementById('feedback-item');
+                    const reflectionItem = document.getElementById('reflection-item');
+                    
+                    if (feedbackItem) feedbackItem.style.display = 'none';
+                    if (reflectionItem) reflectionItem.style.display = 'none';
+                    
+                    console.log('✅ CONTROL view: Hidden feedback and reflection features');
+                } else {
+                    console.log('✅ FULL access: All features visible');
+                }
                 
                 // Auth passed - show page
                 window.authCheckComplete();
