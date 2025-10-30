@@ -9,23 +9,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function initializeFeedbackPage() {
-    const helpfulnessSlider = document.getElementById('helpfulness');
-    const ratingValue = document.getElementById('ratingValue');
-    const helpfulSection = document.getElementById('helpfulSection');
     const submitButton = document.getElementById('submitFeedback');
-
-    // Update rating display
-    helpfulnessSlider.addEventListener('input', function() {
-        const value = this.value;
-        ratingValue.textContent = value;
-        
-        // Show/hide "what was helpful" section
-        if (value > 1) {
-            helpfulSection.style.display = 'block';
-        } else {
-            helpfulSection.style.display = 'none';
-        }
-    });
 
     // Handle form submission
     submitButton.addEventListener('click', async function() {
@@ -36,14 +20,13 @@ function initializeFeedbackPage() {
 }
 
 async function submitFeedback() {
-    const helpfulnessScore = parseInt(document.getElementById('helpfulness').value);
     const whatHelpful = document.getElementById('whatHelpful').value.trim();
     const improvements = document.getElementById('improvements').value.trim();
     const submitButton = document.getElementById('submitFeedback');
 
-    // Validation
-    if (helpfulnessScore > 1 && !whatHelpful) {
-        alert('Please tell us what you found helpful.');
+    // Optional validation - at least one field should have content
+    if (!whatHelpful && !improvements) {
+        alert('Please provide feedback in at least one field.');
         return;
     }
 
@@ -57,10 +40,10 @@ async function submitFeedback() {
         session_id: sessionId,
         conversation_id: conversationId,
         persona_practiced: personaPracticed,
-        helpfulness_score: helpfulnessScore,
-        what_was_helpful: helpfulnessScore > 1 ? whatHelpful : null,
+        helpfulness_score: 5, // Default score since slider removed
+        what_was_helpful: whatHelpful || null,
         improvement_suggestions: improvements || null,
-        user_email: null // Optional: could prompt for email
+        user_email: null
     };
 
     console.log('Submitting feedback:', feedbackData);
@@ -91,11 +74,8 @@ async function submitFeedback() {
         showSuccessMessage();
 
         // Clear form
-        document.getElementById('helpfulness').value = 5;
-        document.getElementById('ratingValue').textContent = '5';
         document.getElementById('whatHelpful').value = '';
         document.getElementById('improvements').value = '';
-        document.getElementById('helpfulSection').style.display = 'none';
 
         // Enable next button
         const nextBtn = document.getElementById('nextBtn');
