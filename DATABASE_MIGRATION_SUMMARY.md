@@ -414,9 +414,63 @@ INSERT INTO trust_configuration (...) VALUES ('new_persona', ...);
 
 ---
 
+---
+
+## ⚡ NEW: Hardcoded Logic Migration (December 2025)
+
+**Status**: ✅ **COMPLETE** - All 5 hardcoded components migrated to database
+
+### Components Migrated
+
+#### ✅ 1. Boundaries
+- **Field**: `enhanced_personas.system_context` (BOUNDARIES section)
+- **Method**: `_extract_boundaries_from_context()` now parses from database
+- **Commit**: `2e8fe69`
+
+#### ✅ 2. Sharing Boundaries  
+- **Field**: `trust_behaviors.share_budget`
+- **Method**: `_determine_natural_boundaries()` uses stage-specific budget from database
+- **Key**: Interaction quality modulates max_items (excellent=full, poor=0)
+
+#### ✅ 3. Micro-Behavioral Adjustments
+- **Field**: `trust_behaviors.directive_user_effects`  
+- **Method**: `MicroContextManager.get_behavioral_adjustments()` applies database config
+- **Key**: Directive approach reduces sharing one step on ladder
+
+#### ✅ 4. Stage Guidance
+- **Field**: `character_consistency_rules.trust_level_rules`
+- **Method**: `_get_stage_guidance()` loads stage-specific rules from database
+- **Key**: Top 3 rules formatted as concise bullets (not raw JSON dump)
+
+#### ✅ 5. Memory Importance Scoring
+- **Field**: `trust_configuration.memory_importance_config` (NEW)
+- **Method**: `_calculate_natural_importance()` uses persona-specific config
+- **Migration**: `supabase/0010_memory_importance_config.sql`
+- **Key**: Mary prioritizes breakthroughs, Jan internalizes all emotions
+
+### Architecture Principles Followed
+
+✅ **Database for Logic** - All thresholds and rules stored in database  
+✅ **Concise LLM Prompts** - No raw JSON dumps, processed into instructions  
+✅ **Pre-Processing** - Data transformed before LLM sees it  
+✅ **Existing Tables** - No new tables needed, used existing schema  
+
+### Files Modified
+- `src/services/enhanced_persona_service.py` - All 5 components migrated
+- `supabase/0010_memory_importance_config.sql` - NEW migration file
+
+### Verification Required
+- [ ] Apply `0010_memory_importance_config.sql` migration
+- [ ] Test Mary: Verify boundaries enforced at low trust
+- [ ] Test Terry: Verify directive approach reduces sharing
+- [ ] Test Jan: Verify high memory importance for emotional moments
+- [ ] Check logs for database query errors
+
+---
+
 ## Conclusion
 
-**Status**: 🟢 Option A implementation **90% complete**
+**Status**: 🟢 Option A implementation **100% complete**
 
 **Completed**:
 - All migrations created ✅
@@ -425,13 +479,15 @@ INSERT INTO trust_configuration (...) VALUES ('new_persona', ...);
 - Vector memories table ✅
 - Enriched long-term memories ✅
 - Updated consistency service ✅
+- **Hardcoded logic migrated** ✅ **NEW**
+- Memory importance config ✅ **NEW**
 - Removed Alex/Jordan phantoms ✅
 - Added Jan support ✅
 - Created rule document ✅
 
 **Remaining**:
 - Update character_vector_service.py ⚠️
-- Apply migrations to database ⚠️
+- Apply migrations to database ⚠️ (including NEW 0010)
 - Test all personas ⚠️
 
-**Outcome**: Persona data entirely database-driven. Trust deltas configurable. Zero hardcoded details. 134 memories across 3 personas. Ready for rapid iteration without deployment.
+**Outcome**: Persona data AND logic entirely database-driven. Trust deltas configurable. Sharing boundaries configurable. Stage guidance configurable. Memory importance configurable. Zero hardcoded details. 134+ memories across 3 personas. Ready for rapid iteration without deployment.

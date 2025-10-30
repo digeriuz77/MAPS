@@ -50,12 +50,14 @@ class PersonaResponse:
 # All pattern matching logic moved to llm_interaction_analyzer.py
 
 class MicroContextManager:
-    """Manages persona behavior based on user empathy/pressure patterns"""
+    """Manages persona behavior based on user empathy/pressure patterns using database config"""
     
     def get_behavioral_adjustments(self, interaction_context: InteractionContext, 
-                                  trust_level: float, conversation_state: ConversationState) -> Dict[str, Any]:
-        """Get micro-adjustments to persona behavior based on interaction context"""
+                                  trust_level: float, conversation_state: ConversationState,
+                                  directive_user_effects: Dict = None) -> Dict[str, Any]:
+        """Get micro-adjustments to persona behavior from database directive_user_effects"""
         
+        # Default baseline adjustments
         adjustments = {
             "response_length": "normal",
             "emotional_availability": "guarded",
@@ -64,7 +66,7 @@ class MicroContextManager:
             "defensiveness_level": "moderate"
         }
         
-        # Adjust based on interaction quality
+        # Adjust based on interaction quality (universal patterns)
         if interaction_context.interaction_quality == "excellent":
             adjustments.update({
                 "emotional_availability": "open",
@@ -89,9 +91,18 @@ class MicroContextManager:
             adjustments["emotional_availability"] = "very_open"
             adjustments["information_sharing"] = "vulnerable"
         
-        # Adjust based on user approach
-        if interaction_context.user_approach == "directive":
-            adjustments["defensiveness_level"] = "high"
+        # Apply persona-specific directive_user_effects from database
+        if directive_user_effects and interaction_context.user_approach == "directive":
+            # Database config: {"defensive_delta": 0.1, "reduce_disclosure_one_step": true}
+            if directive_user_effects.get('reduce_disclosure_one_step'):
+                # Reduce sharing when user is directive/pushy
+                current_sharing = adjustments.get('information_sharing', 'minimal')
+                sharing_ladder = ['vulnerable', 'generous', 'minimal', 'resistant']
+                if current_sharing in sharing_ladder:
+                    current_idx = sharing_ladder.index(current_sharing)
+                    adjustments['information_sharing'] = sharing_ladder[min(current_idx + 1, len(sharing_ladder) - 1)]
+            
+            adjustments["defensiveness_level"] = "high"  # Universal response to directive approach
         elif interaction_context.user_approach == "collaborative":
             adjustments["tone_adjustment"] = "engaged"
         
@@ -212,18 +223,31 @@ class EnhancedPersonaService:
             async with track_step("knowledge_selection", {"session_id": session_id, "persona_id": persona_id}):
                 available_knowledge, tier_name = await self._get_available_knowledge(persona_id, trust_level)
             
-            # STEP 3: Get micro-behavioral adjustments
+            # STEP 3: Get micro-behavioral adjustments from database config
             async with track_step("behavioral_adjustments", {"session_id": session_id, "persona_id": persona_id}):
+                trust_behaviors = persona_data.get('trust_behaviors', {})
+                directive_user_effects = trust_behaviors.get('directive_user_effects', {})
+                
                 behavioral_adjustments = self.micro_context_manager.get_behavioral_adjustments(
-                    interaction_context, trust_level, conversation_state
+                    interaction_context, trust_level, conversation_state, directive_user_effects
                 )
             
             logger.info(f"🎯 Behavioral adjustments: {behavioral_adjustments}")
             
-            # STEP 4: Determine sharing boundaries (simplified from staged approach)
+            # STEP 4: Determine sharing boundaries using database-driven share_budget
             async with track_step("sharing_boundaries", {"session_id": session_id, "persona_id": persona_id}):
+                # Extract share_budget from persona trust_behaviors
+                trust_behaviors = persona_data.get('trust_behaviors', {})
+                share_budget = trust_behaviors.get('share_budget', {
+                    'defensive': {'max_items': 0, 'max_detail': 'hint'},
+                    'cautious': {'max_items': 1, 'max_detail': 'surface'},
+                    'opening': {'max_items': 2, 'max_detail': 'moderate'},
+                    'trusting': {'max_items': 3, 'max_detail': 'specific'}
+                })
+                
                 sharing_boundaries = self._determine_natural_boundaries(
-                    interaction_context, trust_level, behavioral_adjustments, available_knowledge
+                    interaction_context, trust_level, behavioral_adjustments, 
+                    available_knowledge, conversation_state.stage, share_budget
                 )
             
             # STEP 5: Generate persona response with all context
@@ -267,7 +291,7 @@ class EnhancedPersonaService:
                     user_message=user_message,
                     interaction_context=interaction_context,
                     persona_response=validated_response,
-                    persona_name=persona_name
+                    persona_id=persona_id
                 )
             
             logger.info(f"✅ Turn complete. New trust: {updated_state.trust_level:.2f}, " +
@@ -370,8 +394,9 @@ class EnhancedPersonaService:
     
     def _determine_natural_boundaries(self, interaction_context: InteractionContext, 
                                     trust_level: float, behavioral_adjustments: Dict,
-                                    available_knowledge: Dict) -> Dict[str, Any]:
-        """Determine what character would naturally share based on context"""
+                                    available_knowledge: Dict, stage: str,
+                                    share_budget: Dict) -> Dict[str, Any]:
+        """Determine what character would naturally share based on database-driven share_budget"""
         
         boundaries = {
             "willing_to_mention": [],
@@ -380,30 +405,34 @@ class EnhancedPersonaService:
             "defensive_responses": False
         }
         
-        # Determine sharing depth based on trust and interaction quality (0.0-1.0 scale!)
-        if trust_level >= 0.80 and interaction_context.interaction_quality == "excellent":
-            boundaries["sharing_depth"] = "deep"
-        elif trust_level >= 0.60 and interaction_context.interaction_quality in ["good", "excellent"]:
-            boundaries["sharing_depth"] = "moderate"
-        elif trust_level >= 0.40 and interaction_context.interaction_quality != "poor":
-            boundaries["sharing_depth"] = "surface"
-        else:
-            boundaries["sharing_depth"] = "minimal"
+        # Get stage-specific sharing constraints from database
+        stage_budget = share_budget.get(stage, {})
+        max_items = stage_budget.get('max_items', 0)
+        max_detail = stage_budget.get('max_detail', 'hint')  # hint/surface/moderate/specific
         
-        # Determine what to mention based on available knowledge and comfort level
-        if available_knowledge:
+        # Map database detail level to legacy sharing_depth for backward compatibility
+        detail_map = {
+            'hint': 'minimal',
+            'surface': 'surface', 
+            'moderate': 'moderate',
+            'specific': 'deep'
+        }
+        boundaries["sharing_depth"] = detail_map.get(max_detail, 'surface')
+        
+        # Interaction quality modulates max_items (excellent = full, poor = reduce)
+        if interaction_context.interaction_quality == "excellent":
+            adjusted_max = max_items  # Use full budget
+        elif interaction_context.interaction_quality == "good":
+            adjusted_max = max(0, max_items - 1)  # Slight reduction
+        elif interaction_context.interaction_quality == "adequate":
+            adjusted_max = max(0, max_items - 1)  # Slight reduction
+        else:  # poor
+            adjusted_max = 0  # Share nothing
+        
+        # Determine what to mention based on available knowledge and budget
+        if available_knowledge and adjusted_max > 0:
             all_topics = list(available_knowledge.keys())
-            
-            if boundaries["sharing_depth"] == "deep":
-                boundaries["willing_to_mention"] = all_topics
-            elif boundaries["sharing_depth"] == "moderate":
-                # Share half the available topics
-                boundaries["willing_to_mention"] = all_topics[:len(all_topics)//2]
-            elif boundaries["sharing_depth"] == "surface":
-                # Share only basic topics
-                safe_topics = [topic for topic in all_topics if 
-                              topic in ['job_title', 'employer', 'tenure', 'current_status']]
-                boundaries["willing_to_mention"] = safe_topics[:2]
+            boundaries["willing_to_mention"] = all_topics[:adjusted_max]
         
         # Adjust for defensive responses
         if (interaction_context.interaction_quality == "poor" or 
@@ -453,8 +482,8 @@ class EnhancedPersonaService:
             persona_id, trust_level, interaction_context, session_id
         )
         
-        # Stage-specific guidance for natural progression
-        stage_guidance = self._get_stage_guidance(stage, trust_level)
+        # Stage-specific guidance from database for natural progression
+        stage_guidance = await self._get_stage_guidance(persona_id, stage, trust_level)
         
         # Build enhanced prompt with character depth
         character_memories_text = ""
@@ -614,22 +643,44 @@ Respond naturally as {persona_name} (1-3 sentences):"""
             sents = sents + ["I could use a bit of help figuring this out."]
         return ' '.join(sents)
 
-    def _get_stage_guidance(self, stage: str, trust_level: float) -> str:
-        """Provide stage-specific guidance for natural conversation progression"""
-        
-        guidance = {
-            "defensive": "You're guarded and protective. Keep responses brief. Don't reveal personal struggles.",
+    async def _get_stage_guidance(self, persona_id: str, stage: str, trust_level: float) -> str:
+        """Get stage-specific guidance from database character_consistency_rules"""
+        try:
+            # Get trust_level_rules from database
+            result = self.supabase.table('character_consistency_rules').select(
+                'trust_level_rules'
+            ).eq('persona_id', persona_id).maybe_single().execute()
             
-            "cautious": "You're testing safety. Share surface-level work facts. Acknowledge stress exists but don't elaborate.",
+            if not result.data:
+                # Fallback to generic guidance
+                return "Respond naturally based on where you are in building trust."
             
-            "building_rapport": "You're starting to trust. Share work challenges and hint at external pressures. Show some vulnerability.",
+            trust_level_rules = result.data.get('trust_level_rules', {})
             
-            "opening_up": "You feel safer now. Share specific challenges about balancing responsibilities. Be candid about struggles.",
+            # Map stage names to database keys (defensive/cautious/opening/trusting)
+            stage_key_map = {
+                'defensive': 'defensive',
+                'cautious': 'cautious',
+                'building_rapport': 'opening',
+                'opening_up': 'opening',
+                'opening': 'opening',
+                'full_trust': 'trusting',
+                'trusting': 'trusting'
+            }
             
-            "full_trust": "You trust this person. Discuss solutions openly. Be specific about needs and what would help."
-        }
-        
-        return guidance.get(stage, "Respond naturally based on where you are in building trust.")
+            stage_key = stage_key_map.get(stage, 'cautious')
+            rules = trust_level_rules.get(stage_key, [])
+            
+            if rules:
+                # Process list of rules into concise guidance (don't dump raw list to LLM)
+                # Take top 3 most important rules to keep prompt compact
+                return "\n".join(f"• {rule}" for rule in rules[:3])
+            else:
+                return "Respond naturally based on where you are in building trust."
+                
+        except Exception as e:
+            logger.error(f"Failed to get stage guidance from database: {e}")
+            return "Respond naturally based on where you are in building trust."
     
     
     async def _get_intelligent_memories(self, persona_id: str, user_message: str,
@@ -743,7 +794,7 @@ Respond naturally as {persona_name} (1-3 sentences):"""
     
     async def _form_natural_memory(self, session_id: str, user_message: str, 
                                  interaction_context: InteractionContext, persona_response: str,
-                                 persona_name: str) -> None:
+                                 persona_id: str) -> None:
         """Form contextual memory based on natural interaction assessment"""
         
         try:
@@ -752,8 +803,8 @@ Respond naturally as {persona_name} (1-3 sentences):"""
                 user_message, interaction_context, persona_response
             )
             
-            # Calculate importance based on interaction significance
-            importance = self._calculate_natural_importance(interaction_context)
+            # Calculate importance from database-driven config
+            importance = await self._calculate_natural_importance(persona_id, interaction_context)
             
             # Store in conversation_memories table (dynamic memories)
             # Use session_id as-is - it should be a proper UUID from the routes
@@ -802,7 +853,7 @@ Respond naturally as {persona_name} (1-3 sentences):"""
                 from src.services.memory_consolidation_service import memory_consolidation_service
                 await memory_consolidation_service.schedule_consolidation(
                     session_id=session_id,
-                    persona_id=persona_name,  # Fixed: was persona_id, should be persona_name
+                    persona_id=persona_id,
                     user_message=user_message,
                     persona_response=persona_response
                 )
@@ -852,30 +903,59 @@ Respond naturally as {persona_name} (1-3 sentences):"""
         
         return base_memory + emotional_context + trust_context
     
-    def _calculate_natural_importance(self, interaction_context: InteractionContext) -> float:
-        """Calculate memory importance based on interaction significance"""
-        
-        base_importance = 6.0  # All dynamic memories start at 6.0
-        
-        # Boost importance for significant interactions
-        if interaction_context.interaction_quality == "excellent":
-            base_importance += 2.0
-        elif interaction_context.interaction_quality == "poor":
-            base_importance += 1.5  # Negative experiences are also important to remember
-        elif interaction_context.interaction_quality == "good":
-            base_importance += 1.0
-        
-        # Boost for trust breakthroughs or major declines
-        if interaction_context.trust_trajectory == "breakthrough":
-            base_importance += 1.5
-        elif interaction_context.trust_trajectory == "declining":
-            base_importance += 1.0
-        
-        # Boost for emotional safety issues
-        if not interaction_context.emotional_safety:
-            base_importance += 1.0
-        
-        return min(10.0, base_importance)
+    async def _calculate_natural_importance(self, persona_id: str, interaction_context: InteractionContext) -> float:
+        """Calculate memory importance from database-driven config"""
+        try:
+            # Get memory_importance_config from database
+            result = self.supabase.table('trust_configuration').select(
+                'memory_importance_config'
+            ).eq('persona_id', persona_id).maybe_single().execute()
+            
+            # Fallback config if database lookup fails
+            default_config = {
+                'base_importance': 6.0,
+                'quality_boosts': {'excellent': 2.0, 'good': 1.0, 'adequate': 0.0, 'poor': 1.5},
+                'trajectory_boosts': {'breakthrough': 1.5, 'building': 0.5, 'stable': 0.0, 'declining': 1.0},
+                'safety_boost': 1.0,
+                'max_importance': 10.0
+            }
+            
+            if result.data and result.data.get('memory_importance_config'):
+                config = result.data['memory_importance_config']
+            else:
+                config = default_config
+            
+            # Calculate importance using database config
+            base_importance = config.get('base_importance', 6.0)
+            
+            # Add quality boost
+            quality_boosts = config.get('quality_boosts', {})
+            quality_boost = quality_boosts.get(interaction_context.interaction_quality, 0.0)
+            base_importance += quality_boost
+            
+            # Add trajectory boost
+            trajectory_boosts = config.get('trajectory_boosts', {})
+            trajectory_boost = trajectory_boosts.get(interaction_context.trust_trajectory, 0.0)
+            base_importance += trajectory_boost
+            
+            # Add safety boost if interaction was unsafe
+            if not interaction_context.emotional_safety:
+                safety_boost = config.get('safety_boost', 1.0)
+                base_importance += safety_boost
+            
+            # Cap at max
+            max_importance = config.get('max_importance', 10.0)
+            return min(max_importance, base_importance)
+            
+        except Exception as e:
+            logger.error(f"Failed to get memory importance config from database: {e}")
+            # Fallback to basic calculation
+            base = 6.0
+            if interaction_context.interaction_quality == "excellent":
+                base += 2.0
+            elif interaction_context.interaction_quality == "poor":
+                base += 1.5
+            return min(10.0, base)
     
     async def _check_and_summarize_memories(self, session_id: str) -> None:
         """Check if we need to trigger memory summarization"""
