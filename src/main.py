@@ -109,6 +109,14 @@ def create_app() -> FastAPI:
     if os.path.exists(static_path):
         app.mount("/static", StaticFiles(directory=static_path), name="static")
     
+    @app.get("/api/config/supabase")
+    async def get_supabase_config():
+        """Get Supabase configuration for frontend"""
+        return {
+            "url": settings.SUPABASE_URL,
+            "anonKey": settings.SUPABASE_ANON_KEY
+        }
+    
     @app.get("/health")
     async def health_check():
         """Health check endpoint"""
