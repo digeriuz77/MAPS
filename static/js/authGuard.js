@@ -164,6 +164,39 @@ async function canAccessRoute(route) {
     }
 }
 
+/**
+ * Make authenticated API request
+ * Automatically includes the Bearer token from current session
+ * @param {string} url - API endpoint URL
+ * @param {Object} options - Fetch options (method, headers, body, etc.)
+ * @returns {Promise<Response>} Fetch response
+ */
+async function authenticatedFetch(url, options = {}) {
+    try {
+        const supabase = window.getSupabaseClient();
+        const { data: { session }, error } = await supabase.auth.getSession();
+
+        if (error || !session) {
+            throw new Error('No valid session for API request');
+        }
+
+        // Merge headers with authorization token
+        const headers = {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`,
+            ...options.headers
+        };
+
+        return fetch(url, {
+            ...options,
+            headers
+        });
+    } catch (error) {
+        console.error('❌ Authenticated fetch failed:', error);
+        throw error;
+    }
+}
+
 // Export functions to window for global access
 window.requireAuth = requireAuth;
 window.getUserRole = getUserRole;
@@ -171,3 +204,4 @@ window.requireFullAccess = requireFullAccess;
 window.getCachedUserRole = getCachedUserRole;
 window.logout = logout;
 window.canAccessRoute = canAccessRoute;
+window.authenticatedFetch = authenticatedFetch;
