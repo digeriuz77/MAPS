@@ -4,8 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Feedback - 1-1 Practice Platform</title>
-    <!-- Auth Blocker -->
-    <script src="/static/js/auth-blocker.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="/static/css/teal-theme.css">
     <style>
@@ -94,31 +92,6 @@
         <button class="btn-teal-secondary" id="nextBtn" disabled>Next</button>
     </footer>
     
-    <!-- Supabase SDK -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <!-- Auth utilities -->
-    <script src="/static/js/supabaseClient.js"></script>
-    <script src="/static/js/authGuard.js"></script>
-    <script src="/static/js/navigation.js"></script>
-    
     <script src="/static/js/feedback.js"></script>
-    
-    <script>
-        // Wait for Supabase initialization from navigation.js to complete
-        // navigation.js already calls initializeSupabase
-        window.addEventListener('DOMContentLoaded', async function() {
-            // Verify authentication (all users can give feedback)
-            try {
-                await requireAuth();
-                console.log('✅ Feedback page - auth verified (all users welcome)');
-                if (typeof window.authCheckComplete === 'function') {
-                    window.authCheckComplete();
-                }
-            } catch (error) {
-                console.error('Auth verification failed:', error);
-                // requireAuth already handles redirect
-            }
-        });
-    </script>
 </body>
 </html>

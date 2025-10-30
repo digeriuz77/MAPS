@@ -70,8 +70,8 @@ async function submitFeedback() {
     submitButton.textContent = 'Submitting...';
 
     try {
-        // Submit feedback using authenticated fetch
-        const response = await authenticatedFetch('/api/feedback/submit', {
+        // Submit feedback (no authentication required)
+        const response = await fetch('/api/feedback/submit', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
