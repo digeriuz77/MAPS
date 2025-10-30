@@ -139,14 +139,18 @@ Provide an encouraging, professional summary that highlights key insights and gr
                     logger.info(f"Session ID '{request.session_id}' is not a valid UUID, storing as None")
             
             reflection_data = {
-                'coach_id': '00000000-0000-0000-0000-000000000001',  # Default coach ID
-                'conversation_id': conversation_id,
-                'persona_practiced': request.persona_practiced,
-                'question1_response': request.question1_response,
-                'question2_response': request.question2_response,
-                'question3_response': request.question3_response,
-                'ai_summary': summary.strip(),
-                'summary_generated_at': datetime.utcnow().isoformat()
+                'user_id': '00000000-0000-0000-0000-000000000001',  # Default user ID
+                'session_date': datetime.utcnow().date().isoformat(),
+                'question1': request.question1_response,
+                'question2': request.question2_response,
+                'question3': request.question3_response,
+                'summary': summary.strip(),
+                'metadata': {
+                    'conversation_id': conversation_id,
+                    'persona_practiced': request.persona_practiced,
+                    'completed': True,
+                    'session_type': 'coaching_reflection'
+                }
             }
             
             # Insert into reflection_sessions table
