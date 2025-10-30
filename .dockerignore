@@ -1,0 +1,87 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+*.egg-info/
+dist/
+build/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Docs and markdown (except plan.md which might be referenced)
+*.md
+!README.md
+docs/
+ARCHITECTURE_REVIEW.md
+CORRECTED_SUMMARY.md
+CRITICAL_FIXES_SUMMARY.md
+DATABASE_MIGRATION_SUMMARY.md
+DATABASE_SCHEMA_RULEBOOK.md
+DEPLOYMENT_CHECKLIST.md
+EXECUTIVE_SUMMARY.md
+HARDCODED_PERSONA_AUDIT.md
+IMPLEMENTATION_GUIDE.md
+INTEGRATION_STATUS.md
+MI_AND_VOICE_VALIDATION.md
+NO_HARDCODED_PERSONAS.md
+PIPELINE_ANALYSIS_TERRY_TEST.md
+QUICK_DEPLOY.md
+READY_TO_APPLY.md
+TEST_RESULTS_12_TURNS.md
+TEST_RESULTS_DATABASE_DRIVEN.md
+TRUST_DELTA_UPGRADE_PLAN.md
+WARP.md
+APPLY_MIGRATIONS.md
+
+# Environment files (should be set via Railway vars)
+.env
+.env.*
+
+# Test files
+test_*.py
+*_test.py
+test_output.txt
+
+# Scripts
+scripts/
+*.sh
+
+# Deployment configs (not needed inside container)
+railway.json
+nixpacks.toml
+Procfile
+runtime.txt
+docker-compose.yml
+
+# Database migration files (applied separately)
+supabase/
+
+# Analysis and debug files
+analyze_implementation.py
+debug_memory.py
+fix_memory_system.py
+simple_fix_memory.py
+test_memory_pipeline.py
+
+# Logs
+logs/
+*.log
+
+# Temp files
+NUL
+.env\ -\ Copy.example
