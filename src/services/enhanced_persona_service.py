@@ -483,6 +483,10 @@ class EnhancedPersonaService:
         voice_fingerprint = self._get_voice_fingerprint(persona_data, stage, interaction_context)
         vf_block = f"\n\n═══ VOICE FINGERPRINT ═══\n{voice_fingerprint}" if voice_fingerprint else ""
         
+        # Extract persona-specific boundaries from database
+        system_context = persona_data.get('system_context', '')
+        persona_boundaries = self._extract_boundaries_from_context(system_context)
+        
         # Streamlined prompt: behavioral context + character depth + intelligent memories + stage guidance
         response_prompt = f"""═══ CONVERSATION CONTEXT ═══
 Stage: {stage.replace('_', ' ').title()} (Trust: {trust_level:.2f})
@@ -495,15 +499,11 @@ Stage: {stage.replace('_', ' ').title()} (Trust: {trust_level:.2f})
 {behavioral_prompt}{response_guidance}{mi_cue_text}{vf_block}
 
 ═══ CRITICAL BOUNDARIES ═══
-You are {persona_name}, a REAL PERSON in a 1-1 work conversation. You are NOT an AI assistant.
+{persona_boundaries}
 
-YOU DO NOT ANSWER:
-- General knowledge questions (recipes, physics, weather, directions, product recommendations)
-- Questions unrelated to your work/life situation
-- Factual queries a real person in your situation wouldn't know
-
-IF ASKED THESE: Deflect immediately.
-Examples: "I'm not here to discuss that" / "That's not relevant to my situation" / "Can we focus on what I actually need help with?"
+You are {persona_name}, a REAL PERSON in a 1-1 work conversation. NOT an AI assistant.
+YOU DO NOT ANSWER general knowledge questions (recipes, physics, weather, products, directions).
+IF ASKED: Deflect immediately - "That's not what I'm here to discuss" / "Can we focus on my situation?"
 
 ═══ CURRENT INTERACTION ═══
 User: "{user_message}"
@@ -531,6 +531,34 @@ Respond naturally as {persona_name} (1-3 sentences):"""
         # Apply deterministic voice sanitizer (no extra LLM)
         response = self._apply_voice_sanitizer(response.strip(), persona_data, stage, interaction_context)
         return response
+    
+    def _extract_boundaries_from_context(self, system_context: str) -> str:
+        """Extract BOUNDARIES section from system_context field in database.
+        Returns persona-specific boundaries or generic fallback.
+        """
+        if not system_context:
+            return "Stay in character as a real person in a 1-1 conversation."
+        
+        # Look for BOUNDARIES: section
+        lines = system_context.split('\n')
+        boundaries = []
+        in_boundaries_section = False
+        
+        for line in lines:
+            if 'BOUNDARIES:' in line.upper():
+                in_boundaries_section = True
+                continue
+            if in_boundaries_section:
+                if line.strip().startswith('-'):
+                    boundaries.append(line.strip())
+                elif line.strip() and not line.strip().startswith('-'):
+                    # End of boundaries section
+                    break
+        
+        if boundaries:
+            return '\n'.join(boundaries)
+        else:
+            return "Stay in character. Share information based on your trust level."
     
     def _get_voice_fingerprint(self, persona_data: Dict, stage: str, interaction_context: InteractionContext) -> str:
         """Build a concise voice fingerprint block based on traits.speech_patterns and current stage.
