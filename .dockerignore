@@ -48,8 +48,8 @@ TRUST_DELTA_UPGRADE_PLAN.md
 WARP.md
 APPLY_MIGRATIONS.md
 
-# Environment files (should be set via Railway vars)
-.env
+# Environment files - .env is included for Railway deployment
+# .env is included intentionally
 .env.*
 
 # Test files
