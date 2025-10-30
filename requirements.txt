@@ -24,7 +24,7 @@ langchain-openai==0.0.5
 
 # HTTP and Async
 aiohttp==3.9.3
-httpx==0.26.0
+httpx>=0.24.0,<0.25.0
 requests==2.31.0
 
 # Numerical computing
