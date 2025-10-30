@@ -19,10 +19,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY src/ ./src/
 COPY static/ ./static/
 
-# Copy startup script
-COPY start.sh ./
-RUN chmod +x start.sh
-
 # Create logs directory
 RUN mkdir -p logs
 
@@ -33,5 +29,5 @@ EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:${PORT:-8000}/health || exit 1
 
-# Start using our script that properly handles PORT variable
-CMD ["./start.sh"]
+# Use shell form to properly expand PORT environment variable
+CMD sh -c 'uvicorn src.main:app --host 0.0.0.0 --port ${PORT:-8000}'
