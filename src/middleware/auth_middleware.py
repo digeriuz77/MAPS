@@ -35,7 +35,7 @@ class AuthMiddleware(BaseHTTPMiddleware):
         "/analysis",
         "/reflection",
         "/feedback",
-        "/thankyou",
+        "/thank-you",  # FULL access users after feedback completion
         "/auth-test",
     }
     

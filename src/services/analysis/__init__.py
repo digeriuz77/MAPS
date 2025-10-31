@@ -1,9 +1,17 @@
 """
-MITI Transcript Analysis Service with Enhanced Capabilities
+MAPS Person-Centred Analysis Service
+V3 System - MITI framework removed, MAPS framework active
 """
-from .analysis_service import AnalysisService, get_analysis_service
-from .cache_service import get_analysis_cache
-from .json_parser import clean_and_validate_json_response
+from .maps_analysis_service import (
+    MAPSAnalysisService,
+    get_maps_analysis_service,
+    create_standalone_maps_service,
+    MAPSAnalysisResult,
+    ConditionsForChange,
+    PersonCentredConditions,
+    PatternsObserved,
+    StrengthsAndSuggestions
+)
 from .types import (
     ConversationContext,
     SpeakerIdentifierHints,
@@ -20,16 +28,18 @@ from .types import (
     DEFAULT_CLIENT_ROLE,
     DEFAULT_SCENARIO_DESCRIPTION
 )
-from .aggregator import get_summary_statistics, calculate_mi_proficiency_score
-
-# Database-enhanced services removed - MAPS uses standard Gemini service directly
-DATABASE_INTEGRATION_AVAILABLE = False
 
 __all__ = [
-    "AnalysisService",
-    "get_analysis_service",
-    "get_analysis_cache",
-    "clean_and_validate_json_response",
+    # MAPS Services (V3 Active)
+    "MAPSAnalysisService",
+    "get_maps_analysis_service",
+    "create_standalone_maps_service",
+    "MAPSAnalysisResult",
+    "ConditionsForChange",
+    "PersonCentredConditions",
+    "PatternsObserved",
+    "StrengthsAndSuggestions",
+    # Type definitions (kept for compatibility)
     "ConversationContext",
     "SpeakerIdentifierHints",
     "CompleteAnalysisResult",
@@ -39,14 +49,9 @@ __all__ = [
     "AudioAnalysisRequest",
     "AggregatedStats",
     "SupervisoryReportData",
-    "get_summary_statistics",
-    "calculate_mi_proficiency_score",
     "ALL_MITI_CODES",
     "DEFAULT_BATCH_SIZE",
     "DEFAULT_PRACTITIONER_ROLE",
     "DEFAULT_CLIENT_ROLE",
     "DEFAULT_SCENARIO_DESCRIPTION"
 ]
-
-# Database-enhanced services removed (MAPS uses Gemini directly)
-# No additional exports needed

@@ -11,7 +11,7 @@ from fastapi.responses import Response
 from pydantic import BaseModel
 
 from src.dependencies import get_supabase_client
-from src.services.analysis import get_analysis_service, AnalysisRequest
+from src.services.analysis import AnalysisRequest
 from src.services.analysis.types import CompleteAnalysisResult
 from src.services.analysis.maps_analysis_service import get_maps_analysis_service
 
@@ -29,7 +29,7 @@ class AnalysisSubmission(BaseModel):
 
 @router.post("/submit")
 async def submit_analysis(request: AnalysisSubmission):
-    """Submit transcript for person-centred analysis"""
+    """Submit transcript for person-centred MAPS analysis (legacy endpoint - use /text instead)"""
     try:
         job_id = str(uuid.uuid4())
         
@@ -43,34 +43,38 @@ async def submit_analysis(request: AnalysisSubmission):
             "error": None
         }
         
-        # Start analysis in background (simplified for now)
+        # Start MAPS analysis in background
         try:
-            analysis_service = get_analysis_service()
+            maps_service = get_maps_analysis_service()
             
-            # Convert request to analysis format
-            analysis_request = AnalysisRequest(
+            # Extract speaker names
+            speaker_hints = request.speaker_hints or {}
+            context = request.context or {}
+            
+            coach_name = speaker_hints.get("practitioner_identifier_hint") or context.get("practitioner_role", "Coach")
+            person_name = speaker_hints.get("client_identifier_hint") or context.get("client_role", "Person")
+            
+            # Run MAPS analysis
+            result = await maps_service.analyze_transcript(
                 transcript=request.transcript,
-                context=request.context,
-                speaker_hints=request.speaker_hints
+                context=context,
+                manager_name=coach_name,
+                persona_name=person_name
             )
             
-            # Run analysis (in production, this should be async/background task)
-            result = await analysis_service.analyze_transcript(
-                raw_transcript=request.transcript,
-                context=analysis_request.context,
-                speaker_hints=analysis_request.speaker_hints
-            )
+            # Convert to frontend format
+            frontend_result = _convert_to_frontend_format(result)
             
             # Update job with results
             analysis_jobs[job_id].update({
                 "status": "complete",
                 "progress": 100,
                 "stage": "complete",
-                "result": result.dict() if hasattr(result, 'dict') else result
+                "result": frontend_result
             })
             
         except Exception as e:
-            logger.error(f"Analysis failed for job {job_id}: {e}")
+            logger.error(f"MAPS analysis failed for job {job_id}: {e}")
             analysis_jobs[job_id].update({
                 "status": "error",
                 "error": str(e),
@@ -327,14 +331,8 @@ async def clear_analysis_cache():
         cleared_count = len(analysis_jobs)
         analysis_jobs.clear()
         
-        # Also clear any service-level caches if available
-        try:
-            from src.services.analysis.cache_service import get_analysis_cache
-            cache_service = get_analysis_cache()
-            cache_service.clear_all()
-        except ImportError:
-            # Cache service not available, that's OK
-            pass
+        # Note: MITI cache_service removed in V3 (MAPS doesn't use caching)
+        # In-memory job storage cleared above is sufficient
         
         return {
             "status": "success",
