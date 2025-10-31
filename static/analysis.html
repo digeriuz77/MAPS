@@ -400,69 +400,46 @@
         <div id="resultsSection" class="results-section">
             <!-- Overall Score -->
             <div class="report-card text-center">
-                <h3>Person-Centred Proficiency Score</h3>
+                <h3>Overall Coaching Quality</h3>
                 <div class="proficiency-score" id="proficiencyScore">--</div>
-                <p class="text-muted">Out of 100</p>
+                <p class="text-muted">Out of 10</p>
+                <p class="text-muted small" id="mapsValuesSummary">--</p>
             </div>
             
-            <!-- Key Metrics -->
-            <h3 class="mb-3">Key Metrics</h3>
-            <div class="row mb-4">
-                <div class="col-md-3 mb-3">
-                    <div class="metric-card">
-                        <i class="fas fa-comments fa-2x mb-2" style="color: var(--primary-teal);"></i>
-                        <div class="metric-value" id="totalTurns">--</div>
-                        <div class="metric-label">Total Turns</div>
-                    </div>
-                </div>
-                <div class="col-md-3 mb-3">
-                    <div class="metric-card">
-                        <i class="fas fa-balance-scale fa-2x mb-2" style="color: var(--primary-teal);"></i>
-                        <div class="metric-value" id="reflectionRatio">--</div>
-                        <div class="metric-label">Reflection:Question</div>
-                    </div>
-                </div>
-                <div class="col-md-3 mb-3">
-                    <div class="metric-card">
-                        <i class="fas fa-chart-line fa-2x mb-2" style="color: var(--primary-teal);"></i>
-                        <div class="metric-value" id="complexPercentage">--</div>
-                        <div class="metric-label">Complex Reflections</div>
-                    </div>
-                </div>
-                <div class="col-md-3 mb-3">
-                    <div class="metric-card">
-                        <i class="fas fa-check-circle fa-2x mb-2" style="color: var(--primary-teal);"></i>
-                        <div class="metric-value" id="miAdherent">--</div>
-                        <div class="metric-label">Person-Centred Adherent Ratio</div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Global Ratings -->
+            <!-- Core Coaching Themes -->
             <div class="report-card">
-                <h4 class="mb-3">Global Ratings</h4>
+                <h4 class="mb-3">Core Coaching Themes</h4>
                 <div id="globalRatings">
                     <!-- Populated dynamically -->
                 </div>
             </div>
             
-            <!-- Patterns & Recommendations -->
+            <!-- Strengths & Suggestions -->
             <div class="row">
                 <div class="col-md-6">
                     <div class="report-card">
-                        <h4 class="mb-3">Practitioner Patterns</h4>
-                        <h5 class="text-success">Strengths</h5>
-                        <p id="strengths"></p>
-                        <h5 class="text-warning">Challenge Areas</h5>
-                        <p id="challenges"></p>
+                        <h4 class="mb-3">Coaching Strengths</h4>
+                        <div id="strengths"></div>
                     </div>
                 </div>
                 <div class="col-md-6">
                     <div class="report-card">
-                        <h4 class="mb-3">Recommendations</h4>
-                        <h5 class="text-primary">Immediate Focus</h5>
-                        <p id="immediateFocus"></p>
-                        <h5 class="text-info">Skill Development</h5>
+                        <h4 class="mb-3">Growth Opportunities</h4>
+                        <div id="challenges"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Action Plan -->
+            <div class="report-card">
+                <h4 class="mb-3">Action Plan</h4>
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5 class="text-primary">Next Session Focus</h5>
+                        <div id="immediateFocus"></div>
+                    </div>
+                    <div class="col-md-6">
+                        <h5 class="text-info">MAPS Values Alignment</h5>
                         <p id="skillDevelopment"></p>
                     </div>
                 </div>
@@ -1374,20 +1351,13 @@
             document.getElementById('progressSection').style.display = 'none';
             document.getElementById('resultsSection').style.display = 'block';
 
-            // Proficiency score
+            // Overall quality score
             document.getElementById('proficiencyScore').textContent =
-                result.proficiency_score ? Math.round(result.proficiency_score) : '--';
-
-            // Key metrics
-            const summary = result.summary;
-            document.getElementById('totalTurns').textContent =
-                summary.conversation_overview.total_turns;
-            document.getElementById('reflectionRatio').textContent =
-                summary.mi_quality_indicators.reflection_to_question_ratio;
-            document.getElementById('complexPercentage').textContent =
-                summary.mi_quality_indicators.complex_reflection_percentage;
-            document.getElementById('miAdherent').textContent =
-                summary.mi_quality_indicators.mi_adherent_ratio;
+                result.overall_quality_score ? result.overall_quality_score.toFixed(1) : '--';
+            
+            // MAPS values summary
+            document.getElementById('mapsValuesSummary').textContent =
+                result.maps_values_summary || 'No summary available';
 
             // Global ratings - display new 3-theme CoreCoachingEffectiveness structure
             let ratingsHtml = '';
@@ -1399,15 +1369,15 @@
                 // Define theme display names and descriptions
                 const themeInfo = {
                     foundational_trust_safety: {
-                        name: 'Foundational Trust & Safety',
+                        name: 'Partnership',
                         desc: 'Safety, Trust, Genuineness, Positive Regard'
                     },
                     empathic_partnership_autonomy: {
-                        name: 'Empathic Partnership & Autonomy',
+                        name: 'Empathy',
                         desc: 'Empathic Understanding, Active Listening, Collaboration, Autonomy Support'
                     },
                     empowerment_clarity: {
-                        name: 'Empowerment & Clarity',
+                        name: 'Empowering Change',
                         desc: 'Client Empowerment, Communication Clarity, Confidence-Building'
                     }
                 };
@@ -1445,14 +1415,29 @@
             document.getElementById('globalRatings').innerHTML = ratingsHtml;
 
             // Patterns & recommendations
-            document.getElementById('strengths').textContent =
-                result.report.practitioner_patterns.strengths;
-            document.getElementById('challenges').textContent =
-                result.report.practitioner_patterns.challenge_areas;
-            document.getElementById('immediateFocus').textContent =
-                result.report.actionable_recommendations.immediate_focus;
+            const suggestions = result.report.strengths_and_suggestions || {};
+            
+            // Format strengths as list
+            const strengthsList = suggestions.strengths || [];
+            document.getElementById('strengths').innerHTML = strengthsList.length > 0
+                ? strengthsList.map(s => `<p><strong>${s.strength}:</strong> ${s.example}</p>`).join('')
+                : 'No strengths identified';
+            
+            // Format opportunities as list
+            const opportunitiesList = suggestions.opportunities || [];
+            document.getElementById('challenges').innerHTML = opportunitiesList.length > 0
+                ? opportunitiesList.map(o => `<p><strong>${o.area}:</strong> ${o.suggestion}</p>`).join('')
+                : 'No opportunities identified';
+            
+            // Format next session focus
+            const nextFocus = suggestions.next_session_focus || [];
+            document.getElementById('immediateFocus').innerHTML = nextFocus.length > 0
+                ? '<ul>' + nextFocus.map(f => `<li>${f}</li>`).join('') + '</ul>'
+                : 'No focus areas identified';
+            
+            // MAPS alignment
             document.getElementById('skillDevelopment').textContent =
-                result.report.actionable_recommendations.skill_development;
+                suggestions.maps_alignment || 'No MAPS alignment notes';
         }
         
         // Download report
