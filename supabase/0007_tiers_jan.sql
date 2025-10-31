@@ -40,7 +40,7 @@ SET trust_threshold = 0.60,
       'unsaid_fears', ['asking for help feels like failure','admitting not capable'],
       'coping_strategies', ['connecting personal to work','recognizing spiral pattern'],
       'topic_rotation', ['breakup_impact','spiral_insight','help_resistance'],
-      'escalation_hooks', ['what would make asking for support easier','one small step you could take']
+      'escalation_hooks', ['what would make asking for support easier','what might help you move forward']
     )
 WHERE persona_id='jan' AND (lower(tier_name) IN ('opening','opening_up'));
 
@@ -49,8 +49,8 @@ UPDATE character_knowledge_tiers
 SET trust_threshold = 0.80,
     available_knowledge = coalesce(available_knowledge,'{}'::jsonb) || jsonb_build_object(
       'deeper_details', ['weekly supervisor check-ins','rebuild confidence one step at a time'],
-      'concrete_ask', ['work out one small manageable step','supervisor feedback to avoid spiral'],
-      'topic_rotation', ['small_step_request','supervisor_plan','confidence_rebuild'],
+      'concrete_ask', ['regular supervisor check-ins','feedback to track progress'],
+      'topic_rotation', ['action_planning','supervisor_support','confidence_rebuild'],
       'validation_phrases', ['That feels doable.','I'm willing to try that.'],
       'readiness_signals', ['different approach needed','current method not working']
     )
