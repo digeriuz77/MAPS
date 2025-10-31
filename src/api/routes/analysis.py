@@ -666,41 +666,36 @@ def _convert_to_frontend_format(result) -> Dict[str, Any]:
             # MAPS format - convert to frontend format
             proficiency_score = int(result.overall_quality_score * 10)  # Convert 1-10 to 0-100
 
-            # Extract scores from person_centred_conditions
-            pc_conditions = result.person_centred_conditions
-            global_ratings = {
-                "partnership": {
-                    "score": int(pc_conditions.collaboration.get('score', 3) if isinstance(pc_conditions.collaboration, dict) else 3),
-                    "rationale": pc_conditions.collaboration.get('rationale', 'Collaboration assessed') if isinstance(pc_conditions.collaboration, dict) else 'Collaboration assessed'
-                },
-                "empathy": {
-                    "score": int(pc_conditions.empathic_understanding.get('score', 3) if isinstance(pc_conditions.empathic_understanding, dict) else 3),
-                    "rationale": pc_conditions.empathic_understanding.get('rationale', 'Empathic understanding assessed') if isinstance(pc_conditions.empathic_understanding, dict) else 'Empathic understanding assessed'
-                },
-                "cultivating_change_talk": {
-                    "score": int(result.conditions_for_change.confidence_building.get('score', 3) if isinstance(result.conditions_for_change.confidence_building, dict) else 3),
-                    "rationale": result.conditions_for_change.confidence_building.get('rationale', 'Confidence building assessed') if isinstance(result.conditions_for_change.confidence_building, dict) else 'Confidence building assessed'
-                },
-                "softening_sustain_talk": {
-                    "score": int(result.conditions_for_change.safety_trust.get('score', 3) if isinstance(result.conditions_for_change.safety_trust, dict) else 3),
-                    "rationale": result.conditions_for_change.safety_trust.get('rationale', 'Safety and trust assessed') if isinstance(result.conditions_for_change.safety_trust, dict) else 'Safety and trust assessed'
+            # Use new core_coaching_effectiveness structure (3 themes)
+            core_effectiveness = result.core_coaching_effectiveness
+            
+            # Build report structure with new theme names
+            report_data = {
+                "core_coaching_effectiveness": {
+                    "foundational_trust_safety": {
+                        "score": core_effectiveness.foundational_trust_safety.score,
+                        "evidence": core_effectiveness.foundational_trust_safety.evidence,
+                        "notes": core_effectiveness.foundational_trust_safety.notes
+                    },
+                    "empathic_partnership_autonomy": {
+                        "score": core_effectiveness.empathic_partnership_autonomy.score,
+                        "evidence": core_effectiveness.empathic_partnership_autonomy.evidence,
+                        "notes": core_effectiveness.empathic_partnership_autonomy.notes
+                    },
+                    "empowerment_clarity": {
+                        "score": core_effectiveness.empowerment_clarity.score,
+                        "evidence": core_effectiveness.empowerment_clarity.evidence,
+                        "notes": core_effectiveness.empowerment_clarity.notes
+                    }
                 }
             }
 
-            # Extract strengths and opportunities
-            strengths_list = result.strengths_and_suggestions.strengths
-            opportunities_list = result.strengths_and_suggestions.opportunities
-            next_focus = result.strengths_and_suggestions.next_session_focus
-
-            # Format strengths as single string
-            strengths_text = "; ".join([s.get('strength', '') for s in strengths_list]) if strengths_list else 'Analysis completed'
-
-            # Format opportunities as single string
-            opportunities_text = "; ".join([o.get('suggestion', '') for o in opportunities_list]) if opportunities_list else 'Continue practicing'
-
-            # Format next steps
-            immediate_focus = next_focus[0] if next_focus else 'Review the analysis above'
-            skill_development = "; ".join(next_focus[1:]) if len(next_focus) > 1 else 'Continue developing person-centred skills'
+            # Extract strengths_and_suggestions structure
+            suggestions = result.strengths_and_suggestions
+            strengths_list = suggestions.strengths if hasattr(suggestions, 'strengths') else []
+            opportunities_list = suggestions.opportunities if hasattr(suggestions, 'opportunities') else []
+            next_focus = suggestions.next_session_focus if hasattr(suggestions, 'next_session_focus') else []
+            maps_alignment = suggestions.maps_alignment if hasattr(suggestions, 'maps_alignment') else ''
 
             # Extract conversation statistics from patterns_observed
             patterns = result.patterns_observed
@@ -719,40 +714,23 @@ def _convert_to_frontend_format(result) -> Dict[str, Any]:
             practitioner_turns = int(estimated_turns * (coach_percentage / 100))
             client_turns = int(estimated_turns * (person_percentage / 100))
             
-            # Build frontend-compatible result
+            # Build frontend-compatible result with NEW structure
             frontend_result = {
-                "proficiency_score": proficiency_score,
-                "summary": {
-                    "conversation_overview": {
-                        "total_turns": estimated_turns,
-                        "practitioner_turns": practitioner_turns,
-                        "client_turns": client_turns
-                    },
-                    "mi_quality_indicators": {
-                        "reflection_to_question_ratio": "N/A",  # MAPS uses different framework
-                        "complex_reflection_percentage": "N/A",
-                        "mi_adherent_ratio": f"{proficiency_score}%"  # Overall quality score
-                    }
-                },
+                "overall_quality_score": result.overall_quality_score,
+                "maps_values_summary": result.maps_values_summary,
                 "report": {
-                    "global_ratings": global_ratings,
-                    "practitioner_patterns": {
-                        "strengths": strengths_text,
-                        "challenge_areas": opportunities_text
+                    "core_coaching_effectiveness": report_data["core_coaching_effectiveness"],
+                    "strengths_and_suggestions": {
+                        "strengths": strengths_list,
+                        "opportunities": opportunities_list,
+                        "next_session_focus": next_focus,
+                        "maps_alignment": maps_alignment
                     },
-                    "actionable_recommendations": {
-                        "immediate_focus": immediate_focus,
-                        "skill_development": skill_development
-                    }
-                },
-                "statistics": {
-                    "total_turns": estimated_turns,
-                    "reflection_to_question_ratio": "N/A",
-                    "percentage_complex_reflections": "N/A",
-                    "mia_to_mina_ratio": f"{coach_percentage:.0f}:{person_percentage:.0f}",
-                    "code_counts": {
-                        "coach_patterns": coach_patterns_count,
-                        "person_patterns": person_patterns_count
+                    "patterns_observed": {
+                        "manager_patterns": patterns.manager_patterns if hasattr(patterns, 'manager_patterns') else [],
+                        "employee_patterns": patterns.employee_patterns if hasattr(patterns, 'employee_patterns') else [],
+                        "interaction_dynamics": patterns.interaction_dynamics if hasattr(patterns, 'interaction_dynamics') else '',
+                        "conversation_balance": conversation_balance
                     }
                 }
             }
