@@ -14,31 +14,18 @@ Replace your existing maps_analysis_service.py with this file.
 import json
 import re
 import logging
-from typing import Dict, List, Any, Optional, Tuple
-from pydantic import BaseModel
+from typing import Dict, List, Any, Optional, Tuple, Literal
+from pydantic import BaseModel, Field
 from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
 
-class ConditionsForChange(BaseModel):
-    """Assessment of conditions that support change"""
-    safety_trust: Dict[str, Any]
-    empowerment: Dict[str, Any]
-    autonomy: Dict[str, Any]
-    clarity: Dict[str, Any]
-    confidence_building: Dict[str, Any]
-    overall_score: float
-    summary: str
-
-
-class PersonCentredConditions(BaseModel):
-    """Carl Rogers' person-centred core conditions"""
-    genuineness: Dict[str, Any]
-    positive_regard: Dict[str, Any]
-    empathic_understanding: Dict[str, Any]
-    active_listening: Dict[str, Any]
-    collaboration: Dict[str, Any]
+class CoreCoachingEffectiveness(BaseModel):
+    """Integrated assessment of manager's coaching effectiveness across 3 themes"""
+    foundational_trust_safety: Dict[str, Any]
+    empathic_partnership_autonomy: Dict[str, Any]
+    empowerment_clarity: Dict[str, Any]
     overall_score: float
     summary: str
 
@@ -64,12 +51,25 @@ class MAPSAnalysisResult(BaseModel):
     session_id: str
     conversation_id: str
     analyzed_at: datetime
-    conditions_for_change: ConditionsForChange
-    person_centred_conditions: PersonCentredConditions
+    core_coaching_effectiveness: CoreCoachingEffectiveness
     patterns_observed: PatternsObserved
     strengths_and_suggestions: StrengthsAndSuggestions
     overall_quality_score: float
     maps_values_summary: str
+
+
+class ManagerAction(BaseModel):
+    """Classification of manager's conversational technique"""
+    technique: Literal[
+        "Open Question",
+        "Complex Reflection",
+        "Simple Reflection",
+        "Affirmation",
+        "Summarization",
+        "Giving Advice",
+        "Closed Question",
+        "Other"
+    ] = Field(description="The primary coaching technique used in the manager's statement")
 
 
 class MAPSAnalysisService:
@@ -133,15 +133,30 @@ class MAPSAnalysisService:
         # Analyze persona behavioral evolution (no trust numbers)
         behavioral_analysis = self._analyze_persona_behavior_evolution(messages, persona_name)
         
+        # Calculate trust progression metrics
+        trust_metrics = self._calculate_trust_metrics(messages)
+        
+        # Find high-impact moments (trust jumps with manager action classification)
+        high_impact_moments = await self._find_high_impact_moments(messages, threshold=0.08)
+        
+        # Find trust-decreasing moments (problematic manager actions)
+        trust_decreasing_moments = await self._find_trust_decreasing_moments(messages, threshold=0.05)
+        
+        # Analyze technique gaps (unused MI techniques)
+        technique_gaps = self._analyze_technique_gaps(high_impact_moments)
+        
         # Build formatted transcript
         transcript = self._build_transcript(messages, persona_name)
         
         logger.info(f"Built transcript (length: {len(transcript)} chars)")
         logger.info(f"Speakers: {self.user_label} and {persona_name}")
+        if trust_metrics:
+            logger.info(f"Trust progression: {trust_metrics['initial_trust']:.2f} → {trust_metrics['final_trust']:.2f} (change: {trust_metrics['trust_change']:+.2f})")
         
-        # Build analysis prompt with behavioral context
+        # Build analysis prompt with all analysis components
         analysis_prompt = self._build_behavior_aware_prompt(
-            transcript, context, self.user_label, persona_name, behavioral_analysis
+            transcript, context, self.user_label, persona_name, behavioral_analysis, 
+            trust_metrics, high_impact_moments, trust_decreasing_moments, technique_gaps
         )
         
         # Get AI analysis
@@ -212,14 +227,15 @@ class MAPSAnalysisService:
         """Fetch conversation messages and determine persona name"""
         
         try:
-            # Get conversation metadata for persona_id
+            # Get conversation metadata
+            # Note: conversations table only stores persona_id, not name
             conversation = self.supabase_client.table('conversations').select(
                 'persona_id'
             ).eq('id', conversation_id).single().execute()
             
             persona_id = conversation.data.get('persona_id') if conversation.data else None
             
-            # Get persona name
+            # Get persona name from enhanced_personas table
             persona_name = "Employee"
             if persona_id:
                 persona_result = self.supabase_client.table('enhanced_personas').select(
@@ -228,13 +244,13 @@ class MAPSAnalysisService:
                 
                 if persona_result.data:
                     persona_name = persona_result.data.get('name', 'Employee')
-                    logger.info(f"Found persona: {persona_name}")
+                    logger.info(f"Found persona: {persona_name} (id: {persona_id})")
             else:
                 logger.warning(f"No persona_id for conversation {conversation_id}")
             
-            # Get messages
-            messages_result = self.supabase_client.table('conversation_messages').select(
-                'turn_number, role, message, timestamp'
+            # Get messages from conversation_transcripts table with trust_level
+            messages_result = self.supabase_client.table('conversation_transcripts').select(
+                'turn_number, role, message, timestamp, trust_level'
             ).eq('conversation_id', conversation_id).order('turn_number', desc=False).execute()
             
             if not messages_result.data:
@@ -323,6 +339,271 @@ class MAPSAnalysisService:
             "late_behavior": late_behavior,
             "changes": changes,
             "description": self._describe_evolution(persona_name, evolution_type, changes)
+        }
+    
+    def _calculate_trust_metrics(self, messages: List[Dict[str, Any]]) -> Optional[Dict[str, float]]:
+        """
+        Calculate trust progression metrics from messages with trust_level
+        
+        Args:
+            messages: List of message dicts with optional trust_level field
+            
+        Returns:
+            Dict with trust metrics or None if no trust data available
+        """
+        # Extract trust levels from persona messages only (user messages don't have trust)
+        trust_levels = [
+            msg['trust_level'] for msg in messages 
+            if msg.get('role') == 'persona' and msg.get('trust_level') is not None
+        ]
+        
+        if not trust_levels:
+            logger.info("No trust data available in messages")
+            return None
+        
+        initial_trust = trust_levels[0]
+        final_trust = trust_levels[-1]
+        trust_change = final_trust - initial_trust
+        peak_trust = max(trust_levels)
+        lowest_trust = min(trust_levels)
+        avg_trust = sum(trust_levels) / len(trust_levels)
+        
+        return {
+            'initial_trust': initial_trust,
+            'final_trust': final_trust,
+            'trust_change': trust_change,
+            'peak_trust': peak_trust,
+            'lowest_trust': lowest_trust,
+            'avg_trust': avg_trust,
+            'num_measurements': len(trust_levels)
+        }
+    
+    async def _find_high_impact_moments(
+        self,
+        messages: List[Dict[str, Any]],
+        threshold: float = 0.08
+    ) -> List[Dict[str, Any]]:
+        """
+        Identifies and classifies manager actions that led to significant trust increases.
+        
+        Args:
+            messages: List of message dicts with trust_level data
+            threshold: Minimum trust increase to qualify as high-impact (default: 0.08)
+            
+        Returns:
+            List of high-impact moments with trust_increase, action details, and classification
+        """
+        if not self.llm_service:
+            logger.warning("LLM service required for high-impact moment classification")
+            return []
+        
+        high_impact_moments = []
+        
+        # Iterate through messages to find trust jumps
+        for i in range(1, len(messages)):
+            # Only check persona messages (they have trust_level)
+            if messages[i].get('role') != 'persona' or messages[i].get('trust_level') is None:
+                continue
+            
+            # Find the last persona trust level to compare against
+            last_persona_trust = None
+            for j in range(i - 1, -1, -1):
+                if messages[j].get('role') == 'persona' and messages[j].get('trust_level') is not None:
+                    last_persona_trust = messages[j]['trust_level']
+                    break
+            
+            if last_persona_trust is None:
+                continue  # First persona message, no baseline
+            
+            # Calculate trust increase
+            trust_increase = messages[i]['trust_level'] - last_persona_trust
+            
+            if trust_increase >= threshold:
+                # Found a high-impact moment! Find the preceding manager message
+                manager_message = None
+                for j in range(i - 1, -1, -1):
+                    if messages[j].get('role') == 'user':
+                        manager_message = messages[j]
+                        break
+                
+                if not manager_message:
+                    continue
+                
+                # Classify the manager's technique using micro-LLM
+                action_type = "Unclassified"
+                try:
+                    classification_prompt = f"""Classify this manager's statement into ONE of these coaching techniques:
+- Open Question
+- Complex Reflection
+- Simple Reflection
+- Affirmation
+- Summarization
+- Giving Advice
+- Closed Question
+- Other
+
+Manager's statement: "{manager_message['message']}"
+
+Respond with ONLY the technique name, nothing else."""
+                    
+                    response = await self.llm_service.generate_response(
+                        prompt=classification_prompt,
+                        system_prompt="You are an expert in motivational interviewing. Classify statements accurately and concisely.",
+                        model="gpt-4o-mini",
+                        temperature=0.0,
+                        max_tokens=20
+                    )
+                    
+                    action_type = response.strip()
+                    
+                except Exception as e:
+                    logger.warning(f"Failed to classify manager action: {e}")
+                    action_type = "Unclassified"
+                
+                high_impact_moments.append({
+                    "trust_increase": round(trust_increase, 2),
+                    "manager_action_text": manager_message['message'],
+                    "manager_action_type": action_type,
+                    "persona_response_text": messages[i]['message']
+                })
+                
+                logger.info(f"High-impact moment: +{trust_increase:.2f} trust from {action_type}")
+        
+        logger.info(f"Found {len(high_impact_moments)} high-impact moments (threshold: {threshold})")
+        return high_impact_moments
+    
+    async def _find_trust_decreasing_moments(
+        self,
+        messages: List[Dict[str, Any]],
+        threshold: float = 0.05
+    ) -> List[Dict[str, Any]]:
+        """
+        Identifies manager actions that led to trust decreases.
+        
+        Args:
+            messages: List of message dicts with trust_level data
+            threshold: Minimum trust decrease to qualify as problematic (default: 0.05)
+            
+        Returns:
+            List of problematic moments with trust_decrease, action details, and classification
+        """
+        if not self.llm_service:
+            logger.warning("LLM service required for trust-decreasing moment classification")
+            return []
+        
+        trust_decreasing_moments = []
+        
+        # Iterate through messages to find trust drops
+        for i in range(1, len(messages)):
+            # Only check persona messages (they have trust_level)
+            if messages[i].get('role') != 'persona' or messages[i].get('trust_level') is None:
+                continue
+            
+            # Find the last persona trust level to compare against
+            last_persona_trust = None
+            for j in range(i - 1, -1, -1):
+                if messages[j].get('role') == 'persona' and messages[j].get('trust_level') is not None:
+                    last_persona_trust = messages[j]['trust_level']
+                    break
+            
+            if last_persona_trust is None:
+                continue
+            
+            # Calculate trust decrease (negative values)
+            trust_change = messages[i]['trust_level'] - last_persona_trust
+            
+            if trust_change <= -threshold:  # Negative, so <= to check decrease
+                # Found a trust drop! Find the preceding manager message
+                manager_message = None
+                for j in range(i - 1, -1, -1):
+                    if messages[j].get('role') == 'user':
+                        manager_message = messages[j]
+                        break
+                
+                if not manager_message:
+                    continue
+                
+                # Classify the problematic manager action
+                action_type = "Unclassified"
+                try:
+                    classification_prompt = f"""Classify this manager's statement into ONE of these categories:
+- Giving Advice (premature)
+- Closed Question
+- Directive Statement
+- Confrontational
+- Dismissive
+- Interrupting
+- Changing Subject
+- Other
+
+Manager's statement: "{manager_message['message']}"
+
+Respond with ONLY the category name, nothing else."""
+                    
+                    response = await self.llm_service.generate_response(
+                        prompt=classification_prompt,
+                        system_prompt="You are an expert in motivational interviewing. Identify problematic coaching behaviors accurately.",
+                        model="gpt-4o-mini",
+                        temperature=0.0,
+                        max_tokens=20
+                    )
+                    
+                    action_type = response.strip()
+                    
+                except Exception as e:
+                    logger.warning(f"Failed to classify problematic action: {e}")
+                    action_type = "Unclassified"
+                
+                trust_decreasing_moments.append({
+                    "trust_decrease": round(abs(trust_change), 2),
+                    "manager_action_text": manager_message['message'],
+                    "manager_action_type": action_type,
+                    "persona_response_text": messages[i]['message']
+                })
+                
+                logger.info(f"Trust-decreasing moment: -{abs(trust_change):.2f} trust from {action_type}")
+        
+        logger.info(f"Found {len(trust_decreasing_moments)} trust-decreasing moments (threshold: {threshold})")
+        return trust_decreasing_moments
+    
+    def _analyze_technique_gaps(
+        self,
+        high_impact_moments: List[Dict[str, Any]]
+    ) -> Dict[str, Any]:
+        """
+        Identify MI techniques that were NOT used in high-impact moments.
+        
+        Args:
+            high_impact_moments: List of moments with manager_action_type classifications
+            
+        Returns:
+            Dict with used_techniques and unused_techniques lists
+        """
+        # All possible MI techniques
+        all_techniques = [
+            "Open Question",
+            "Complex Reflection",
+            "Simple Reflection",
+            "Affirmation",
+            "Summarization"
+        ]
+        
+        # Extract techniques used in high-impact moments
+        used_techniques = set(
+            moment['manager_action_type'] 
+            for moment in high_impact_moments 
+            if moment['manager_action_type'] in all_techniques
+        )
+        
+        # Identify gaps
+        unused_techniques = [t for t in all_techniques if t not in used_techniques]
+        
+        logger.info(f"Technique analysis: {len(used_techniques)} used, {len(unused_techniques)} unused")
+        
+        return {
+            "used_techniques": list(used_techniques),
+            "unused_techniques": unused_techniques,
+            "all_techniques": all_techniques
         }
     
     def _analyze_message_set(self, messages: List[Dict]) -> Dict[str, Any]:
@@ -539,9 +820,13 @@ This stable pattern could indicate several things. When scoring:
         context: Optional[Dict[str, Any]],
         manager_label: str,
         persona_name: str,
-        behavioral_analysis: Dict[str, Any]
+        behavioral_analysis: Dict[str, Any],
+        trust_metrics: Optional[Dict[str, float]] = None,
+        high_impact_moments: Optional[List[Dict[str, Any]]] = None,
+        trust_decreasing_moments: Optional[List[Dict[str, Any]]] = None,
+        technique_gaps: Optional[Dict[str, Any]] = None
     ) -> str:
-        """Build analysis prompt with behavioral context"""
+        """Build analysis prompt with comprehensive trust-driven analysis"""
         
         # Context section
         context_section = ""
@@ -571,50 +856,114 @@ EVALUATION GUIDANCE:
 {self._get_evaluation_guidance(behavioral_analysis['evolution'])}
 """
         
-        prompt = f"""You are analyzing a one-to-one coaching conversation from the perspective of person-centred practice, specifically for Money and Pensions Service (MAPS).
+        # Trust progression section (if available)
+        trust_section = ""
+        if trust_metrics:
+            trust_change_direction = "increased" if trust_metrics['trust_change'] > 0.05 else "decreased" if trust_metrics['trust_change'] < -0.05 else "remained stable"
+            trust_section = f"""
 
-NOTE: In this conversation, '{manager_label}' is the HR MANAGER/USER practicing their motivational interviewing skills, and '{persona_name}' is the EMPLOYEE they are practicing with.
+TRUST PROGRESSION DATA:
+The system tracked trust levels throughout the conversation:
+- Initial trust: {trust_metrics['initial_trust']:.2f}
+- Final trust: {trust_metrics['final_trust']:.2f}
+- Trust change: {trust_metrics['trust_change']:+.2f} ({trust_change_direction})
+- Peak trust reached: {trust_metrics['peak_trust']:.2f}
+- Average trust: {trust_metrics['avg_trust']:.2f}
 
-{evolution_section}
+Note: This quantitative trust data complements the behavioral analysis above. Use it to validate your assessment of psychological safety and relationship building.
+"""
+        
+        # Key moments section (if available)
+        key_moments_section = ""
+        if high_impact_moments:
+            key_moments_section = "\n\nCRITICAL COACHING MOMENTS ANALYSIS:\n"
+            key_moments_section += "The system has identified the following manager actions that directly led to significant increases in persona trust. Your analysis, especially in 'Strengths & Suggestions', **must** be grounded in this evidence.\n"
+            
+            for moment in high_impact_moments:
+                key_moments_section += f"""
+---
+- **Trust Increase**: +{moment['trust_increase']}
+- **Manager's Action (classified as '{moment['manager_action_type']}')**: "{moment['manager_action_text']}"
+- **Resulting Persona Response**: "{moment['persona_response_text']}"
+---
+"""
+        
+        # Problematic moments section (if available)
+        problematic_section = ""
+        if trust_decreasing_moments:
+            problematic_section = "\n\nPROBLEMATIC COACHING MOMENTS:\n"
+            problematic_section += "The following manager actions led to trust DECREASES. These must be addressed in your 'Opportunities for Growth' section.\n"
+            
+            for moment in trust_decreasing_moments:
+                problematic_section += f"""
+---
+- **Trust Decrease**: -{moment['trust_decrease']}
+- **Manager's Action (classified as '{moment['manager_action_type']}')**: "{moment['manager_action_text']}"
+- **Resulting Persona Response**: "{moment['persona_response_text']}"
+---
+"""
+        
+        # Technique gaps section (if available)
+        gaps_section = ""
+        if technique_gaps and technique_gaps['unused_techniques']:
+            gaps_section = "\n\nTECHNIQUE GAPS ANALYSIS:\n"
+            gaps_section += f"The following MI techniques were NOT observed in high-impact moments and could be practiced in future sessions:\n"
+            for technique in technique_gaps['unused_techniques']:
+                gaps_section += f"- {technique}\n"
+            if technique_gaps['used_techniques']:
+                gaps_section += f"\nTechniques that DID produce high-impact moments: {', '.join(technique_gaps['used_techniques'])}\n"
+        
+        master_instructions = """**PRIMARY ANALYSIS INSTRUCTIONS:**
+Your analysis MUST be anchored in the data-driven evidence provided below. Use trust metrics and classified moments as your primary evidence source.
 
-TERMINOLOGY REQUIREMENTS:
-- Always use "ask-share-ask" (NOT "elicit-provide-elicit") when referring to this coaching technique
-- This is the preferred MAPS terminology for asking permission, sharing information, then asking for reaction
+1. **Ground Your Scores:** Every score MUST be justified by specific evidence from Critical/Problematic Coaching Moments. Explain HOW a specific technique (e.g., "Complex Reflection") contributed to a theme (e.g., "Empathic Partnership").
+2. **Be Data-Driven:** In 'Patterns Observed', focus on quantifiable patterns: "The manager's Complex Reflections produced +0.15 trust increases."
+3. **Be Specific in Feedback:**
+   - 'Strengths' MUST cite actions from Critical Coaching Moments with trust increases.
+   - 'Opportunities' MUST address actions from Problematic Coaching Moments with trust decreases.
+   - 'Next Session Focus' MUST include techniques from the Technique Gaps section.
+4. **Use Trust Data:** Reference initial trust, final trust, and trust change to validate your assessments.
+
+Do not make vague statements. Every key insight must be traceable to provided data."""
+        
+        prompt = f"""You are an expert coaching analyst for Money and Pensions Service (MAPS), specializing in Motivational Interviewing (MI).
+
+{master_instructions}
+
+--- DATA FOR ANALYSIS ---
+{trust_section}{key_moments_section}{problematic_section}{gaps_section}
+--- END OF DATA ---
+
+NOTE: In this conversation, '{manager_label}' is the HR MANAGER/USER practicing their MI skills, and '{persona_name}' is the EMPLOYEE they are practicing with.
+
+TERMINOLOGY: Use "ask-share-ask" (NOT "elicit-provide-elicit") for this coaching technique.
 
 MAPS Core Values:
 1. TRANSFORMING: Committed to transforming lives and making positive societal impact
 2. CARING: Caring about colleagues and people whose lives they transform  
 3. CONNECTING: Ensuring people receive the right guidance at the right time to help them navigate complex choices
 {context_section}
-Analyze this conversation across FOUR dimensions:
+Analyze this conversation across THREE dimensions:
 
-=== PART 1: CONDITIONS FOR CHANGE ===
-Assess how well {manager_label} created an environment conducive to change:
+=== PART 1: CORE COACHING EFFECTIVENESS ===
+Assess the manager's effectiveness across three integrated themes, using the data evidence above.
 
-1. Safety & Trust (1-5): Did {manager_label} establish psychological safety? Was {persona_name} comfortable being open?
-2. Empowerment (1-5): Did {manager_label} help {persona_name} feel capable of making changes?
-3. Autonomy (1-5): Was {persona_name}'s autonomy respected? Were they in the driver's seat?
-4. Clarity (1-5): Did {manager_label} help clarify complex choices?
-5. Confidence-building (1-5): Did the conversation increase {persona_name}'s self-efficacy?
+1. **Partnership (foundational_trust_safety) (1-5)**: 
+   Did {manager_label} create psychological safety through authenticity and non-judgmental acceptance? 
+   Evidence: Use Trust Progression Data and Critical/Problematic Moments to show how specific behaviors built or eroded safety.
 
-For EACH dimension, provide:
+2. **Empathy (empathic_partnership_autonomy) (1-5)**: 
+   Did {manager_label} demonstrate deep empathic understanding through active listening while fostering true collaborative partnership and respecting {persona_name}'s autonomy?
+   Evidence: Reference specific techniques from high-impact moments (e.g., Complex Reflections, Open Questions).
+
+3. **Empowering Change (empowerment_clarity) (1-5)**: 
+   Did {manager_label} help {persona_name} feel capable, confident, and clear about their situation and path forward?
+   Evidence: Show how manager's actions increased persona's self-efficacy and understanding.
+
+For EACH theme, provide:
 - Score (1-5)
-- 2-3 specific evidence examples from the conversation
-- Brief rationale
-
-=== PART 2: PERSON-CENTRED CORE CONDITIONS (Carl Rogers) ===
-Evaluate {manager_label}'s demonstration of:
-
-1. Genuineness/Congruence (1-5): Was {manager_label} authentic and not hiding behind a professional facade?
-2. Unconditional Positive Regard (1-5): Did {manager_label} show non-judgmental acceptance?
-3. Empathic Understanding (1-5): Did {manager_label} deeply understand {persona_name}'s perspective?
-4. Active Listening (1-5): Quality of listening, reflections, and responses
-5. Collaboration (1-5): Was this a partnership or one-directional?
-
-For EACH condition, provide:
-- Score (1-5)
-- Evidence examples
-- Brief rationale
+- Specific evidence from the DATA section above
+- Brief rationale connecting evidence to assessment
 
 === PART 3: PATTERNS OBSERVED ===
 Identify:
@@ -639,21 +988,10 @@ Provide:
 CRITICAL: Respond with ONLY valid JSON in this exact structure (no markdown, no additional text):
 
 {{
-  "conditions_for_change": {{
-    "safety_trust": {{"score": 1-5, "evidence": ["example1", "example2"], "notes": "brief rationale"}},
-    "empowerment": {{"score": 1-5, "evidence": ["example1", "example2"], "notes": "rationale"}},
-    "autonomy": {{"score": 1-5, "evidence": ["example1", "example2"], "notes": "rationale"}},
-    "clarity": {{"score": 1-5, "evidence": ["example1", "example2"], "notes": "rationale"}},
-    "confidence_building": {{"score": 1-5, "evidence": ["example1", "example2"], "notes": "rationale"}},
-    "overall_score": 3.5,
-    "summary": "brief overall summary"
-  }},
-  "person_centred_conditions": {{
-    "genuineness": {{"score": 1-5, "evidence": ["example"], "notes": "rationale"}},
-    "positive_regard": {{"score": 1-5, "evidence": ["example"], "notes": "rationale"}},
-    "empathic_understanding": {{"score": 1-5, "evidence": ["example"], "notes": "rationale"}},
-    "active_listening": {{"score": 1-5, "evidence": ["example"], "notes": "rationale"}},
-    "collaboration": {{"score": 1-5, "evidence": ["example"], "notes": "rationale"}},
+  "core_coaching_effectiveness": {{
+    "foundational_trust_safety": {{"score": 1-5, "evidence": ["example1", "example2"], "notes": "brief rationale"}},
+    "empathic_partnership_autonomy": {{"score": 1-5, "evidence": ["example1", "example2"], "notes": "rationale"}},
+    "empowerment_clarity": {{"score": 1-5, "evidence": ["example1", "example2"], "notes": "rationale"}},
     "overall_score": 3.5,
     "summary": "brief overall summary"
   }},
@@ -806,8 +1144,7 @@ CONVERSATION TO ANALYZE:
                 session_id=f"maps_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}",
                 conversation_id=conversation_id,
                 analyzed_at=datetime.utcnow(),
-                conditions_for_change=ConditionsForChange(**analysis_data["conditions_for_change"]),
-                person_centred_conditions=PersonCentredConditions(**analysis_data["person_centred_conditions"]),
+                core_coaching_effectiveness=CoreCoachingEffectiveness(**analysis_data["core_coaching_effectiveness"]),
                 patterns_observed=PatternsObserved(**analysis_data["patterns_observed"]),
                 strengths_and_suggestions=StrengthsAndSuggestions(**analysis_data["strengths_and_suggestions"]),
                 overall_quality_score=analysis_data.get("overall_quality_score", 5.0),

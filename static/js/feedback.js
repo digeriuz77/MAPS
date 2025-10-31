@@ -70,19 +70,17 @@ async function submitFeedback() {
         const result = await response.json();
         console.log('✅ Feedback submitted successfully:', result);
 
-        // Show success message
+        // Show brief success message
         showSuccessMessage();
 
         // Clear form
         document.getElementById('whatHelpful').value = '';
         document.getElementById('improvements').value = '';
 
-        // Enable next button
-        const nextBtn = document.getElementById('nextBtn');
-        if (nextBtn) {
-            nextBtn.disabled = false;
-            nextBtn.onclick = () => window.location.href = '/thank-you';
-        }
+        // Redirect to thank-you page after brief delay to show success message
+        setTimeout(() => {
+            window.location.href = '/thank-you';
+        }, 1500); // 1.5 second delay to show success message
 
     } catch (error) {
         console.error('❌ Failed to submit feedback:', error);
@@ -115,8 +113,5 @@ function showSuccessMessage() {
     
     container.insertBefore(successDiv, container.firstChild);
     
-    // Remove after 5 seconds
-    setTimeout(() => {
-        successDiv.remove();
-    }, 5000);
+    // Note: Success message will remain visible until page redirects (1.5s)
 }

@@ -1389,17 +1389,59 @@
             document.getElementById('miAdherent').textContent =
                 summary.mi_quality_indicators.mi_adherent_ratio;
 
-            // Global ratings
-            const ratingsHtml = Object.entries(result.report.global_ratings).map(([key, rating]) => {
-                const name = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-                return `
-                    <div class="rating-item">
-                        <span class="rating-score">${rating.score}</span>
-                        <strong>${name}</strong>
-                        <p class="mb-0 ms-5">${rating.rationale}</p>
-                    </div>
-                `;
-            }).join('');
+            // Global ratings - display new 3-theme CoreCoachingEffectiveness structure
+            let ratingsHtml = '';
+            
+            if (result.report.core_coaching_effectiveness) {
+                // New structure: 3 integrated themes
+                const themes = result.report.core_coaching_effectiveness;
+                
+                // Define theme display names and descriptions
+                const themeInfo = {
+                    foundational_trust_safety: {
+                        name: 'Foundational Trust & Safety',
+                        desc: 'Safety, Trust, Genuineness, Positive Regard'
+                    },
+                    empathic_partnership_autonomy: {
+                        name: 'Empathic Partnership & Autonomy',
+                        desc: 'Empathic Understanding, Active Listening, Collaboration, Autonomy Support'
+                    },
+                    empowerment_clarity: {
+                        name: 'Empowerment & Clarity',
+                        desc: 'Client Empowerment, Communication Clarity, Confidence-Building'
+                    }
+                };
+                
+                ratingsHtml = Object.entries(themes).map(([key, theme]) => {
+                    const info = themeInfo[key] || { name: key.replace(/_/g, ' '), desc: '' };
+                    const evidencePoints = theme.evidence && theme.evidence.length > 0 
+                        ? `<ul class="mt-2 mb-2">${theme.evidence.map(e => `<li class="text-muted small">${e}</li>`).join('')}</ul>`
+                        : '';
+                    
+                    return `
+                        <div class="rating-item">
+                            <span class="rating-score">${theme.score}</span>
+                            <strong>${info.name}</strong>
+                            <p class="text-muted small mb-1">${info.desc}</p>
+                            ${evidencePoints}
+                            <p class="mb-0 ms-5">${theme.notes || 'No notes provided'}</p>
+                        </div>
+                    `;
+                }).join('');
+            } else if (result.report.global_ratings) {
+                // Fallback for old structure (10 metrics)
+                ratingsHtml = Object.entries(result.report.global_ratings).map(([key, rating]) => {
+                    const name = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                    return `
+                        <div class="rating-item">
+                            <span class="rating-score">${rating.score}</span>
+                            <strong>${name}</strong>
+                            <p class="mb-0 ms-5">${rating.rationale || rating.notes || 'No rationale provided'}</p>
+                        </div>
+                    `;
+                }).join('');
+            }
+            
             document.getElementById('globalRatings').innerHTML = ratingsHtml;
 
             // Patterns & recommendations

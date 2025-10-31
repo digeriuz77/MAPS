@@ -181,13 +181,22 @@ async def send_enhanced_message(
         turn_number = (turn_result.data[0]['turn_number'] + 1) if turn_result.data else 1
         
         # Store user message in transcript
-        supabase.table('conversation_transcripts').insert({
-            'conversation_id': conversation_id,
-            'turn_number': turn_number,
-            'role': 'user',
-            'message': request.message,
-            'timestamp': datetime.utcnow().isoformat()
-        }).execute()
+        try:
+            transcript_result = supabase.table('conversation_transcripts').insert({
+                'conversation_id': conversation_id,
+                'turn_number': turn_number,
+                'role': 'user',
+                'message': request.message,
+                'timestamp': datetime.utcnow().isoformat()
+            }).execute()
+            
+            if transcript_result.data:
+                logger.info(f"✅ Saved user message to conversation_transcripts (turn {turn_number})")
+            else:
+                logger.error(f"❌ Failed to save user message - no data returned")
+        except Exception as transcript_error:
+            logger.error(f"❌ Failed to save user message to conversation_transcripts: {transcript_error}")
+            # Continue anyway - message is in short-term memory
         
         # Add user message to short-term memory
         short_term_memory.add_message(
@@ -221,13 +230,22 @@ async def send_enhanced_message(
         )
         
         # Store persona response in transcript
-        supabase.table('conversation_transcripts').insert({
-            'conversation_id': conversation_id,
-            'turn_number': turn_number,
-            'role': 'persona',
-            'message': result.response,
-            'timestamp': datetime.utcnow().isoformat()
-        }).execute()
+        try:
+            transcript_result = supabase.table('conversation_transcripts').insert({
+                'conversation_id': conversation_id,
+                'turn_number': turn_number,
+                'role': 'persona',
+                'message': result.response,
+                'timestamp': datetime.utcnow().isoformat()
+            }).execute()
+            
+            if transcript_result.data:
+                logger.info(f"✅ Saved persona response to conversation_transcripts (turn {turn_number})")
+            else:
+                logger.error(f"❌ Failed to save persona response - no data returned")
+        except Exception as transcript_error:
+            logger.error(f"❌ Failed to save persona response to conversation_transcripts: {transcript_error}")
+            # Continue anyway - message is in short-term memory
         
         # Add persona response to short-term memory
         short_term_memory.add_message(
