@@ -7,8 +7,7 @@ from .maps_analysis_service import (
     get_maps_analysis_service,
     create_standalone_maps_service,
     MAPSAnalysisResult,
-    ConditionsForChange,
-    PersonCentredConditions,
+    CoreCoachingEffectiveness,
     PatternsObserved,
     StrengthsAndSuggestions
 )
@@ -35,8 +34,7 @@ __all__ = [
     "get_maps_analysis_service",
     "create_standalone_maps_service",
     "MAPSAnalysisResult",
-    "ConditionsForChange",
-    "PersonCentredConditions",
+    "CoreCoachingEffectiveness",
     "PatternsObserved",
     "StrengthsAndSuggestions",
     # Type definitions (kept for compatibility)
