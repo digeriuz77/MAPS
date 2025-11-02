@@ -3,7 +3,8 @@ Email service for sending reflection summaries and analysis reports
 """
 import logging
 import smtplib
-from email.mime.text import MIMEText
+import asyncio
+from email.mime_text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.mime.base import MIMEBase
 from email import encoders
@@ -26,6 +27,7 @@ class EmailService:
         self.smtp_username = getattr(self.settings, 'SMTP_USERNAME', None)
         self.smtp_password = getattr(self.settings, 'SMTP_PASSWORD', None)
         self.from_email = getattr(self.settings, 'FROM_EMAIL', self.smtp_username)
+        self.smtp_timeout = getattr(self.settings, 'SMTP_TIMEOUT', 15)
         self.enabled = bool(self.smtp_username and self.smtp_password)
         
         if not self.enabled:
@@ -57,39 +59,42 @@ class EmailService:
             return False
         
         try:
-            # Create message
-            msg = MIMEMultipart('alternative')
-            msg['From'] = self.from_email
-            msg['To'] = recipient_email
-            msg['Subject'] = subject
-            
-            # Add text content
-            text_part = MIMEText(text_content, 'plain')
-            msg.attach(text_part)
-            
-            # Add HTML content if provided
-            if html_content:
-                html_part = MIMEText(html_content, 'html')
-                msg.attach(html_part)
-            
-            # Add attachments if provided
-            if attachments:
-                for attachment in attachments:
-                    part = MIMEBase('application', 'octet-stream')
-                    part.set_payload(attachment['content'])
-                    encoders.encode_base64(part)
-                    part.add_header(
-                        'Content-Disposition',
-                        f"attachment; filename= {attachment['filename']}"
-                    )
-                    msg.attach(part)
-            
-            # Send email
-            with smtplib.SMTP(self.smtp_server, self.smtp_port) as server:
-                server.starttls()
-                server.login(self.smtp_username, self.smtp_password)
-                server.send_message(msg)
-            
+            # Build the message synchronously
+            def build_message():
+                msg_local = MIMEMultipart('alternative')
+                msg_local['From'] = self.from_email
+                msg_local['To'] = recipient_email
+                msg_local['Subject'] = subject
+                # Text content
+                text_part_local = MIMEText(text_content, 'plain')
+                msg_local.attach(text_part_local)
+                # HTML content
+                if html_content:
+                    html_part_local = MIMEText(html_content, 'html')
+                    msg_local.attach(html_part_local)
+                # Attachments
+                if attachments:
+                    for attachment in attachments:
+                        part = MIMEBase('application', 'octet-stream')
+                        part.set_payload(attachment['content'])
+                        encoders.encode_base64(part)
+                        part.add_header('Content-Disposition', f"attachment; filename= {attachment['filename']}")
+                        msg_local.attach(part)
+                return msg_local
+
+            msg = build_message()
+
+            # Blocking SMTP IO wrapped in a thread with timeout
+            def send_sync():
+                with smtplib.SMTP(self.smtp_server, self.smtp_port, timeout=self.smtp_timeout) as server:
+                    server.ehlo()
+                    server.starttls()
+                    server.ehlo()
+                    server.login(self.smtp_username, self.smtp_password)
+                    server.send_message(msg)
+
+            await asyncio.to_thread(send_sync)
+
             logger.info(f"Successfully sent email to {recipient_email}")
             return True
             
