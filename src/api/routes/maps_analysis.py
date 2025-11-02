@@ -20,6 +20,62 @@ router = APIRouter(prefix="/api/v1/maps", tags=["maps_analysis"])
 maps_jobs: Dict[str, Dict[str, Any]] = {}
 
 
+def _to_maps_frontend_dict(result: Any) -> Dict[str, Any]:
+    """Normalize MAPS analysis result (Pydantic or dict) to the frontend shape.
+    Omits any overall x/10 score by design.
+    """
+    # Extract raw data from Pydantic if needed
+    if hasattr(result, "model_dump"):
+        data = result.model_dump()
+    elif hasattr(result, "dict"):
+        data = result.dict()
+    else:
+        data = result if isinstance(result, dict) else {}
+
+    core = data.get("core_coaching_effectiveness", {}) or {}
+    strengths = data.get("strengths_and_suggestions", {}) or {}
+    patterns = data.get("patterns_observed", {}) or {}
+
+    def get_theme(d: Dict[str, Any]) -> Dict[str, Any]:
+        return {
+            "score": d.get("score"),
+            "evidence": d.get("evidence", []),
+            "notes": d.get("notes", "")
+        }
+
+    frontend = {
+        # No overall_quality_score
+        "maps_values_summary": data.get("maps_values_summary", ""),
+        "report": {
+            "core_coaching_effectiveness": {
+                "foundational_trust_safety": get_theme(core.get("foundational_trust_safety", {})),
+                "empathic_partnership_autonomy": get_theme(core.get("empathic_partnership_autonomy", {})),
+                "empowerment_clarity": get_theme(core.get("empowerment_clarity", {})),
+            },
+            "strengths_and_suggestions": {
+                "strengths": [
+                    (s.model_dump() if hasattr(s, "model_dump") else (s.dict() if hasattr(s, "dict") else s))
+                    for s in strengths.get("strengths", [])
+                ],
+                "opportunities": [
+                    (o.model_dump() if hasattr(o, "model_dump") else (o.dict() if hasattr(o, "dict") else o))
+                    for o in strengths.get("opportunities", [])
+                ],
+                "next_session_focus": strengths.get("next_session_focus", []),
+                "maps_alignment": strengths.get("maps_alignment", "")
+            },
+            "patterns_observed": {
+                "manager_patterns": patterns.get("manager_patterns", []),
+                "employee_patterns": patterns.get("employee_patterns", []),
+                "interaction_dynamics": patterns.get("interaction_dynamics", ""),
+                "conversation_balance": patterns.get("conversation_balance", {}),
+            }
+        }
+    }
+
+    return frontend
+
+
 class TranscriptAnalysisRequest(BaseModel):
     transcript: str
     context: Optional[Dict[str, Any]] = None
@@ -79,90 +135,8 @@ async def analyze_transcript(request: TranscriptAnalysisRequest):
                 "current_item": "Generating report..."
             })
             
-            # Convert result to frontend-compatible dict using new 3-theme structure
-            # Handle both dict and Pydantic model responses
-            if isinstance(result, dict):
-                # Already a dict - use dict access
-                core_eff = result.get('core_coaching_effectiveness', {})
-                fts = core_eff.get('foundational_trust_safety', {})
-                epa = core_eff.get('empathic_partnership_autonomy', {})
-                ec = core_eff.get('empowerment_clarity', {})
-                
-                suggestions = result.get('strengths_and_suggestions', {})
-                patterns = result.get('patterns_observed', {})
-                
-                result_dict = {
-                    "overall_quality_score": result.get('overall_quality_score', 5.0),
-                    "maps_values_summary": result.get('maps_values_summary', ''),
-                    "report": {
-                        "core_coaching_effectiveness": {
-                            "foundational_trust_safety": {
-                                "score": fts.get('score', 5),
-                                "evidence": fts.get('evidence', []),
-                                "notes": fts.get('notes', '')
-                            },
-                            "empathic_partnership_autonomy": {
-                                "score": epa.get('score', 5),
-                                "evidence": epa.get('evidence', []),
-                                "notes": epa.get('notes', '')
-                            },
-                            "empowerment_clarity": {
-                                "score": ec.get('score', 5),
-                                "evidence": ec.get('evidence', []),
-                                "notes": ec.get('notes', '')
-                            }
-                        },
-                        "strengths_and_suggestions": {
-                            "strengths": suggestions.get('strengths', []),
-                            "opportunities": suggestions.get('opportunities', []),
-                            "next_session_focus": suggestions.get('next_session_focus', []),
-                            "maps_alignment": suggestions.get('maps_alignment', '')
-                        },
-                        "patterns_observed": {
-                            "manager_patterns": patterns.get('manager_patterns', []),
-                            "employee_patterns": patterns.get('employee_patterns', []),
-                            "interaction_dynamics": patterns.get('interaction_dynamics', ''),
-                            "conversation_balance": patterns.get('conversation_balance', {})
-                        }
-                    }
-                }
-            else:
-                # Pydantic model - use attribute access
-                result_dict = {
-                    "overall_quality_score": result.overall_quality_score,
-                    "maps_values_summary": result.maps_values_summary,
-                    "report": {
-                        "core_coaching_effectiveness": {
-                            "foundational_trust_safety": {
-                                "score": result.core_coaching_effectiveness.foundational_trust_safety.score,
-                                "evidence": result.core_coaching_effectiveness.foundational_trust_safety.evidence,
-                                "notes": result.core_coaching_effectiveness.foundational_trust_safety.notes
-                            },
-                            "empathic_partnership_autonomy": {
-                                "score": result.core_coaching_effectiveness.empathic_partnership_autonomy.score,
-                                "evidence": result.core_coaching_effectiveness.empathic_partnership_autonomy.evidence,
-                                "notes": result.core_coaching_effectiveness.empathic_partnership_autonomy.notes
-                            },
-                            "empowerment_clarity": {
-                                "score": result.core_coaching_effectiveness.empowerment_clarity.score,
-                                "evidence": result.core_coaching_effectiveness.empowerment_clarity.evidence,
-                                "notes": result.core_coaching_effectiveness.empowerment_clarity.notes
-                            }
-                        },
-                        "strengths_and_suggestions": {
-                            "strengths": [s.dict() if hasattr(s, 'dict') else s for s in result.strengths_and_suggestions.strengths] if result.strengths_and_suggestions.strengths else [],
-                            "opportunities": [o.dict() if hasattr(o, 'dict') else o for o in result.strengths_and_suggestions.opportunities] if result.strengths_and_suggestions.opportunities else [],
-                            "next_session_focus": result.strengths_and_suggestions.next_session_focus,
-                            "maps_alignment": result.strengths_and_suggestions.maps_alignment
-                        },
-                        "patterns_observed": {
-                            "manager_patterns": result.patterns_observed.manager_patterns,
-                            "employee_patterns": result.patterns_observed.employee_patterns,
-                            "interaction_dynamics": result.patterns_observed.interaction_dynamics,
-                            "conversation_balance": result.patterns_observed.conversation_balance
-                        }
-                    }
-                }
+            # Convert result to frontend-compatible dict using the canonical normalizer
+            result_dict = _to_maps_frontend_dict(result)
             
             # Complete job
             maps_jobs[job_id].update({
@@ -174,7 +148,7 @@ async def analyze_transcript(request: TranscriptAnalysisRequest):
                 "completed_at": datetime.utcnow().isoformat()
             })
             
-            logger.info(f"MAPS transcript analysis completed: job_id={job_id}, score={result.overall_quality_score}/10")
+            logger.info(f"MAPS transcript analysis completed: job_id={job_id}")
             
         except Exception as e:
             logger.error(f"MAPS analysis failed for job {job_id}: {e}", exc_info=True)
@@ -240,9 +214,8 @@ async def analyze_conversation(
                 "current_item": "Generating detailed report..."
             })
             
-            # Convert result to frontend-compatible dict using new 3-theme structure
-            # Handle both dict and Pydantic model responses
-            if isinstance(result, dict):
+            # Convert result to frontend-compatible dict using the canonical normalizer
+            result_dict = _to_maps_frontend_dict(result)
                 # Already a dict - use dict access
                 core_eff = result.get('core_coaching_effectiveness', {})
                 fts = core_eff.get('foundational_trust_safety', {})
@@ -335,7 +308,7 @@ async def analyze_conversation(
                 "completed_at": datetime.utcnow().isoformat()
             })
             
-            logger.info(f"MAPS conversation analysis completed: job_id={job_id}, score={result.overall_quality_score}/10")
+            logger.info(f"MAPS conversation analysis completed: job_id={job_id}")
             
         except Exception as e:
             logger.error(f"MAPS conversation analysis failed for job {job_id}: {e}", exc_info=True)

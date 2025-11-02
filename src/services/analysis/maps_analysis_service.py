@@ -166,7 +166,7 @@ class MAPSAnalysisService:
         # Structure result
         result = self._structure_analysis_result(analysis_data, conversation_id)
         
-        logger.info(f"MAPS analysis completed. Overall score: {result.overall_quality_score}/10")
+        logger.info("MAPS analysis completed.")
         return result
     
     async def analyze_transcript(
@@ -1032,105 +1032,40 @@ CONVERSATION TO ANALYZE:
         prompt: str,
         conversation_id: str
     ) -> Dict[str, Any]:
-        """Get AI analysis with OpenAI fallback when Gemini fails"""
-        
+        """Get AI analysis using OpenAI only (no Gemini)."""
         from src.config.settings import get_settings
         settings = get_settings()
-        
-        # Try Gemini first
-        try:
-            logger.info("Attempting analysis with Gemini...")
-            
-            response = await self.llm_service.generate_response(
-                prompt=prompt,
-                system_prompt="You are an expert in person-centred coaching analysis for Money and Pensions Service. Provide ONLY valid JSON in your response, no markdown formatting or additional text.",
-                model="gemini-2.5-flash",
-                temperature=0.3,
-                max_tokens=4000
-            )
-            
-            logger.info(f"Received Gemini response ({len(response)} chars)")
-            
-            # Clean response
-            cleaned_response = response.strip()
-            if cleaned_response.startswith("```"):
-                logger.info("Stripping markdown from Gemini response...")
-                cleaned_response = re.sub(r'^```(?:json)?\s*\n', '', cleaned_response)
-                cleaned_response = re.sub(r'\n```\s*$', '', cleaned_response)
-            
-            # Try parsing Gemini response
-            try:
-                analysis_data = json.loads(cleaned_response)
-                logger.info("JSON parsing successful with Gemini")
-                return analysis_data
-                
-            except json.JSONDecodeError as parse_error:
-                # Retry Gemini with higher max_tokens if truncated
-                if "Unterminated string" in str(parse_error) or "Expecting" in str(parse_error):
-                    logger.warning("Gemini JSON truncated, retrying with max_tokens=8000...")
-                    
-                    retry_response = await self.llm_service.generate_response(
-                        prompt=prompt,
-                        system_prompt="You are an expert in person-centred coaching analysis. Provide complete, valid JSON only.",
-                        model="gemini-2.5-flash",
-                        temperature=0.3,
-                        max_tokens=8000
-                    )
-                    
-                    retry_cleaned = retry_response.strip()
-                    if retry_cleaned.startswith("```"):
-                        retry_cleaned = re.sub(r'^```(?:json)?\s*\n', '', retry_cleaned)
-                        retry_cleaned = re.sub(r'\n```\s*$', '', retry_cleaned)
-                    
-                    try:
-                        analysis_data = json.loads(retry_cleaned)
-                        logger.info("JSON parsing successful with Gemini retry")
-                        return analysis_data
-                    except json.JSONDecodeError as retry_error:
-                        logger.warning(f"Gemini retry also failed: {retry_error}")
-                        # Fall through to OpenAI fallback
-                        raise Exception(f"Gemini failed - falling back to OpenAI: {retry_error}")
-                else:
-                    logger.warning(f"Gemini JSON parsing failed: {parse_error}")
-                    # Fall through to OpenAI fallback
-                    raise Exception(f"Gemini failed - falling back to OpenAI: {parse_error}")
 
-        except Exception as gemini_error:
-            logger.warning(f"Gemini analysis failed: {gemini_error}")
-            logger.info("Falling back to OpenAI...")
-            
-            try:
-                # Fallback to OpenAI
-                openai_response = await self.llm_service.generate_response(
-                    prompt=prompt,
-                    system_prompt="You are an expert in person-centred coaching analysis for Money and Pensions Service. Provide ONLY valid JSON in your response, no markdown formatting or additional text.",
-                    model=settings.DEFAULT_MODEL,  # gpt-4.1-nano-2025-04-14
-                    temperature=0.3,
-                    max_tokens=4000
-                )
-                
-                logger.info(f"Received OpenAI fallback response ({len(openai_response)} chars)")
-                
-                # Clean OpenAI response
-                openai_cleaned = openai_response.strip()
-                if openai_cleaned.startswith("```"):
-                    logger.info("Stripping markdown from OpenAI response...")
-                    openai_cleaned = re.sub(r'^```(?:json)?\s*\n', '', openai_cleaned)
-                    openai_cleaned = re.sub(r'\n```\s*$', '', openai_cleaned)
-                
-                # Parse OpenAI response
-                try:
-                    analysis_data = json.loads(openai_cleaned)
-                    logger.info(f"JSON parsing successful with OpenAI fallback (model: {settings.DEFAULT_MODEL})")
-                    return analysis_data
-                except json.JSONDecodeError as openai_parse_error:
-                    logger.error(f"OpenAI fallback also failed JSON parsing: {openai_parse_error}")
-                    logger.error(f"OpenAI response (first 500): {openai_response[:500]}...")
-                    raise Exception(f"Both Gemini and OpenAI failed: Gemini={gemini_error}, OpenAI={openai_parse_error}")
-                    
-            except Exception as openai_error:
-                logger.error(f"OpenAI fallback completely failed: {openai_error}", exc_info=True)
-                raise Exception(f"Both Gemini and OpenAI failed: Gemini={gemini_error}, OpenAI={openai_error}")
+        logger.info("Requesting AI analysis (OpenAI only)...")
+
+        # Call OpenAI via llm_service
+        openai_response = await self.llm_service.generate_response(
+            prompt=prompt,
+            system_prompt=(
+                "You are an expert in person-centred coaching analysis for Money and Pensions Service. "
+                "Provide ONLY valid JSON in your response, no markdown formatting or additional text."
+            ),
+            model=settings.DEFAULT_MODEL,
+            temperature=0.3,
+            max_tokens=4000,
+        )
+
+        # Clean any accidental markdown fencing
+        cleaned = openai_response.strip()
+        if cleaned.startswith("```"):
+            cleaned = re.sub(r'^```(?:json)?\s*\n', '', cleaned)
+            cleaned = re.sub(r'\n```\s*$', '', cleaned)
+
+        # Parse JSON
+        try:
+            analysis_data = json.loads(cleaned)
+            logger.info("JSON parsing successful (OpenAI)")
+            return analysis_data
+        except json.JSONDecodeError as e:
+            logger.error(f"OpenAI JSON parsing failed: {e}")
+            logger.error(f"OpenAI response (first 500): {openai_response[:500]}...")
+            raise Exception(f"OpenAI JSON parsing failed: {e}")
+        
     
     def _structure_analysis_result(
         self,

@@ -1489,9 +1489,15 @@
             document.getElementById('progressSection').style.display = 'none';
             document.getElementById('resultsSection').style.display = 'block';
 
-            // Overall quality score
-            document.getElementById('proficiencyScore').textContent =
-                result.overall_quality_score ? result.overall_quality_score.toFixed(1) : '--';
+            // Hide obsolete overall score card (no x/10 score)
+            const scoreEl = document.getElementById('proficiencyScore');
+            if (scoreEl) {
+                scoreEl.style.display = 'none';
+                if (scoreEl.nextElementSibling && scoreEl.nextElementSibling.tagName === 'P') {
+                    // Hide the 'Out of 10' line
+                    scoreEl.nextElementSibling.style.display = 'none';
+                }
+            }
             
             // MAPS values summary
             document.getElementById('mapsValuesSummary').textContent =

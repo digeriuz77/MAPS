@@ -666,9 +666,8 @@ def _convert_to_frontend_format(result) -> Dict[str, Any]:
         
         # Check if this is a MAPSAnalysisResult
         if hasattr(result, 'overall_quality_score'):
-            # MAPS format - convert to frontend format
-            logger.info(f"Processing MAPS result. Score: {result.overall_quality_score}")
-            proficiency_score = int(result.overall_quality_score * 10)  # Convert 1-10 to 0-100
+            # MAPS format - convert to frontend format (no overall score)
+            logger.info("Processing MAPS result (no overall score)")
 
             # Use new core_coaching_effectiveness structure (3 themes)
             core_effectiveness = result.core_coaching_effectiveness
@@ -759,11 +758,10 @@ def _convert_to_frontend_format(result) -> Dict[str, Any]:
             client_turns = int(estimated_turns * (person_percentage / 100))
             
             # Build frontend-compatible result with NEW structure
-            overall_score = result.overall_quality_score if hasattr(result, 'overall_quality_score') else result.get('overall_quality_score', 5.0)
             maps_summary = result.maps_values_summary if hasattr(result, 'maps_values_summary') else result.get('maps_values_summary', '')
             
             frontend_result = {
-                "overall_quality_score": overall_score,
+                # no overall score
                 "maps_values_summary": maps_summary,
                 "report": {
                     "core_coaching_effectiveness": report_data["core_coaching_effectiveness"],
