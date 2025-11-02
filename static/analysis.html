@@ -997,10 +997,10 @@
             sessionStorage.removeItem('currentConversation');
             console.log('🧹 Cleared sessionStorage after loading conversation');
             
-            // AUTOMATICALLY submit for analysis - no verification needed!
-            // Database already has clean role="user" or role="persona"
+            // AUTOMATICALLY submit for analysis using conversation_id endpoint
+            // This is more efficient and uses trust metrics from database
             setTimeout(() => {
-                autoSubmitAnalysis(transcript, personaName);
+                autoSubmitConversationAnalysis(conversation.conversation_id);
             }, 1000);
         }
         
@@ -1052,6 +1052,78 @@
         let currentJobId = null;
         let currentAnalysisResult = null; // Store result for downloads
         let pollingInterval = null;
+        
+        // Auto-submit conversation analysis using conversation_id (preferred method)
+        async function autoSubmitConversationAnalysis(conversationId) {
+            console.log('🚀 Auto-submitting conversation analysis for:', conversationId);
+            
+            // Hide auto-analysis status, show progress
+            const statusArea = document.getElementById('autoAnalysisStatus');
+            if (statusArea) {
+                statusArea.style.display = 'none';
+            }
+            document.getElementById('uploadSection').style.display = 'none';
+            document.getElementById('verificationSection').style.display = 'none';
+            document.getElementById('progressSection').style.display = 'block';
+            document.getElementById('resultsSection').style.display = 'none';
+            
+            // Show initial progress
+            updateProgress({
+                stage: 'fetching',
+                progress: 5,
+                current_item: 'Fetching conversation from database...'
+            });
+            
+            try {
+                console.log('📡 Submitting conversation analysis for:', conversationId);
+                
+                // Submit for analysis using MAPS conversation endpoint
+                const response = await fetch('/api/v1/maps/analyze/conversation', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        conversation_id: conversationId,
+                        context: {}
+                    })
+                });
+                
+                console.log('📡 Analysis submission response status:', response.status);
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    console.error('❌ Analysis submission error:', errorData);
+                    throw new Error(errorData.detail || 'Failed to submit analysis');
+                }
+                
+                const result = await response.json();
+                console.log('✅ Analysis submission result:', result);
+                currentJobId = result.job_id;
+                
+                // Update progress
+                updateProgress({
+                    stage: 'analyzing',
+                    progress: 15,
+                    current_item: 'Analysis started! Evaluating person-centred conditions...'
+                });
+                
+                // Start polling for progress using MAPS status endpoint
+                startPollingMaps();
+                
+            } catch (error) {
+                console.error('❌ Conversation analysis submission failed:', error);
+                updateProgress({
+                    stage: 'error',
+                    progress: 0,
+                    current_item: `Failed to submit: ${error.message}`
+                });
+                setTimeout(() => {
+                    alert('Failed to submit analysis: ' + error.message + '. Please try again.');
+                    resetAnalysis();
+                }, 2000);
+            }
+        }
         
         // Auto-submit analysis for database-loaded conversations (no speaker verification needed)
         async function autoSubmitAnalysis(transcript, personaName) {
@@ -1242,7 +1314,63 @@
             }
         }
         
-        // Poll for job status
+        // Poll for MAPS job status
+        function startPollingMaps() {
+            console.log('Starting MAPS polling for job:', currentJobId);
+            pollingInterval = setInterval(async () => {
+                try {
+                    const response = await fetch(`/api/v1/maps/status/${currentJobId}`);
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    
+                    const status = await response.json();
+                    console.log('MAPS polling status update:', status);
+                    
+                    updateProgress(status);
+                    
+                    if (status.status === 'complete') {
+                        console.log('MAPS analysis complete, displaying results:', status.result);
+                        stopPolling();
+                        currentAnalysisResult = status.result; // Store for downloads
+                        displayResults(status.result);
+                    } else if (status.status === 'error') {
+                        console.error('MAPS analysis failed with error:', status.error);
+                        stopPolling();
+                        const errorMsg = status.error || 'Unknown error occurred during analysis';
+                        
+                        // Show detailed error information
+                        updateProgress({
+                            stage: 'error',
+                            progress: 0,
+                            current_item: `Error: ${errorMsg}`
+                        });
+                        
+                        // Show user-friendly error message
+                        setTimeout(() => {
+                            alert(`Analysis failed: ${errorMsg}\n\nPlease check your transcript format and try again.`);
+                            resetAnalysis();
+                        }, 2000);
+                    }
+                } catch (error) {
+                    console.error('MAPS polling error:', error);
+                    // Don't stop polling immediately for network errors, but limit retries
+                    if (!window.pollingRetries) {
+                        window.pollingRetries = 0;
+                    }
+                    window.pollingRetries++;
+                    
+                    if (window.pollingRetries > 10) {
+                        stopPolling();
+                        alert('Lost connection to analysis service. Please refresh and try again.');
+                        resetAnalysis();
+                    }
+                }
+            }, 1000);
+        }
+        
+        // Poll for job status (for transcript analysis)
         function startPolling() {
             console.log('Starting polling for job:', currentJobId);
             pollingInterval = setInterval(async () => {
@@ -1347,6 +1475,16 @@
         
         // Display results
         function displayResults(result) {
+            // Debug logging
+            console.log('🔍 displayResults called with:', result);
+            console.log('🔍 result.overall_quality_score:', result.overall_quality_score);
+            console.log('🔍 result.maps_values_summary:', result.maps_values_summary);
+            console.log('🔍 result.report:', result.report);
+            if (result.report) {
+                console.log('🔍 result.report.core_coaching_effectiveness:', result.report.core_coaching_effectiveness);
+                console.log('🔍 result.report.strengths_and_suggestions:', result.report.strengths_and_suggestions);
+            }
+            
             // Hide progress, show results
             document.getElementById('progressSection').style.display = 'none';
             document.getElementById('resultsSection').style.display = 'block';

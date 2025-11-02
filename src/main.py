@@ -88,6 +88,10 @@ def create_app() -> FastAPI:
     # ANALYSIS SYSTEM ROUTES
     from src.api.routes.analysis import router as analysis_router
     app.include_router(analysis_router, tags=["analysis"])
+    
+    # MAPS ANALYSIS ROUTES
+    from src.api.routes.maps_analysis import router as maps_analysis_router
+    app.include_router(maps_analysis_router, tags=["maps_analysis"])
 
     # METRICS ROUTES
     try:

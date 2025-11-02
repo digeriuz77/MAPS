@@ -79,42 +79,40 @@ async def analyze_transcript(request: TranscriptAnalysisRequest):
                 "current_item": "Generating report..."
             })
             
-            # Convert result to dict for frontend
+            # Convert result to frontend-compatible dict using new 3-theme structure
             result_dict = {
-                "session_id": result.session_id,
-                "conversation_id": result.conversation_id,
-                "analyzed_at": result.analyzed_at.isoformat(),
                 "overall_quality_score": result.overall_quality_score,
                 "maps_values_summary": result.maps_values_summary,
-                "conditions_for_change": {
-                    "safety_trust": result.conditions_for_change.safety_trust,
-                    "empowerment": result.conditions_for_change.empowerment,
-                    "autonomy": result.conditions_for_change.autonomy,
-                    "clarity": result.conditions_for_change.clarity,
-                    "confidence_building": result.conditions_for_change.confidence_building,
-                    "overall_score": result.conditions_for_change.overall_score,
-                    "summary": result.conditions_for_change.summary
-                },
-                "person_centred_conditions": {
-                    "genuineness": result.person_centred_conditions.genuineness,
-                    "positive_regard": result.person_centred_conditions.positive_regard,
-                    "empathic_understanding": result.person_centred_conditions.empathic_understanding,
-                    "active_listening": result.person_centred_conditions.active_listening,
-                    "collaboration": result.person_centred_conditions.collaboration,
-                    "overall_score": result.person_centred_conditions.overall_score,
-                    "summary": result.person_centred_conditions.summary
-                },
-                "patterns_observed": {
-                    "manager_patterns": result.patterns_observed.manager_patterns,
-                    "employee_patterns": result.patterns_observed.employee_patterns,
-                    "interaction_dynamics": result.patterns_observed.interaction_dynamics,
-                    "conversation_balance": result.patterns_observed.conversation_balance
-                },
-                "strengths_and_suggestions": {
-                    "strengths": result.strengths_and_suggestions.strengths,
-                    "opportunities": result.strengths_and_suggestions.opportunities,
-                    "next_session_focus": result.strengths_and_suggestions.next_session_focus,
-                    "maps_alignment": result.strengths_and_suggestions.maps_alignment
+                "report": {
+                    "core_coaching_effectiveness": {
+                        "foundational_trust_safety": {
+                            "score": result.core_coaching_effectiveness.foundational_trust_safety.score,
+                            "evidence": result.core_coaching_effectiveness.foundational_trust_safety.evidence,
+                            "notes": result.core_coaching_effectiveness.foundational_trust_safety.notes
+                        },
+                        "empathic_partnership_autonomy": {
+                            "score": result.core_coaching_effectiveness.empathic_partnership_autonomy.score,
+                            "evidence": result.core_coaching_effectiveness.empathic_partnership_autonomy.evidence,
+                            "notes": result.core_coaching_effectiveness.empathic_partnership_autonomy.notes
+                        },
+                        "empowerment_clarity": {
+                            "score": result.core_coaching_effectiveness.empowerment_clarity.score,
+                            "evidence": result.core_coaching_effectiveness.empowerment_clarity.evidence,
+                            "notes": result.core_coaching_effectiveness.empowerment_clarity.notes
+                        }
+                    },
+                    "strengths_and_suggestions": {
+                        "strengths": [s.dict() if hasattr(s, 'dict') else s for s in result.strengths_and_suggestions.strengths] if result.strengths_and_suggestions.strengths else [],
+                        "opportunities": [o.dict() if hasattr(o, 'dict') else o for o in result.strengths_and_suggestions.opportunities] if result.strengths_and_suggestions.opportunities else [],
+                        "next_session_focus": result.strengths_and_suggestions.next_session_focus,
+                        "maps_alignment": result.strengths_and_suggestions.maps_alignment
+                    },
+                    "patterns_observed": {
+                        "manager_patterns": result.patterns_observed.manager_patterns,
+                        "employee_patterns": result.patterns_observed.employee_patterns,
+                        "interaction_dynamics": result.patterns_observed.interaction_dynamics,
+                        "conversation_balance": result.patterns_observed.conversation_balance
+                    }
                 }
             }
             
@@ -194,42 +192,40 @@ async def analyze_conversation(
                 "current_item": "Generating detailed report..."
             })
             
-            # Convert result to dict (same as transcript analysis)
+            # Convert result to frontend-compatible dict using new 3-theme structure
             result_dict = {
-                "session_id": result.session_id,
-                "conversation_id": result.conversation_id,
-                "analyzed_at": result.analyzed_at.isoformat(),
                 "overall_quality_score": result.overall_quality_score,
                 "maps_values_summary": result.maps_values_summary,
-                "conditions_for_change": {
-                    "safety_trust": result.conditions_for_change.safety_trust,
-                    "empowerment": result.conditions_for_change.empowerment,
-                    "autonomy": result.conditions_for_change.autonomy,
-                    "clarity": result.conditions_for_change.clarity,
-                    "confidence_building": result.conditions_for_change.confidence_building,
-                    "overall_score": result.conditions_for_change.overall_score,
-                    "summary": result.conditions_for_change.summary
-                },
-                "person_centred_conditions": {
-                    "genuineness": result.person_centred_conditions.genuineness,
-                    "positive_regard": result.person_centred_conditions.positive_regard,
-                    "empathic_understanding": result.person_centred_conditions.empathic_understanding,
-                    "active_listening": result.person_centred_conditions.active_listening,
-                    "collaboration": result.person_centred_conditions.collaboration,
-                    "overall_score": result.person_centred_conditions.overall_score,
-                    "summary": result.person_centred_conditions.summary
-                },
-                "patterns_observed": {
-                    "manager_patterns": result.patterns_observed.manager_patterns,
-                    "employee_patterns": result.patterns_observed.employee_patterns,
-                    "interaction_dynamics": result.patterns_observed.interaction_dynamics,
-                    "conversation_balance": result.patterns_observed.conversation_balance
-                },
-                "strengths_and_suggestions": {
-                    "strengths": result.strengths_and_suggestions.strengths,
-                    "opportunities": result.strengths_and_suggestions.opportunities,
-                    "next_session_focus": result.strengths_and_suggestions.next_session_focus,
-                    "maps_alignment": result.strengths_and_suggestions.maps_alignment
+                "report": {
+                    "core_coaching_effectiveness": {
+                        "foundational_trust_safety": {
+                            "score": result.core_coaching_effectiveness.foundational_trust_safety.score,
+                            "evidence": result.core_coaching_effectiveness.foundational_trust_safety.evidence,
+                            "notes": result.core_coaching_effectiveness.foundational_trust_safety.notes
+                        },
+                        "empathic_partnership_autonomy": {
+                            "score": result.core_coaching_effectiveness.empathic_partnership_autonomy.score,
+                            "evidence": result.core_coaching_effectiveness.empathic_partnership_autonomy.evidence,
+                            "notes": result.core_coaching_effectiveness.empathic_partnership_autonomy.notes
+                        },
+                        "empowerment_clarity": {
+                            "score": result.core_coaching_effectiveness.empowerment_clarity.score,
+                            "evidence": result.core_coaching_effectiveness.empowerment_clarity.evidence,
+                            "notes": result.core_coaching_effectiveness.empowerment_clarity.notes
+                        }
+                    },
+                    "strengths_and_suggestions": {
+                        "strengths": [s.dict() if hasattr(s, 'dict') else s for s in result.strengths_and_suggestions.strengths] if result.strengths_and_suggestions.strengths else [],
+                        "opportunities": [o.dict() if hasattr(o, 'dict') else o for o in result.strengths_and_suggestions.opportunities] if result.strengths_and_suggestions.opportunities else [],
+                        "next_session_focus": result.strengths_and_suggestions.next_session_focus,
+                        "maps_alignment": result.strengths_and_suggestions.maps_alignment
+                    },
+                    "patterns_observed": {
+                        "manager_patterns": result.patterns_observed.manager_patterns,
+                        "employee_patterns": result.patterns_observed.employee_patterns,
+                        "interaction_dynamics": result.patterns_observed.interaction_dynamics,
+                        "conversation_balance": result.patterns_observed.conversation_balance
+                    }
                 }
             }
             
