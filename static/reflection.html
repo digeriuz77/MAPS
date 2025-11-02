@@ -109,27 +109,7 @@
                 </p>
             </div>
             
-            <!-- Email Section -->
-            <div style="border-top: 1px solid #e0e0e0; padding-top: 20px;">
-                <h5 style="color: var(--primary-teal); margin-bottom: 10px;">
-                    <i class="fas fa-envelope"></i> Email Your Reflection
-                </h5>
-                <p>Would you like a copy emailed to you?</p>
-                <div style="margin-bottom: 15px;">
-                    <label style="margin-right: 20px;">
-                        <input type="radio" name="emailOption" value="yes" style="margin-right: 5px;"> Yes
-                    </label>
-                    <label>
-                        <input type="radio" name="emailOption" value="no" style="margin-right: 5px;" checked> No
-                    </label>
-                </div>
-                <div id="emailInput" style="display:none;">
-                    <input type="email" id="userEmail" class="teal-input" placeholder="Your email address" style="margin-bottom: 10px;">
-                    <button id="sendEmailBtn" class="btn-teal-primary">
-                        <i class="fas fa-paper-plane"></i> Send Email
-                    </button>
-                </div>
-            </div>
+            <!-- Email feature temporarily disabled -->
             
             <!-- App Feedback Button -->
             <div style="margin-top: 30px; text-align: center; border-top: 1px solid #e0e0e0; padding-top: 20px;">
@@ -214,6 +194,9 @@
                 summarySection.style.display = 'block';
                 emailSection.style.display = 'block';
                 
+                // Enable navigation to Feedback now that summary exists
+                nextBtn.disabled = false;
+                
                 // Scroll to summary
                 summarySection.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 
@@ -226,16 +209,7 @@
             }
         });
         
-        // Email option handling
-        document.querySelectorAll('input[name="emailOption"]').forEach(radio => {
-            radio.addEventListener('change', (e) => {
-                document.getElementById('emailInput').style.display = 
-                    e.target.value === 'yes' ? 'block' : 'none';
-                if (e.target.value === 'no') {
-                    nextBtn.disabled = false;
-                }
-            });
-        });
+        // Email feature disabled
         
         // Download reflection
         document.getElementById('downloadBtn').addEventListener('click', () => {
@@ -291,49 +265,7 @@ Virtual Health Labs © 2025
             nextBtn.disabled = false;
         });
         
-        // Send email
-        document.getElementById('sendEmailBtn').addEventListener('click', async () => {
-            const email = document.getElementById('userEmail').value;
-            if (!email || !email.includes('@')) {
-                alert('Please enter a valid email address');
-                return;
-            }
-            
-            const sendBtn = document.getElementById('sendEmailBtn');
-            sendBtn.disabled = true;
-            sendBtn.textContent = 'Sending...';
-            
-            try {
-                const response = await fetch('/api/reflection/send-email', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({
-                        email: email,
-                        question1: question1.value,
-                        question2: question2.value,
-                        question3: question3.value,
-                        summary: summaryText.textContent,
-                        session_id: sessionStorage.getItem('currentSessionId'),
-                        persona_practiced: sessionStorage.getItem('personaPracticed') || 'Mary'
-                    })
-                });
-                
-                if (!response.ok) throw new Error('Failed to send email');
-                
-                sendBtn.innerHTML = '<i class="fas fa-check"></i> Sent!';
-                sendBtn.style.background = '#28a745';
-                nextBtn.disabled = false;
-                
-                alert('Reflection summary sent to your email!');
-                
-            } catch (error) {
-                console.error('Failed to send email:', error);
-                alert('Failed to send email. You can still download your summary.');
-                sendBtn.disabled = false;
-                sendBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Send Email';
-                nextBtn.disabled = false;
-            }
-        });
+        // Email feature disabled
     </script>
     
     <!-- Supabase SDK -->
