@@ -4,7 +4,7 @@ Email service for sending reflection summaries and analysis reports
 import logging
 import smtplib
 import asyncio
-from email.mime_text import MIMEText
+from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.mime.base import MIMEBase
 from email import encoders

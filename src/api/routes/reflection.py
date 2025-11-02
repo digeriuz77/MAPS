@@ -19,6 +19,21 @@ async def reflection_health():
     """Health check for reflection service"""
     return {"status": "healthy", "service": "reflection"}
 
+@router.get("/sessions/recent")
+async def get_recent_reflections(limit: int = 10, supabase = Depends(get_supabase_client)):
+    """Return the most recent reflection_sessions rows for verification"""
+    try:
+        result = supabase.table('reflection_sessions') \
+            .select('*') \
+            .order('session_date', desc=True) \
+            .limit(max(1, min(limit, 50))) \
+            .execute()
+        rows = result.data or []
+        return {"count": len(rows), "rows": rows}
+    except Exception as e:
+        logger.error(f"Failed to fetch recent reflections: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to query reflection sessions")
+
 class ReflectionSummaryRequest(BaseModel):
     """Request model for reflection summary generation"""
     question1_response: str
@@ -138,13 +153,19 @@ Provide an encouraging, professional summary that highlights key insights and gr
                 else:
                     logger.info(f"Session ID '{request.session_id}' is not a valid UUID, storing as None")
             
+            # Generate a UUID for the reflection record (table requires non-null id)
+            import uuid
+            reflection_id = str(uuid.uuid4())
+            
             reflection_data = {
+                'id': reflection_id,
                 'user_id': '00000000-0000-0000-0000-000000000001',  # Default user ID
                 'session_date': datetime.utcnow().date().isoformat(),
                 'question1': request.question1_response,
                 'question2': request.question2_response,
                 'question3': request.question3_response,
                 'summary': summary.strip(),
+                'conversation_id': conversation_id,  # top-level for easy querying
                 'metadata': {
                     'conversation_id': conversation_id,
                     'persona_practiced': request.persona_practiced,
@@ -262,11 +283,19 @@ Session ID: {request.session_id or 'N/A'}
 Generated: {datetime.utcnow().strftime('%Y-%m-%d %H:%M UTC')}
 """
         
-        # Send email using simple method
+        # Attach a .txt file of the reflection as well
+        attachment_filename = f"reflection_{datetime.utcnow().strftime('%Y%m%d_%H%M%SZ')}.txt"
+        attachments = [{
+            'filename': attachment_filename,
+            'content': email_body.encode('utf-8')
+        }]
+
+        # Send email using simple method with attachment
         success = await email_service._send_email(
             recipient_email=request.email,
             subject=email_subject,
-            text_content=email_body
+            text_content=email_body,
+            attachments=attachments
         )
         
         if success:
