@@ -1046,8 +1046,9 @@ CONVERSATION TO ANALYZE:
                 "Provide ONLY valid JSON in your response, no markdown formatting or additional text."
             ),
             model=settings.DEFAULT_MODEL,
-            temperature=0.3,
+            temperature=0.0,
             max_tokens=4000,
+            response_format={"type": "json_object"},
         )
 
         # Clean any accidental markdown fencing

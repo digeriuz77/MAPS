@@ -50,7 +50,8 @@ class LLMService:
         conversation_history: Optional[List[Message]] = None,
         session_id: Optional[str] = None,
         frequency_penalty: Optional[float] = None,
-        presence_penalty: Optional[float] = None
+        presence_penalty: Optional[float] = None,
+        response_format: Optional[Dict[str, Any]] = None,
     ) -> str:
         """Generate response using LLM API"""
         
@@ -128,7 +129,7 @@ class LLMService:
             else:
                 response = await self._generate_openai_response(
                     messages, model, temperature, max_tokens, stop_sequences,
-                    frequency_penalty, presence_penalty
+                    frequency_penalty, presence_penalty, response_format
                 )
             
             # Check for repetition if session_id provided
@@ -156,7 +157,8 @@ class LLMService:
         max_tokens: int,
         stop_sequences: Optional[List[str]] = None,
         frequency_penalty: float = 0.0,
-        presence_penalty: float = 0.0
+        presence_penalty: float = 0.0,
+        response_format: Optional[Dict[str, Any]] = None,
     ) -> str:
         """Generate response using OpenAI API"""
 
@@ -180,6 +182,10 @@ class LLMService:
                         "frequency_penalty": frequency_penalty,
                         "presence_penalty": presence_penalty
                     }
+
+                    # Enforce JSON object output if requested (for supported models)
+                    if response_format:
+                        request_params["response_format"] = response_format
 
                     # Only add temperature if not using gpt-5 models (which require default temperature=1)
                     if not model.lower().startswith("gpt-5"):
