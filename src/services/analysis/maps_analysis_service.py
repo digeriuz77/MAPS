@@ -23,27 +23,27 @@ logger = logging.getLogger(__name__)
 
 class CoreCoachingEffectiveness(BaseModel):
     """Integrated assessment of manager's coaching effectiveness across 3 themes"""
-    foundational_trust_safety: Dict[str, Any]
-    empathic_partnership_autonomy: Dict[str, Any]
-    empowerment_clarity: Dict[str, Any]
-    overall_score: float
-    summary: str
+    foundational_trust_safety: Dict[str, Any] = Field(default_factory=dict)
+    empathic_partnership_autonomy: Dict[str, Any] = Field(default_factory=dict)
+    empowerment_clarity: Dict[str, Any] = Field(default_factory=dict)
+    overall_score: float = 0.0
+    summary: str = ""
 
 
 class PatternsObserved(BaseModel):
     """Patterns in manager and employee behavior"""
-    manager_patterns: List[str]
-    employee_patterns: List[str]
-    interaction_dynamics: str
-    conversation_balance: Dict[str, Any]
+    manager_patterns: List[str] = Field(default_factory=list)
+    employee_patterns: List[str] = Field(default_factory=list)
+    interaction_dynamics: str = ""
+    conversation_balance: Dict[str, Any] = Field(default_factory=dict)
 
 
 class StrengthsAndSuggestions(BaseModel):
     """Identified strengths and development opportunities"""
-    strengths: List[Dict[str, str]]
-    opportunities: List[Dict[str, str]]
-    next_session_focus: List[str]
-    maps_alignment: str
+    strengths: List[Dict[str, str]] = Field(default_factory=list)
+    opportunities: List[Dict[str, str]] = Field(default_factory=list)
+    next_session_focus: List[str] = Field(default_factory=list)
+    maps_alignment: str = ""
 
 
 class MAPSAnalysisResult(BaseModel):
@@ -163,7 +163,7 @@ class MAPSAnalysisService:
         logger.info("Requesting AI analysis from LLM service...")
         analysis_data = await self._get_ai_analysis(analysis_prompt, conversation_id)
         
-        # Structure result
+        # Structure result with defensive normalization
         result = self._structure_analysis_result(analysis_data, conversation_id)
         
         logger.info("MAPS analysis completed.")
@@ -1047,7 +1047,7 @@ CONVERSATION TO ANALYZE:
             ),
             model=settings.DEFAULT_MODEL,
             temperature=0.0,
-            max_tokens=4000,
+            max_tokens=6000,
             response_format={"type": "json_object"},
         )
 
@@ -1076,6 +1076,33 @@ CONVERSATION TO ANALYZE:
         """Structure analysis data into result object"""
         
         try:
+            # Defensive normalization to tolerate missing keys
+            core = analysis_data.setdefault("core_coaching_effectiveness", {})
+            def _ensure_theme(name: str):
+                t = core.setdefault(name, {})
+                t.setdefault("score", None)
+                t.setdefault("evidence", [])
+                t.setdefault("notes", "")
+            _ensure_theme("foundational_trust_safety")
+            _ensure_theme("empathic_partnership_autonomy")
+            _ensure_theme("empowerment_clarity")
+            core.setdefault("overall_score", 0.0)
+            core.setdefault("summary", "")
+
+            patterns = analysis_data.setdefault("patterns_observed", {})
+            patterns.setdefault("manager_patterns", [])
+            patterns.setdefault("employee_patterns", [])
+            patterns.setdefault("interaction_dynamics", "")
+            cb = patterns.setdefault("conversation_balance", {})
+            cb.setdefault("manager_speaking_percentage", 50)
+            cb.setdefault("employee_speaking_percentage", 50)
+
+            sas = analysis_data.setdefault("strengths_and_suggestions", {})
+            sas.setdefault("strengths", [])
+            sas.setdefault("opportunities", [])
+            sas.setdefault("next_session_focus", [])
+            sas.setdefault("maps_alignment", "")
+
             result = MAPSAnalysisResult(
                 session_id=f"maps_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}",
                 conversation_id=conversation_id,
