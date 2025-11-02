@@ -463,6 +463,29 @@
         </div>
     </div>
     
+    <!-- Leave Analysis Modal -->
+    <div class="modal fade" id="leaveAnalysisModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-exclamation-triangle text-warning"></i> Before you leave</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    Once you leave this screen, your report will not be available.
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" id="confirmDownloadHtml">
+                        <i class="fas fa-file-download"></i> Download report (HTML)
+                    </button>
+                    <button type="button" class="btn btn-primary" id="confirmGoReflection">
+                        I want to go to reflection
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
@@ -1741,76 +1764,30 @@
             return text;
         }
 
-        // Go to reflection with analysis results
+        // Go to reflection with confirmation modal (no server fetch)
         async function goToReflection() {
-            if (!currentJobId) {
-                alert('No completed analysis available to send to reflection');
+            const modalEl = document.getElementById('leaveAnalysisModal');
+            if (!modalEl) {
+                window.location.href = '/reflection?from=analysis';
                 return;
             }
+            const modal = new bootstrap.Modal(modalEl);
 
-            try {
-                // Get the latest status to ensure we have the result
-                const response = await fetch(`/api/v1/analysis/status/${currentJobId}`);
-                if (!response.ok) {
-                    throw new Error('Could not fetch analysis results');
-                }
-                
-                const statusData = await response.json();
-                if (statusData.status !== 'complete' || !statusData.result) {
-                    alert('Analysis is not complete or results are not available');
-                    return;
-                }
-                
-                const analysisResult = statusData.result;
-
-                // Format analysis report as text
-                let reportText = `Person-Centred Analysis Report\n`;
-                reportText += `==================\n\n`;
-                reportText += `Proficiency Score: ${analysisResult.proficiency_score || 'N/A'}\n\n`;
-
-                if (analysisResult.statistics && analysisResult.statistics.code_counts) {
-                    reportText += `Behavior Counts:\n`;
-                    Object.entries(analysisResult.statistics.code_counts).forEach(([behavior, count]) => {
-                        reportText += `  ${behavior}: ${count}\n`;
-                    });
-                    reportText += `\n`;
-                }
-
-                if (analysisResult.report && analysisResult.report.global_ratings) {
-                    reportText += `Global Ratings:\n`;
-                    Object.entries(analysisResult.report.global_ratings).forEach(([metric, ratingData]) => {
-                        const score = typeof ratingData === 'object' ? ratingData.score : ratingData;
-                        reportText += `  ${metric}: ${score}\n`;
-                    });
-                    reportText += `\n`;
-                }
-
-                if (analysisResult.report && analysisResult.report.actionable_recommendations) {
-                    reportText += `Recommendations:\n`;
-                    const recs = analysisResult.report.actionable_recommendations;
-                    if (recs.immediate_focus) {
-                        reportText += `  Immediate Focus: ${recs.immediate_focus}\n`;
-                    }
-                    if (recs.skill_development) {
-                        reportText += `  Skill Development: ${recs.skill_development}\n`;
-                    }
-                    reportText += `\n`;
-                }
-
-                if (analysisResult.summary) {
-                    reportText += `Summary:\n${JSON.stringify(analysisResult.summary, null, 2)}\n\n`;
-                }
-
-                // Store analysis report for reflection page
-                sessionStorage.setItem('analysisReportForReflection', reportText);
-
-                // Navigate to reflection page
-                window.location.href = '/reflection?from=analysis';
-
-            } catch (error) {
-                console.error('Failed to prepare analysis for reflection:', error);
-                alert('Failed to prepare analysis report for reflection');
+            const downloadBtn = modalEl.querySelector('#confirmDownloadHtml');
+            const goBtn = modalEl.querySelector('#confirmGoReflection');
+            if (downloadBtn) {
+                downloadBtn.onclick = () => {
+                    try { downloadReport('html'); } catch (e) { console.error(e); }
+                };
             }
+            if (goBtn) {
+                goBtn.onclick = () => {
+                    modal.hide();
+                    window.location.href = '/reflection?from=analysis';
+                };
+            }
+
+            modal.show();
         }
 
         // Reset analysis
