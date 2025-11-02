@@ -79,6 +79,7 @@ class Settings(BaseSettings):
     
     class Config:
         env_file = ".env"
+        extra = "ignore"  # Ignore extra fields from testing harness .env
 
 @lru_cache()
 def get_settings() -> Settings:
