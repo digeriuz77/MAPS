@@ -80,41 +80,89 @@ async def analyze_transcript(request: TranscriptAnalysisRequest):
             })
             
             # Convert result to frontend-compatible dict using new 3-theme structure
-            result_dict = {
-                "overall_quality_score": result.overall_quality_score,
-                "maps_values_summary": result.maps_values_summary,
-                "report": {
-                    "core_coaching_effectiveness": {
-                        "foundational_trust_safety": {
-                            "score": result.core_coaching_effectiveness.foundational_trust_safety.score,
-                            "evidence": result.core_coaching_effectiveness.foundational_trust_safety.evidence,
-                            "notes": result.core_coaching_effectiveness.foundational_trust_safety.notes
+            # Handle both dict and Pydantic model responses
+            if isinstance(result, dict):
+                # Already a dict - use dict access
+                core_eff = result.get('core_coaching_effectiveness', {})
+                fts = core_eff.get('foundational_trust_safety', {})
+                epa = core_eff.get('empathic_partnership_autonomy', {})
+                ec = core_eff.get('empowerment_clarity', {})
+                
+                suggestions = result.get('strengths_and_suggestions', {})
+                patterns = result.get('patterns_observed', {})
+                
+                result_dict = {
+                    "overall_quality_score": result.get('overall_quality_score', 5.0),
+                    "maps_values_summary": result.get('maps_values_summary', ''),
+                    "report": {
+                        "core_coaching_effectiveness": {
+                            "foundational_trust_safety": {
+                                "score": fts.get('score', 5),
+                                "evidence": fts.get('evidence', []),
+                                "notes": fts.get('notes', '')
+                            },
+                            "empathic_partnership_autonomy": {
+                                "score": epa.get('score', 5),
+                                "evidence": epa.get('evidence', []),
+                                "notes": epa.get('notes', '')
+                            },
+                            "empowerment_clarity": {
+                                "score": ec.get('score', 5),
+                                "evidence": ec.get('evidence', []),
+                                "notes": ec.get('notes', '')
+                            }
                         },
-                        "empathic_partnership_autonomy": {
-                            "score": result.core_coaching_effectiveness.empathic_partnership_autonomy.score,
-                            "evidence": result.core_coaching_effectiveness.empathic_partnership_autonomy.evidence,
-                            "notes": result.core_coaching_effectiveness.empathic_partnership_autonomy.notes
+                        "strengths_and_suggestions": {
+                            "strengths": suggestions.get('strengths', []),
+                            "opportunities": suggestions.get('opportunities', []),
+                            "next_session_focus": suggestions.get('next_session_focus', []),
+                            "maps_alignment": suggestions.get('maps_alignment', '')
                         },
-                        "empowerment_clarity": {
-                            "score": result.core_coaching_effectiveness.empowerment_clarity.score,
-                            "evidence": result.core_coaching_effectiveness.empowerment_clarity.evidence,
-                            "notes": result.core_coaching_effectiveness.empowerment_clarity.notes
+                        "patterns_observed": {
+                            "manager_patterns": patterns.get('manager_patterns', []),
+                            "employee_patterns": patterns.get('employee_patterns', []),
+                            "interaction_dynamics": patterns.get('interaction_dynamics', ''),
+                            "conversation_balance": patterns.get('conversation_balance', {})
                         }
-                    },
-                    "strengths_and_suggestions": {
-                        "strengths": [s.dict() if hasattr(s, 'dict') else s for s in result.strengths_and_suggestions.strengths] if result.strengths_and_suggestions.strengths else [],
-                        "opportunities": [o.dict() if hasattr(o, 'dict') else o for o in result.strengths_and_suggestions.opportunities] if result.strengths_and_suggestions.opportunities else [],
-                        "next_session_focus": result.strengths_and_suggestions.next_session_focus,
-                        "maps_alignment": result.strengths_and_suggestions.maps_alignment
-                    },
-                    "patterns_observed": {
-                        "manager_patterns": result.patterns_observed.manager_patterns,
-                        "employee_patterns": result.patterns_observed.employee_patterns,
-                        "interaction_dynamics": result.patterns_observed.interaction_dynamics,
-                        "conversation_balance": result.patterns_observed.conversation_balance
                     }
                 }
-            }
+            else:
+                # Pydantic model - use attribute access
+                result_dict = {
+                    "overall_quality_score": result.overall_quality_score,
+                    "maps_values_summary": result.maps_values_summary,
+                    "report": {
+                        "core_coaching_effectiveness": {
+                            "foundational_trust_safety": {
+                                "score": result.core_coaching_effectiveness.foundational_trust_safety.score,
+                                "evidence": result.core_coaching_effectiveness.foundational_trust_safety.evidence,
+                                "notes": result.core_coaching_effectiveness.foundational_trust_safety.notes
+                            },
+                            "empathic_partnership_autonomy": {
+                                "score": result.core_coaching_effectiveness.empathic_partnership_autonomy.score,
+                                "evidence": result.core_coaching_effectiveness.empathic_partnership_autonomy.evidence,
+                                "notes": result.core_coaching_effectiveness.empathic_partnership_autonomy.notes
+                            },
+                            "empowerment_clarity": {
+                                "score": result.core_coaching_effectiveness.empowerment_clarity.score,
+                                "evidence": result.core_coaching_effectiveness.empowerment_clarity.evidence,
+                                "notes": result.core_coaching_effectiveness.empowerment_clarity.notes
+                            }
+                        },
+                        "strengths_and_suggestions": {
+                            "strengths": [s.dict() if hasattr(s, 'dict') else s for s in result.strengths_and_suggestions.strengths] if result.strengths_and_suggestions.strengths else [],
+                            "opportunities": [o.dict() if hasattr(o, 'dict') else o for o in result.strengths_and_suggestions.opportunities] if result.strengths_and_suggestions.opportunities else [],
+                            "next_session_focus": result.strengths_and_suggestions.next_session_focus,
+                            "maps_alignment": result.strengths_and_suggestions.maps_alignment
+                        },
+                        "patterns_observed": {
+                            "manager_patterns": result.patterns_observed.manager_patterns,
+                            "employee_patterns": result.patterns_observed.employee_patterns,
+                            "interaction_dynamics": result.patterns_observed.interaction_dynamics,
+                            "conversation_balance": result.patterns_observed.conversation_balance
+                        }
+                    }
+                }
             
             # Complete job
             maps_jobs[job_id].update({
@@ -193,41 +241,89 @@ async def analyze_conversation(
             })
             
             # Convert result to frontend-compatible dict using new 3-theme structure
-            result_dict = {
-                "overall_quality_score": result.overall_quality_score,
-                "maps_values_summary": result.maps_values_summary,
-                "report": {
-                    "core_coaching_effectiveness": {
-                        "foundational_trust_safety": {
-                            "score": result.core_coaching_effectiveness.foundational_trust_safety.score,
-                            "evidence": result.core_coaching_effectiveness.foundational_trust_safety.evidence,
-                            "notes": result.core_coaching_effectiveness.foundational_trust_safety.notes
+            # Handle both dict and Pydantic model responses
+            if isinstance(result, dict):
+                # Already a dict - use dict access
+                core_eff = result.get('core_coaching_effectiveness', {})
+                fts = core_eff.get('foundational_trust_safety', {})
+                epa = core_eff.get('empathic_partnership_autonomy', {})
+                ec = core_eff.get('empowerment_clarity', {})
+                
+                suggestions = result.get('strengths_and_suggestions', {})
+                patterns = result.get('patterns_observed', {})
+                
+                result_dict = {
+                    "overall_quality_score": result.get('overall_quality_score', 5.0),
+                    "maps_values_summary": result.get('maps_values_summary', ''),
+                    "report": {
+                        "core_coaching_effectiveness": {
+                            "foundational_trust_safety": {
+                                "score": fts.get('score', 5),
+                                "evidence": fts.get('evidence', []),
+                                "notes": fts.get('notes', '')
+                            },
+                            "empathic_partnership_autonomy": {
+                                "score": epa.get('score', 5),
+                                "evidence": epa.get('evidence', []),
+                                "notes": epa.get('notes', '')
+                            },
+                            "empowerment_clarity": {
+                                "score": ec.get('score', 5),
+                                "evidence": ec.get('evidence', []),
+                                "notes": ec.get('notes', '')
+                            }
                         },
-                        "empathic_partnership_autonomy": {
-                            "score": result.core_coaching_effectiveness.empathic_partnership_autonomy.score,
-                            "evidence": result.core_coaching_effectiveness.empathic_partnership_autonomy.evidence,
-                            "notes": result.core_coaching_effectiveness.empathic_partnership_autonomy.notes
+                        "strengths_and_suggestions": {
+                            "strengths": suggestions.get('strengths', []),
+                            "opportunities": suggestions.get('opportunities', []),
+                            "next_session_focus": suggestions.get('next_session_focus', []),
+                            "maps_alignment": suggestions.get('maps_alignment', '')
                         },
-                        "empowerment_clarity": {
-                            "score": result.core_coaching_effectiveness.empowerment_clarity.score,
-                            "evidence": result.core_coaching_effectiveness.empowerment_clarity.evidence,
-                            "notes": result.core_coaching_effectiveness.empowerment_clarity.notes
+                        "patterns_observed": {
+                            "manager_patterns": patterns.get('manager_patterns', []),
+                            "employee_patterns": patterns.get('employee_patterns', []),
+                            "interaction_dynamics": patterns.get('interaction_dynamics', ''),
+                            "conversation_balance": patterns.get('conversation_balance', {})
                         }
-                    },
-                    "strengths_and_suggestions": {
-                        "strengths": [s.dict() if hasattr(s, 'dict') else s for s in result.strengths_and_suggestions.strengths] if result.strengths_and_suggestions.strengths else [],
-                        "opportunities": [o.dict() if hasattr(o, 'dict') else o for o in result.strengths_and_suggestions.opportunities] if result.strengths_and_suggestions.opportunities else [],
-                        "next_session_focus": result.strengths_and_suggestions.next_session_focus,
-                        "maps_alignment": result.strengths_and_suggestions.maps_alignment
-                    },
-                    "patterns_observed": {
-                        "manager_patterns": result.patterns_observed.manager_patterns,
-                        "employee_patterns": result.patterns_observed.employee_patterns,
-                        "interaction_dynamics": result.patterns_observed.interaction_dynamics,
-                        "conversation_balance": result.patterns_observed.conversation_balance
                     }
                 }
-            }
+            else:
+                # Pydantic model - use attribute access
+                result_dict = {
+                    "overall_quality_score": result.overall_quality_score,
+                    "maps_values_summary": result.maps_values_summary,
+                    "report": {
+                        "core_coaching_effectiveness": {
+                            "foundational_trust_safety": {
+                                "score": result.core_coaching_effectiveness.foundational_trust_safety.score,
+                                "evidence": result.core_coaching_effectiveness.foundational_trust_safety.evidence,
+                                "notes": result.core_coaching_effectiveness.foundational_trust_safety.notes
+                            },
+                            "empathic_partnership_autonomy": {
+                                "score": result.core_coaching_effectiveness.empathic_partnership_autonomy.score,
+                                "evidence": result.core_coaching_effectiveness.empathic_partnership_autonomy.evidence,
+                                "notes": result.core_coaching_effectiveness.empathic_partnership_autonomy.notes
+                            },
+                            "empowerment_clarity": {
+                                "score": result.core_coaching_effectiveness.empowerment_clarity.score,
+                                "evidence": result.core_coaching_effectiveness.empowerment_clarity.evidence,
+                                "notes": result.core_coaching_effectiveness.empowerment_clarity.notes
+                            }
+                        },
+                        "strengths_and_suggestions": {
+                            "strengths": [s.dict() if hasattr(s, 'dict') else s for s in result.strengths_and_suggestions.strengths] if result.strengths_and_suggestions.strengths else [],
+                            "opportunities": [o.dict() if hasattr(o, 'dict') else o for o in result.strengths_and_suggestions.opportunities] if result.strengths_and_suggestions.opportunities else [],
+                            "next_session_focus": result.strengths_and_suggestions.next_session_focus,
+                            "maps_alignment": result.strengths_and_suggestions.maps_alignment
+                        },
+                        "patterns_observed": {
+                            "manager_patterns": result.patterns_observed.manager_patterns,
+                            "employee_patterns": result.patterns_observed.employee_patterns,
+                            "interaction_dynamics": result.patterns_observed.interaction_dynamics,
+                            "conversation_balance": result.patterns_observed.conversation_balance
+                        }
+                    }
+                }
             
             # Complete job
             maps_jobs[job_id].update({
