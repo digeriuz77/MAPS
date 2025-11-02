@@ -1652,11 +1652,59 @@
             }
         }
 
-        // Generate HTML report from result
+        // Generate HTML report from result (MAPS 3-theme structure)
         function generateHTMLReport(result) {
-            const stats = result.statistics || {};
             const report = result.report || {};
-            const globalRatings = report.global_ratings || {};
+            const themes = report.core_coaching_effectiveness || {};
+            const sas = report.strengths_and_suggestions || {};
+            const patterns = report.patterns_observed || {};
+
+            const themeInfo = {
+                foundational_trust_safety: { name: 'Partnership', desc: 'Safety, Trust, Genuineness, Positive Regard' },
+                empathic_partnership_autonomy: { name: 'Empathy', desc: 'Empathic Understanding, Active Listening, Collaboration, Autonomy Support' },
+                empowerment_clarity: { name: 'Empowering Change', desc: 'Client Empowerment, Communication Clarity, Confidence-Building' }
+            };
+
+            const themesHtml = Object.entries(themes).map(([key, t]) => {
+                const info = themeInfo[key] || { name: key.replace(/_/g, ' '), desc: '' };
+                const evidence = Array.isArray(t.evidence) && t.evidence.length
+                  ? `<ul>${t.evidence.map(e => `<li>${e}</li>`).join('')}</ul>`
+                  : '';
+                return `
+                    <div class="rating">
+                        <strong>${info.name}</strong>
+                        <span class="score" style="margin-left:8px;">${(t.score ?? '-')}/5</span>
+                        <p style="margin:4px 0; color:#666;">${info.desc}</p>
+                        ${evidence}
+                        ${t.notes ? `<p style="margin-top:8px;">${t.notes}</p>` : ''}
+                    </div>
+                `;
+            }).join('');
+
+            const strengths = sas.strengths || [];
+            const strengthsHtml = strengths.length ? strengths.map(s => {
+                const line = s.strength ? `<strong>${s.strength}:</strong> ${s.example || ''}` : JSON.stringify(s);
+                return `<p>${line}</p>`;
+            }).join('') : 'No strengths identified';
+
+            const opportunities = sas.opportunities || [];
+            const opportunitiesHtml = opportunities.length ? opportunities.map(o => {
+                const line = o.area ? `<strong>${o.area}:</strong> ${o.suggestion || ''}` : JSON.stringify(o);
+                return `<p>${line}</p>`;
+            }).join('') : 'No opportunities identified';
+
+            const nextFocus = sas.next_session_focus || [];
+            const nextFocusHtml = nextFocus.length ? `<ul>${nextFocus.map(f => `<li>${f}</li>`).join('')}</ul>` : 'No focus areas identified';
+
+            const mapsAlignment = sas.maps_alignment || '';
+
+            const cb = patterns.conversation_balance || {};
+            const balanceHtml = (cb.coach_speaking_percentage != null && cb.person_speaking_percentage != null)
+              ? `<p>Coach: ${cb.coach_speaking_percentage}% &nbsp; | &nbsp; Person: ${cb.person_speaking_percentage}%</p>`
+              : '';
+            const interactionHtml = patterns.interaction_dynamics ? `<p>${patterns.interaction_dynamics}</p>` : '';
+            const trust = patterns.trust_metrics;
+            const trustHtml = trust ? `<p>Trust: initial ${trust.initial_trust}, final ${trust.final_trust}, change ${trust.trust_change}</p>` : '';
 
             return `<!DOCTYPE html>
 <html lang="en">
@@ -1666,14 +1714,11 @@
     <title>MAPS Person-Centred Analysis Report</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 40px; line-height: 1.6; color: #333; }
-        .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #7C9BF5; padding-bottom: 20px; }
-        .section { margin-bottom: 25px; padding: 15px; border-left: 4px solid #7C9BF5; background: #f8f9fa; }
-        .metric { display: inline-block; margin: 10px 15px; }
-        .metric-value { font-size: 1.5em; font-weight: bold; color: #7C9BF5; }
-        .metric-label { font-size: 0.9em; color: #666; }
-        .rating { margin: 10px 0; padding: 10px; background: white; border-radius: 5px; }
-        .score { font-weight: bold; color: #7C9BF5; }
-        h1 { color: #7C9BF5; }
+        .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #1abc9c; padding-bottom: 20px; }
+        .section { margin-bottom: 25px; padding: 15px; border-left: 4px solid #1abc9c; background: #f8f9fa; }
+        .rating { margin: 10px 0; padding: 10px; background: #fff; border-radius: 6px; border: 1px solid #eee; }
+        .score { font-weight: bold; color: #1abc9c; }
+        h1 { color: #1abc9c; }
         h2 { color: #555; border-bottom: 1px solid #ddd; padding-bottom: 10px; }
     </style>
 </head>
@@ -1681,43 +1726,39 @@
     <div class="header">
         <h1>MAPS Person-Centred Analysis Report</h1>
         <p>Generated: ${new Date().toLocaleString()}</p>
-        <p>Overall Quality Score: <span class="metric-value">${result.proficiency_score || 'N/A'}</span></p>
+        ${result.maps_values_summary ? `<p style="max-width:800px;margin:8px auto 0;">${result.maps_values_summary}</p>` : ''}
     </div>
 
     <div class="section">
-        <h2>Conversation Overview</h2>
-        <div class="metric">
-            <div class="metric-value">${stats.total_turns || 'N/A'}</div>
-            <div class="metric-label">Total Turns</div>
-        </div>
+        <h2>Core Coaching Themes</h2>
+        ${themesHtml || '<p>No theme data available</p>'}
     </div>
 
     <div class="section">
-        <h2>Global Ratings</h2>
-        ${Object.entries(globalRatings).map(([name, data]) => `
-            <div class="rating">
-                <strong>${name.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}:</strong>
-                <span class="score">${data.score || 'N/A'}/5</span>
-                <p>${data.rationale || 'No rationale provided'}</p>
-            </div>
-        `).join('')}
+        <h2>Coaching Strengths</h2>
+        ${strengthsHtml}
     </div>
 
     <div class="section">
-        <h2>Practitioner Patterns</h2>
-        <h3>Strengths</h3>
-        <p>${report.practitioner_patterns?.strengths || 'No data available'}</p>
-        <h3>Challenge Areas</h3>
-        <p>${report.practitioner_patterns?.challenge_areas || 'No data available'}</p>
+        <h2>Growth Opportunities</h2>
+        ${opportunitiesHtml}
     </div>
 
     <div class="section">
-        <h2>Recommendations</h2>
-        <h3>Immediate Focus</h3>
-        <p>${report.actionable_recommendations?.immediate_focus || 'No recommendations available'}</p>
-        <h3>Skill Development</h3>
-        <p>${report.actionable_recommendations?.skill_development || 'No recommendations available'}</p>
+        <h2>Action Plan</h2>
+        <h3>Next Session Focus</h3>
+        ${nextFocusHtml}
+        <h3>MAPS Values Alignment</h3>
+        <p>${mapsAlignment || 'No MAPS alignment notes'}</p>
     </div>
+
+    ${(interactionHtml || balanceHtml || trustHtml) ? `
+    <div class="section">
+        <h2>Patterns Observed</h2>
+        ${interactionHtml}
+        ${balanceHtml}
+        ${trustHtml}
+    </div>` : ''}
 
     <div class="section" style="text-align: center; border-left: none; background: none;">
         <p style="color: #999;">Generated by Persona AI Training System - MAPS Framework</p>
