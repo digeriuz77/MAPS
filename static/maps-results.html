@@ -395,7 +395,7 @@
             }
             
             try {
-                const response = await fetch(`/api/v1/analysis/status/${jobId}`);
+                const response = await fetch(`/api/analysis/status/${jobId}`);
                 if (!response.ok) throw new Error('Failed to load results');
                 
                 const data = await response.json();

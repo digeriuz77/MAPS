@@ -85,14 +85,10 @@ def create_app() -> FastAPI:
     from src.api.routes.enhanced_chat import router as enhanced_chat_router
     app.include_router(enhanced_chat_router, prefix="/api/chat", tags=["enhanced-chat"])
 
-    # ANALYSIS SYSTEM ROUTES
+    # ANALYSIS SYSTEM ROUTES (consolidated - includes former maps_analysis)
     from src.api.routes.analysis import router as analysis_router
     app.include_router(analysis_router, tags=["analysis"])
     
-    # MAPS ANALYSIS ROUTES
-    from src.api.routes.maps_analysis import router as maps_analysis_router
-    app.include_router(maps_analysis_router, tags=["maps_analysis"])
-
     # METRICS ROUTES
     try:
         from src.api.routes.metrics import router as metrics_router
@@ -107,6 +103,20 @@ def create_app() -> FastAPI:
     # REFLECTION SYSTEM ROUTES
     from src.api.routes.reflection import router as reflection_router
     app.include_router(reflection_router, tags=["reflection"])
+    
+    # SCENARIO-BASED TRAINING ROUTES
+    from src.api.routes.scenarios import router as scenarios_router
+    app.include_router(scenarios_router, prefix="/api", tags=["scenarios"])
+    
+    # VOICE ROUTES (STT/TTS for scenarios)
+    try:
+        from src.api.routes.voice import router as voice_router
+        app.include_router(voice_router, prefix="/api", tags=["voice"])
+        logger.info("Voice routes loaded successfully")
+    except ImportError as e:
+        logger.warning(f"Voice routes not available (missing dependencies): {e}")
+    except Exception as e:
+        logger.error(f"Failed to load voice routes: {e}")
     
     # Mount static files
     static_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "static")

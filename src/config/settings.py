@@ -77,6 +77,27 @@ class Settings(BaseSettings):
     SMTP_PASSWORD: Optional[str] = None
     FROM_EMAIL: Optional[str] = None
     
+    # Voice/Speech Configuration (Deepgram)
+    DEEPGRAM_API_KEY: Optional[str] = None
+    
+    # Voice Agent Configuration (Full mode)
+    DEEPGRAM_VOICE_AGENT_LISTEN_MODEL: str = "nova-3"
+    DEEPGRAM_VOICE_AGENT_THINK_MODEL: str = "gpt-4o-mini"
+    DEEPGRAM_VOICE_AGENT_SPEAK_MODEL: str = "aura-2-thalia-en"
+    
+    # Flux STT Configuration
+    DEEPGRAM_FLUX_MODEL: str = "flux-general-en"
+    DEEPGRAM_FLUX_EOT_THRESHOLD: float = 0.7  # End-of-turn confidence (0.5-0.9)
+    DEEPGRAM_FLUX_EAGER_EOT_THRESHOLD: Optional[float] = None  # Early EOT threshold (0.3-0.9)
+    DEEPGRAM_FLUX_EOT_TIMEOUT_MS: int = 5000  # Max silence before forced EOT (500-10000)
+    
+    # Voice Session Settings
+    VOICE_ENABLED: bool = True
+    VOICE_DEFAULT_MODE: str = "stt_only"  # "full", "stt_only", "tts_only"
+    VOICE_INPUT_SAMPLE_RATE: int = 16000  # For Flux (16000 recommended)
+    VOICE_OUTPUT_SAMPLE_RATE: int = 24000  # For TTS
+    VOICE_MAX_SESSION_DURATION_SECONDS: int = 1800  # 30 minute max
+    
     class Config:
         env_file = ".env"
         extra = "ignore"  # Ignore extra fields from testing harness .env

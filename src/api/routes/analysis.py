@@ -1,427 +1,257 @@
 """
-Analysis API routes for person-centred transcript analysis
+Analysis API Routes - Consolidated MAPS Analysis
+
+Consolidated from analysis.py and maps_analysis.py into a single, clean API.
+Uses the MAPS framework for person-centred transcript analysis.
 """
+
 import logging
 import json
 import uuid
 from typing import Dict, Any, Optional
 from datetime import datetime
 from fastapi import APIRouter, HTTPException, Depends, Query
-from fastapi.responses import Response
 from pydantic import BaseModel
 
 from src.dependencies import get_supabase_client
-from src.services.analysis import AnalysisRequest
-from src.services.analysis.types import CompleteAnalysisResult
-from src.services.analysis.maps_analysis_service import get_maps_analysis_service
+from src.services.analysis.maps_analysis_service import (
+    get_maps_analysis_service, 
+    create_standalone_maps_service
+)
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/api/v1/analysis", tags=["analysis"])
+router = APIRouter(prefix="/api/analysis", tags=["analysis"])
 
-# In-memory job storage (in production, use Redis or database)
+# In-memory job storage (production: use Redis or database)
 analysis_jobs: Dict[str, Dict[str, Any]] = {}
 
-class AnalysisSubmission(BaseModel):
+
+# ========== Request Models ==========
+
+class TranscriptAnalysisRequest(BaseModel):
+    """Submit raw transcript text for MAPS analysis"""
     transcript: str
     context: Optional[Dict[str, Any]] = None
-    speaker_hints: Optional[Dict[str, Any]] = None
+    manager_name: str = "Manager"
+    persona_name: str = "Person"
 
-@router.post("/submit")
-async def submit_analysis(request: AnalysisSubmission):
-    """Submit transcript for person-centred MAPS analysis (legacy endpoint - use /text instead)"""
-    try:
-        job_id = str(uuid.uuid4())
-        
-        # Store job with initial status
-        analysis_jobs[job_id] = {
-            "status": "pending",
-            "progress": 0,
-            "stage": "parsing",
-            "created_at": datetime.utcnow().isoformat(),
-            "result": None,
-            "error": None
-        }
-        
-        # Start MAPS analysis in background
-        try:
-            maps_service = get_maps_analysis_service()
-            
-            # Extract speaker names
-            speaker_hints = request.speaker_hints or {}
-            context = request.context or {}
-            
-            coach_name = speaker_hints.get("practitioner_identifier_hint") or context.get("practitioner_role", "Coach")
-            person_name = speaker_hints.get("client_identifier_hint") or context.get("client_role", "Person")
-            
-            # Run MAPS analysis
-            result = await maps_service.analyze_transcript(
-                transcript=request.transcript,
-                context=context,
-                manager_name=coach_name,
-                persona_name=person_name
-            )
-            
-            # Convert to frontend format
-            frontend_result = _convert_to_frontend_format(result)
-            
-            # Update job with results
-            analysis_jobs[job_id].update({
-                "status": "complete",
-                "progress": 100,
-                "stage": "complete",
-                "result": frontend_result
-            })
-            
-        except Exception as e:
-            logger.error(f"MAPS analysis failed for job {job_id}: {e}")
-            analysis_jobs[job_id].update({
-                "status": "error",
-                "error": str(e),
-                "stage": "error"
-            })
-        
-        return {"job_id": job_id, "status": "submitted"}
-        
-    except Exception as e:
-        logger.error(f"Failed to submit analysis: {e}")
-        raise HTTPException(status_code=500, detail="Failed to submit analysis")
 
-@router.post("/text")
-async def submit_text_analysis(request: AnalysisSubmission):
-    """Submit transcript text for person-centred MAPS analysis - Frontend compatibility endpoint"""
-    try:
-        logger.info(f"MAPS analysis request received: transcript length={len(request.transcript)}, context={request.context}, speaker_hints={request.speaker_hints}")
-        
-        job_id = str(uuid.uuid4())
-        
-        # Store job with initial status
-        analysis_jobs[job_id] = {
-            "status": "pending",
-            "progress": 5,
-            "stage": "preprocessing",
-            "current_item": "Initializing MAPS analysis...",
-            "created_at": datetime.utcnow().isoformat(),
-            "result": None,
-            "error": None
-        }
-        
-        # Start MAPS analysis in background with enhanced error handling
-        try:
-            maps_service = get_maps_analysis_service()
-            logger.info(f"MAPS analysis service obtained, starting analysis for job {job_id}")
-            
-            # Extract speaker names from hints or context
-            speaker_hints = request.speaker_hints or {}
-            context = request.context or {}
-            
-            coach_name = speaker_hints.get("practitioner_identifier_hint") or context.get("practitioner_role", "Coach")
-            person_name = speaker_hints.get("client_identifier_hint") or context.get("client_role", "Person")
-            
-            logger.info(f"Using speaker names: coach={coach_name}, person={person_name}")
-            
-            # Update progress
-            analysis_jobs[job_id].update({
-                "progress": 15,
-                "stage": "coding",
-                "current_item": "Analyzing person-centred conditions..."
-            })
-            
-            # Run MAPS analysis using standalone transcript method
-            result = await maps_service.analyze_transcript(
-                transcript=request.transcript,
-                context=context,
-                manager_name=coach_name,
-                persona_name=person_name
-            )
-            
-            # Update progress
-            analysis_jobs[job_id].update({
-                "progress": 90,
-                "stage": "finalizing",
-                "current_item": "Generating report..."
-            })
+class ConversationAnalysisRequest(BaseModel):
+    """Analyze existing conversation from database"""
+    conversation_id: str
+    context: Optional[Dict[str, Any]] = None
 
-            # Debug: Log result structure before conversion
-            logger.info(f"MAPS result type: {type(result)}")
-            logger.info(f"MAPS result attributes: {dir(result)}")
-            if hasattr(result, 'statistics'):
-                logger.info(f"Statistics exists: {result.statistics}")
-            if hasattr(result, 'report'):
-                logger.info(f"Report exists: {result.report}")
 
-            # Convert result to frontend-compatible format
-            frontend_result = _convert_to_frontend_format(result)
+class ScenarioAnalysisRequest(BaseModel):
+    """Analyze scenario attempt transcript"""
+    attempt_id: str
 
-            # Update job with results
-            analysis_jobs[job_id].update({
-                "status": "complete",
-                "progress": 100,
-                "stage": "complete",
-                "current_item": "Analysis complete!",
-                "result": frontend_result,
-                "completed_at": datetime.utcnow().isoformat()
-            })
-            
-            logger.info(f"MAPS analysis completed successfully for job {job_id}. Score: {result.overall_quality_score}/10")
-            
-        except Exception as e:
-            logger.error(f"MAPS analysis failed for job {job_id}: {e}", exc_info=True)
-            analysis_jobs[job_id].update({
-                "status": "error",
-                "error": str(e),
-                "stage": "error",
-                "current_item": f"Error: {str(e)}"
-            })
-        
-        return {"job_id": job_id, "status": "submitted"}
-        
-    except Exception as e:
-        logger.error(f"Failed to submit MAPS analysis: {e}", exc_info=True)
-        # Return more detailed error information for debugging
-        error_detail = str(e)
-        if "Gemini" in error_detail:
-            error_detail = f"Gemini API error: {error_detail}"
-        elif "database" in error_detail.lower():
-            error_detail = f"Database error: {error_detail}"
-        elif "import" in error_detail.lower():
-            error_detail = f"Import error: {error_detail}"
-        
-        raise HTTPException(status_code=500, detail=f"Failed to submit analysis: {error_detail}")
 
-@router.post("/enhanced/{conversation_id}")
-async def analyze_enhanced_conversation(conversation_id: str):
-    """Analyze enhanced chat conversation by conversation_id"""
-    try:
-        job_id = str(uuid.uuid4())
-        supabase = get_supabase_client()
-        
-        logger.info(f"Enhanced conversation analysis requested for {conversation_id}")
-        
-        # Store job with initial status
-        analysis_jobs[job_id] = {
-            "status": "pending",
-            "progress": 5,
-            "stage": "fetching",
-            "current_item": "Retrieving enhanced conversation...",
-            "created_at": datetime.utcnow().isoformat(),
-            "result": None,
-            "error": None
-        }
-        
-        try:
-            # Fetch conversation from conversation_transcripts
-            transcript_result = supabase.table('conversation_transcripts').select('*').eq(
-                'conversation_id', conversation_id
-            ).order('turn_number').order('timestamp').execute()
-            
-            if not transcript_result.data:
-                raise HTTPException(status_code=404, detail=f"Enhanced conversation {conversation_id} not found")
-            
-            # Get conversation metadata
-            conv_result = supabase.table('conversations').select('*').eq(
-                'id', conversation_id
-            ).maybe_single().execute()
-            
-            persona_info = {}
-            if conv_result.data:
-                persona_id = conv_result.data.get('persona_id')
-                if persona_id:
-                    # Get persona name from enhanced_personas
-                    persona_result = supabase.table('enhanced_personas').select('name').eq(
-                        'persona_id', persona_id
-                    ).maybe_single().execute()
-                    if persona_result.data:
-                        persona_info['name'] = persona_result.data.get('name', 'Person')
-            
-            coach_name = "Coach"
-            person_name = persona_info.get('name', 'Person')
-            
-            # Update progress
-            analysis_jobs[job_id].update({
-                "progress": 25,
-                "stage": "formatting",
-                "current_item": "Formatting conversation transcript..."
-            })
-            
-            # Format messages into transcript
-            transcript_lines = []
-            for msg in transcript_result.data:
-                role = msg.get('role')
-                message = msg.get('message', '')
-                
-                # Map roles to speaker names
-                if role == 'user':
-                    speaker = coach_name
-                elif role == 'persona':
-                    speaker = person_name
-                else:
-                    speaker = role.title()
-                
-                transcript_lines.append(f"{speaker}: {message}")
-            
-            transcript = "\n\n".join(transcript_lines)
-            
-            logger.info(f"Enhanced conversation formatted: {len(transcript)} chars, {len(transcript_result.data)} messages")
-            
-            # Update progress
-            analysis_jobs[job_id].update({
-                "progress": 40,
-                "stage": "analyzing",
-                "current_item": "Running MAPS analysis..."
-            })
-            
-            # Run MAPS analysis using updated service
-            maps_service = get_maps_analysis_service(supabase_client=supabase)
-            
-            # Use the new analyze_conversation_by_id method directly
-            result = await maps_service.analyze_conversation_by_id(
-                conversation_id=conversation_id,
-                context={"conversation_id": conversation_id, "source": "enhanced_chat"}
-            )
-            
-            # Update progress
-            analysis_jobs[job_id].update({
-                "progress": 90,
-                "stage": "finalizing",
-                "current_item": "Generating report..."
-            })
-            
-            # Convert result to frontend-compatible format
-            frontend_result = _convert_to_frontend_format(result)
-            
-            # Update job with results
-            analysis_jobs[job_id].update({
-                "status": "complete",
-                "progress": 100,
-                "stage": "complete",
-                "current_item": "Analysis complete!",
-                "result": frontend_result,
-                "completed_at": datetime.utcnow().isoformat()
-            })
-            
-            logger.info(f"Enhanced conversation analysis completed for {conversation_id}. Score: {result.overall_quality_score}/10")
-            
-            return {"job_id": job_id, "status": "submitted"}
-            
-        except HTTPException:
-            raise
-        except Exception as e:
-            logger.error(f"Enhanced conversation analysis failed for {conversation_id}: {e}", exc_info=True)
-            analysis_jobs[job_id].update({
-                "status": "error",
-                "error": str(e),
-                "stage": "error",
-                "current_item": f"Error: {str(e)}"
-            })
-            raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
+# ========== Helper Functions ==========
+
+def _to_frontend_dict(result: Any) -> Dict[str, Any]:
+    """Normalize MAPS analysis result to frontend format"""
+    if hasattr(result, "model_dump"):
+        data = result.model_dump()
+    elif hasattr(result, "dict"):
+        data = result.dict()
+    else:
+        data = result if isinstance(result, dict) else {}
     
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Failed to start enhanced conversation analysis: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Failed to start analysis: {str(e)}")
-
-@router.delete("/cache")
-async def clear_analysis_cache():
-    """Clear analysis cache for fresh analysis"""
-    try:
-        # Clear in-memory job storage
-        global analysis_jobs
-        cleared_count = len(analysis_jobs)
-        analysis_jobs.clear()
-        
-        # Note: MITI cache_service removed in V3 (MAPS doesn't use caching)
-        # In-memory job storage cleared above is sufficient
-        
+    core = data.get("core_coaching_effectiveness", {}) or {}
+    strengths = data.get("strengths_and_suggestions", {}) or {}
+    patterns = data.get("patterns_observed", {}) or {}
+    
+    def get_theme(d: Dict[str, Any]) -> Dict[str, Any]:
         return {
-            "status": "success",
-            "message": f"Cache cleared successfully. Removed {cleared_count} cached analyses.",
-            "cleared_jobs": cleared_count
+            "score": d.get("score"),
+            "evidence": d.get("evidence", []),
+            "notes": d.get("notes", "")
         }
-        
-    except Exception as e:
-        logger.error(f"Failed to clear cache: {e}")
-        raise HTTPException(status_code=500, detail="Failed to clear cache")
-
-@router.post("/maps")
-async def submit_maps_analysis(request: AnalysisSubmission):
-    """
-    Submit transcript for MAPS person-centred analysis
     
-    Uses the 4-part MAPS framework:
-    1. Conditions for Change
-    2. Person-Centred Core Conditions
-    3. Patterns Observed
-    4. Strengths & Suggestions
+    return {
+        "maps_values_summary": data.get("maps_values_summary", ""),
+        "report": {
+            "core_coaching_effectiveness": {
+                "foundational_trust_safety": get_theme(core.get("foundational_trust_safety", {})),
+                "empathic_partnership_autonomy": get_theme(core.get("empathic_partnership_autonomy", {})),
+                "empowerment_clarity": get_theme(core.get("empowerment_clarity", {})),
+            },
+            "strengths_and_suggestions": {
+                "strengths": [
+                    (s.model_dump() if hasattr(s, "model_dump") else s)
+                    for s in strengths.get("strengths", [])
+                ],
+                "opportunities": [
+                    (o.model_dump() if hasattr(o, "model_dump") else o)
+                    for o in strengths.get("opportunities", [])
+                ],
+                "next_session_focus": strengths.get("next_session_focus", []),
+                "maps_alignment": strengths.get("maps_alignment", "")
+            },
+            "patterns_observed": {
+                "manager_patterns": patterns.get("manager_patterns", []),
+                "employee_patterns": patterns.get("employee_patterns", []),
+                "interaction_dynamics": patterns.get("interaction_dynamics", ""),
+                "conversation_balance": patterns.get("conversation_balance", {}),
+            }
+        }
+    }
+
+
+# ========== Route Implementations ==========
+
+@router.post("/transcript")
+async def analyze_transcript(request: TranscriptAnalysisRequest):
+    """
+    Analyze raw transcript text using MAPS framework.
+    
+    Uses standalone service (no database dependency).
     """
     try:
-        logger.info(f"MAPS analysis request received: transcript length={len(request.transcript)}")
-        
         job_id = str(uuid.uuid4())
+        
+        logger.info(f"Starting MAPS transcript analysis: job_id={job_id}")
         
         # Store job with initial status
         analysis_jobs[job_id] = {
-            "status": "pending",
-            "progress": 0,
-            "stage": "initializing",
+            "status": "processing",
+            "progress": 10,
+            "stage": "analyzing",
+            "current_item": "Running MAPS analysis...",
             "created_at": datetime.utcnow().isoformat(),
             "result": None,
             "error": None,
-            "analysis_type": "maps"
+            "analysis_type": "transcript"
         }
         
-        # Start MAPS analysis
         try:
-            maps_service = get_maps_analysis_service()
-            logger.info(f"MAPS service obtained, starting analysis for job {job_id}")
-            
-            # Extract speaker names from context or use defaults
-            context = request.context or {}
-            coach_name = context.get("practitioner_role", "Coach")
-            person_name = context.get("client_role", "Person")
+            # Create standalone service
+            service = create_standalone_maps_service()
             
             # Update progress
             analysis_jobs[job_id].update({
-                "progress": 25,
-                "stage": "analyzing"
+                "progress": 30,
+                "current_item": "Analyzing behavioral patterns..."
             })
             
-            # Run MAPS analysis using the standalone transcript method
-            result = await maps_service.analyze_transcript(
+            # Run analysis
+            result = await service.analyze_transcript(
                 transcript=request.transcript,
-                context=context,
-                manager_name=coach_name,
-                persona_name=person_name
+                context=request.context,
+                manager_name=request.manager_name,
+                persona_name=request.persona_name
             )
-
-            # Convert result to frontend-compatible format
-            frontend_result = _convert_to_frontend_format(result)
-
-            # Update job with results
+            
+            # Update progress
+            analysis_jobs[job_id].update({
+                "progress": 80,
+                "current_item": "Generating report..."
+            })
+            
+            # Convert result to frontend format
+            result_dict = _to_frontend_dict(result)
+            
+            # Complete job
             analysis_jobs[job_id].update({
                 "status": "complete",
                 "progress": 100,
                 "stage": "complete",
-                "result": frontend_result,
+                "current_item": "Analysis complete!",
+                "result": result_dict,
                 "completed_at": datetime.utcnow().isoformat()
             })
             
-            logger.info(f"MAPS analysis completed successfully for job {job_id}. Score: {result.overall_quality_score}/10")
+            logger.info(f"MAPS transcript analysis completed: job_id={job_id}")
             
         except Exception as e:
             logger.error(f"MAPS analysis failed for job {job_id}: {e}", exc_info=True)
             analysis_jobs[job_id].update({
                 "status": "error",
                 "error": str(e),
-                "stage": "error"
+                "stage": "error",
+                "current_item": f"Error: {str(e)}"
             })
         
-        return {"job_id": job_id, "status": "submitted", "analysis_type": "maps"}
+        return {"job_id": job_id, "status": "submitted"}
         
     except Exception as e:
-        logger.error(f"Failed to submit MAPS analysis: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Failed to submit MAPS analysis: {str(e)}")
+        logger.error(f"Failed to submit analysis: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Failed to submit analysis: {str(e)}")
+
+
+@router.post("/conversation")
+async def analyze_conversation(
+    request: ConversationAnalysisRequest,
+    supabase=Depends(get_supabase_client)
+):
+    """
+    Analyze existing conversation from database using MAPS framework.
+    """
+    try:
+        job_id = str(uuid.uuid4())
+        
+        logger.info(f"Starting MAPS conversation analysis: job_id={job_id}, conversation_id={request.conversation_id}")
+        
+        analysis_jobs[job_id] = {
+            "status": "processing",
+            "progress": 10,
+            "stage": "fetching",
+            "current_item": "Fetching conversation from database...",
+            "created_at": datetime.utcnow().isoformat(),
+            "result": None,
+            "error": None,
+            "analysis_type": "conversation",
+            "conversation_id": request.conversation_id
+        }
+        
+        try:
+            service = get_maps_analysis_service(supabase_client=supabase)
+            
+            analysis_jobs[job_id].update({
+                "progress": 30,
+                "current_item": "Analyzing conversation with MAPS framework..."
+            })
+            
+            result = await service.analyze_conversation_by_id(
+                conversation_id=request.conversation_id,
+                context=request.context
+            )
+            
+            analysis_jobs[job_id].update({
+                "progress": 80,
+                "current_item": "Generating detailed report..."
+            })
+            
+            result_dict = _to_frontend_dict(result)
+            
+            analysis_jobs[job_id].update({
+                "status": "complete",
+                "progress": 100,
+                "stage": "complete",
+                "current_item": "Analysis complete!",
+                "result": result_dict,
+                "completed_at": datetime.utcnow().isoformat()
+            })
+            
+            logger.info(f"MAPS conversation analysis completed: job_id={job_id}")
+            
+        except Exception as e:
+            logger.error(f"Conversation analysis failed for job {job_id}: {e}", exc_info=True)
+            analysis_jobs[job_id].update({
+                "status": "error",
+                "error": str(e),
+                "stage": "error",
+                "current_item": f"Error: {str(e)}"
+            })
+        
+        return {"job_id": job_id, "status": "submitted"}
+        
+    except Exception as e:
+        logger.error(f"Failed to submit conversation analysis: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Failed to submit analysis: {str(e)}")
+
 
 @router.get("/status/{job_id}")
 async def get_analysis_status(job_id: str):
@@ -436,15 +266,17 @@ async def get_analysis_status(job_id: str):
         "status": job["status"],
         "progress": job["progress"],
         "stage": job["stage"],
+        "current_item": job.get("current_item", ""),
         "created_at": job["created_at"],
+        "analysis_type": job.get("analysis_type", "analysis"),
         "error": job.get("error")
     }
     
-    # Include result when complete for frontend compatibility
     if job["status"] == "complete" and job.get("result"):
         response["result"] = job["result"]
     
     return response
+
 
 @router.get("/result/{job_id}")
 async def get_analysis_result(job_id: str):
@@ -460,9 +292,11 @@ async def get_analysis_result(job_id: str):
     return {
         "job_id": job_id,
         "status": job["status"],
+        "analysis_type": job.get("analysis_type", "analysis"),
         "result": job["result"],
         "completed_at": job.get("completed_at", job["created_at"])
     }
+
 
 @router.get("/result/{job_id}/export")
 async def export_analysis_result(
@@ -486,340 +320,161 @@ async def export_analysis_result(
         if format == "json":
             content = json.dumps(result, indent=2)
             media_type = "application/json"
-            filename = f"miti_analysis_{job_id}.json"
+            filename = f"maps_analysis_{job_id}.json"
             
         elif format == "html":
             content = _generate_html_report(result, job_id)
             media_type = "text/html"
-            filename = f"miti_analysis_{job_id}.html"
+            filename = f"maps_analysis_{job_id}.html"
             
         elif format == "txt":
             content = _generate_text_report(result, job_id)
             media_type = "text/plain"
-            filename = f"miti_analysis_{job_id}.txt"
-            
+            filename = f"maps_analysis_{job_id}.txt"
         else:
-            raise HTTPException(status_code=400, detail="Unsupported format. Use: json, html, txt")
+            raise HTTPException(status_code=400, detail=f"Unsupported format: {format}")
         
-        headers = {
-            "Content-Disposition": f"attachment; filename={filename}"
-        }
-        
+        from fastapi.responses import Response
         return Response(
             content=content,
             media_type=media_type,
-            headers=headers
+            headers={"Content-Disposition": f"attachment; filename={filename}"}
         )
         
     except Exception as e:
-        logger.error(f"Failed to export analysis {job_id}: {e}")
+        logger.error(f"Failed to export analysis: {e}")
         raise HTTPException(status_code=500, detail="Failed to export analysis")
 
+
+@router.delete("/cache")
+async def clear_analysis_cache():
+    """Clear analysis cache"""
+    try:
+        global analysis_jobs
+        cleared_count = len(analysis_jobs)
+        analysis_jobs.clear()
+        
+        return {
+            "status": "success",
+            "message": f"Cache cleared. Removed {cleared_count} analyses.",
+            "cleared_jobs": cleared_count
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to clear cache: {e}")
+        raise HTTPException(status_code=500, detail="Failed to clear cache")
+
+
+# ========== Report Generation ==========
+
 def _generate_html_report(result: Dict[str, Any], job_id: str) -> str:
-    """Generate HTML report from analysis results"""
-    
-    # Extract key data with safe defaults
-    statistics = result.get("statistics", {})
+    """Generate HTML report from analysis result"""
+    maps_summary = result.get("maps_values_summary", "")
     report = result.get("report", {})
-    global_ratings = report.get("global_ratings", {})
+    core = report.get("core_coaching_effectiveness", {})
+    strengths = report.get("strengths_and_suggestions", {})
+    patterns = report.get("patterns_observed", {})
     
-    # Build HTML content
-    html_content = f"""
-<!DOCTYPE html>
-<html lang="en">
+    html = f"""<!DOCTYPE html>
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Person-Centred Analysis Report - {job_id}</title>
+    <title>MAPS Analysis Report</title>
     <style>
-        body {{ font-family: Arial, sans-serif; margin: 40px; line-height: 1.6; }}
-        .header {{ text-align: center; margin-bottom: 30px; }}
-        .section {{ margin-bottom: 25px; padding: 15px; border-left: 4px solid #7C9BF5; background: #f8f9fa; }}
-        .metric {{ display: inline-block; margin: 10px 15px; }}
-        .metric-value {{ font-size: 1.5em; font-weight: bold; color: #7C9BF5; }}
-        .metric-label {{ font-size: 0.9em; color: #666; }}
-        .rating {{ margin: 10px 0; padding: 10px; background: white; border-radius: 5px; }}
-        .score {{ font-weight: bold; color: #7C9BF5; }}
+        body {{ font-family: Arial, sans-serif; margin: 40px; }}
+        h1 {{ color: #2c3e50; }}
+        h2 {{ color: #34495e; margin-top: 30px; }}
+        .score {{ font-weight: bold; color: #27ae60; }}
+        .evidence {{ background: #f8f9fa; padding: 10px; margin: 5px 0; border-left: 3px solid #3498db; }}
+        .strength {{ color: #27ae60; }}
+        .opportunity {{ color: #e67e22; }}
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>Person-Centred Analysis Report</h1>
-        <p>Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</p>
-        <p>Job ID: {job_id}</p>
-    </div>
+    <h1>MAPS Analysis Report</h1>
+    <p><strong>Summary:</strong> {maps_summary}</p>
     
-    <div class="section">
-        <h2>Statistics Overview</h2>
-        <div class="metric">
-            <div class="metric-value">{statistics.get('total_turns', 'N/A')}</div>
-            <div class="metric-label">Total Turns</div>
-        </div>
-        <div class="metric">
-            <div class="metric-value">{statistics.get('reflection_to_question_ratio', 'N/A')}</div>
-            <div class="metric-label">Reflection:Question Ratio</div>
-        </div>
-        <div class="metric">
-            <div class="metric-value">{statistics.get('percentage_complex_reflections', 'N/A')}</div>
-            <div class="metric-label">Complex Reflections</div>
-        </div>
-    </div>
+    <h2>Core Coaching Effectiveness</h2>
+    <h3>Foundational Trust & Safety</h3>
+    <p class="score">Score: {core.get('foundational_trust_safety', {}).get('score', 'N/A')}</p>
+    <div class="evidence">{' '.join(core.get('foundational_trust_safety', {}).get('evidence', []))}</div>
     
-    <div class="section">
-        <h2>Global Ratings</h2>
-        {_format_global_ratings_html(global_ratings)}
-    </div>
+    <h3>Empathic Partnership & Autonomy</h3>
+    <p class="score">Score: {core.get('empathic_partnership_autonomy', {}).get('score', 'N/A')}</p>
+    <div class="evidence">{' '.join(core.get('empathic_partnership_autonomy', {}).get('evidence', []))}</div>
     
-    <div class="section">
-        <h2>Practitioner Patterns</h2>
-        <h3>Strengths</h3>
-        <p>{report.get('practitioner_patterns', {}).get('strengths', 'No data available')}</p>
-        <h3>Challenge Areas</h3>
-        <p>{report.get('practitioner_patterns', {}).get('challenge_areas', 'No data available')}</p>
-    </div>
+    <h3>Empowerment & Clarity</h3>
+    <p class="score">Score: {core.get('empowerment_clarity', {}).get('score', 'N/A')}</p>
+    <div class="evidence">{' '.join(core.get('empowerment_clarity', {}).get('evidence', []))}</div>
     
-    <div class="section">
-        <h2>Recommendations</h2>
-        <h3>Immediate Focus</h3>
-        <p>{report.get('actionable_recommendations', {}).get('immediate_focus', 'No recommendations available')}</p>
-        <h3>Skill Development</h3>
-        <p>{report.get('actionable_recommendations', {}).get('skill_development', 'No recommendations available')}</p>
-    </div>
+    <h2>Strengths</h2>
+    <ul>
+        {''.join(f'<li class="strength">{s.get("text", "")}</li>' for s in strengths.get('strengths', []))}
+    </ul>
+    
+    <h2>Opportunities</h2>
+    <ul>
+        {''.join(f'<li class="opportunity">{o.get("text", "")}</li>' for o in strengths.get('opportunities', []))}
+    </ul>
+    
+    <h2>Patterns Observed</h2>
+    <p><strong>Manager Patterns:</strong> {', '.join(patterns.get('manager_patterns', []))}</p>
+    <p><strong>Employee Patterns:</strong> {', '.join(patterns.get('employee_patterns', []))}</p>
+    
+    <hr>
+    <p><em>Generated: {datetime.utcnow().isoformat()}</em></p>
 </body>
-</html>
-"""
-    
-    return html_content
-
-def _format_global_ratings_html(global_ratings: Dict[str, Any]) -> str:
-    """Format global ratings for HTML display"""
-    if not global_ratings:
-        return "<p>No global ratings available</p>"
-    
-    html = ""
-    for rating_name, rating_data in global_ratings.items():
-        if isinstance(rating_data, dict):
-            score = rating_data.get('score', 'N/A')
-            rationale = rating_data.get('rationale', 'No rationale provided')
-            name = rating_name.replace('_', ' ').title()
-            
-            html += f"""
-            <div class="rating">
-                <strong>{name}:</strong> <span class="score">{score}/5</span>
-                <p>{rationale}</p>
-            </div>
-            """
+</html>"""
     
     return html
 
+
 def _generate_text_report(result: Dict[str, Any], job_id: str) -> str:
-    """Generate plain text report from analysis results"""
-    
-    statistics = result.get("statistics", {})
+    """Generate plain text report from analysis result"""
+    maps_summary = result.get("maps_values_summary", "")
     report = result.get("report", {})
-    global_ratings = report.get("global_ratings", {})
+    core = report.get("core_coaching_effectiveness", {})
+    strengths = report.get("strengths_and_suggestions", {})
+    patterns = report.get("patterns_observed", {})
     
-    content = f"""PERSON-CENTRED ANALYSIS REPORT
+    text = f"""MAPS ANALYSIS REPORT
 {'='*50}
 
-Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
-Job ID: {job_id}
+SUMMARY
+{maps_summary}
 
-STATISTICS OVERVIEW
-{'-'*20}
-Total Turns: {statistics.get('total_turns', 'N/A')}
-Reflection to Question Ratio: {statistics.get('reflection_to_question_ratio', 'N/A')}
-Complex Reflections: {statistics.get('percentage_complex_reflections', 'N/A')}
-Person-Centred Adherent to Non-Adherent Ratio: {statistics.get('mia_to_mina_ratio', 'N/A')}
+CORE COACHING EFFECTIVENESS
+{'-'*30}
 
-GLOBAL RATINGS
-{'-'*15}
-{_format_global_ratings_text(global_ratings)}
+Foundational Trust & Safety
+Score: {core.get('foundational_trust_safety', {}).get('score', 'N/A')}
+Evidence:
+{chr(10).join('- ' + e for e in core.get('foundational_trust_safety', {}).get('evidence', []))}
 
-PRACTITIONER PATTERNS
-{'-'*21}
-Strengths:
-{report.get('practitioner_patterns', {}).get('strengths', 'No data available')}
+Empathic Partnership & Autonomy
+Score: {core.get('empathic_partnership_autonomy', {}).get('score', 'N/A')}
+Evidence:
+{chr(10).join('- ' + e for e in core.get('empathic_partnership_autonomy', {}).get('evidence', []))}
 
-Challenge Areas:
-{report.get('practitioner_patterns', {}).get('challenge_areas', 'No data available')}
+Empowerment & Clarity
+Score: {core.get('empowerment_clarity', {}).get('score', 'N/A')}
+Evidence:
+{chr(10).join('- ' + e for e in core.get('empowerment_clarity', {}).get('evidence', []))}
 
-RECOMMENDATIONS
-{'-'*15}
-Immediate Focus:
-{report.get('actionable_recommendations', {}).get('immediate_focus', 'No recommendations available')}
+STRENGTHS
+{'-'*30}
+{chr(10).join('- ' + s.get('text', '') for s in strengths.get('strengths', []))}
 
-Skill Development:
-{report.get('actionable_recommendations', {}).get('skill_development', 'No recommendations available')}
+OPPORTUNITIES
+{'-'*30}
+{chr(10).join('- ' + o.get('text', '') for o in strengths.get('opportunities', []))}
+
+PATTERNS OBSERVED
+{'-'*30}
+Manager Patterns: {', '.join(patterns.get('manager_patterns', []))}
+Employee Patterns: {', '.join(patterns.get('employee_patterns', []))}
 
 {'='*50}
-Generated by Persona AI Training System
+Generated: {datetime.utcnow().isoformat()}
 """
     
-    return content
-
-def _convert_to_frontend_format(result) -> Dict[str, Any]:
-    """Convert MAPS analysis result to format expected by frontend"""
-    try:
-        logger.info(f"Converting result to frontend format. Type: {type(result)}")
-        logger.info(f"Has overall_quality_score: {hasattr(result, 'overall_quality_score')}")
-        
-        # Check if this is a MAPSAnalysisResult
-        if hasattr(result, 'overall_quality_score'):
-            # MAPS format - convert to frontend format (no overall score)
-            logger.info("Processing MAPS result (no overall score)")
-
-            # Use new core_coaching_effectiveness structure (3 themes)
-            core_effectiveness = result.core_coaching_effectiveness
-            
-            # Build report structure with new theme names
-            # Access as dicts since MAPS service returns dicts, not Pydantic models
-            fts = core_effectiveness.get('foundational_trust_safety', {}) if isinstance(core_effectiveness, dict) else core_effectiveness.foundational_trust_safety
-            epa = core_effectiveness.get('empathic_partnership_autonomy', {}) if isinstance(core_effectiveness, dict) else core_effectiveness.empathic_partnership_autonomy
-            ec = core_effectiveness.get('empowerment_clarity', {}) if isinstance(core_effectiveness, dict) else core_effectiveness.empowerment_clarity
-            
-            # Handle both dict and Pydantic model access
-            report_data = {
-                "core_coaching_effectiveness": {
-                    "foundational_trust_safety": {
-                        "score": fts.get('score') if isinstance(fts, dict) else fts.score,
-                        "evidence": fts.get('evidence') if isinstance(fts, dict) else fts.evidence,
-                        "notes": fts.get('notes') if isinstance(fts, dict) else fts.notes
-                    },
-                    "empathic_partnership_autonomy": {
-                        "score": epa.get('score') if isinstance(epa, dict) else epa.score,
-                        "evidence": epa.get('evidence') if isinstance(epa, dict) else epa.evidence,
-                        "notes": epa.get('notes') if isinstance(epa, dict) else epa.notes
-                    },
-                    "empowerment_clarity": {
-                        "score": ec.get('score') if isinstance(ec, dict) else ec.score,
-                        "evidence": ec.get('evidence') if isinstance(ec, dict) else ec.evidence,
-                        "notes": ec.get('notes') if isinstance(ec, dict) else ec.notes
-                    }
-                }
-            }
-
-            # Extract strengths_and_suggestions structure and convert to dicts
-            suggestions = result.strengths_and_suggestions if hasattr(result, 'strengths_and_suggestions') else result.get('strengths_and_suggestions', {})
-            
-            # Handle both dict and Pydantic access
-            if isinstance(suggestions, dict):
-                raw_strengths = suggestions.get('strengths', [])
-                raw_opportunities = suggestions.get('opportunities', [])
-                next_focus = suggestions.get('next_session_focus', [])
-                maps_alignment = suggestions.get('maps_alignment', '')
-            else:
-                raw_strengths = suggestions.strengths if hasattr(suggestions, 'strengths') else []
-                raw_opportunities = suggestions.opportunities if hasattr(suggestions, 'opportunities') else []
-                next_focus = suggestions.next_session_focus if hasattr(suggestions, 'next_session_focus') else []
-                maps_alignment = suggestions.maps_alignment if hasattr(suggestions, 'maps_alignment') else ''
-            
-            # Convert strengths list (may be Pydantic models or dicts)
-            strengths_list = [
-                s.dict() if hasattr(s, 'dict') else s 
-                for s in raw_strengths
-            ] if raw_strengths else []
-            
-            # Convert opportunities list (may be Pydantic models or dicts)
-            opportunities_list = [
-                o.dict() if hasattr(o, 'dict') else o
-                for o in raw_opportunities
-            ] if raw_opportunities else []
-
-            # Extract conversation statistics from patterns_observed
-            patterns = result.patterns_observed if hasattr(result, 'patterns_observed') else result.get('patterns_observed', {})
-            
-            if isinstance(patterns, dict):
-                conversation_balance = patterns.get('conversation_balance', {})
-                coach_patterns = patterns.get('coach_patterns', [])
-                person_patterns = patterns.get('person_patterns', [])
-                manager_patterns = patterns.get('manager_patterns', [])
-                employee_patterns = patterns.get('employee_patterns', [])
-                interaction_dynamics = patterns.get('interaction_dynamics', '')
-            else:
-                conversation_balance = patterns.conversation_balance if hasattr(patterns, 'conversation_balance') else {}
-                coach_patterns = patterns.coach_patterns if hasattr(patterns, 'coach_patterns') else []
-                person_patterns = patterns.person_patterns if hasattr(patterns, 'person_patterns') else []
-                manager_patterns = patterns.manager_patterns if hasattr(patterns, 'manager_patterns') else []
-                employee_patterns = patterns.employee_patterns if hasattr(patterns, 'employee_patterns') else []
-                interaction_dynamics = patterns.interaction_dynamics if hasattr(patterns, 'interaction_dynamics') else ''
-            
-            # Calculate turn estimates from coach/person patterns
-            coach_patterns_count = len(coach_patterns)
-            person_patterns_count = len(person_patterns)
-            estimated_turns = max(coach_patterns_count + person_patterns_count, 10)  # Minimum 10 to show activity
-            
-            # Extract speaking percentages from conversation_balance
-            coach_percentage = conversation_balance.get('coach_speaking_percentage', 50)
-            person_percentage = conversation_balance.get('person_speaking_percentage', 50)
-            
-            # Estimate turn distribution based on speaking percentage
-            practitioner_turns = int(estimated_turns * (coach_percentage / 100))
-            client_turns = int(estimated_turns * (person_percentage / 100))
-            
-            # Build frontend-compatible result with NEW structure
-            maps_summary = result.maps_values_summary if hasattr(result, 'maps_values_summary') else result.get('maps_values_summary', '')
-            
-            frontend_result = {
-                # no overall score
-                "maps_values_summary": maps_summary,
-                "report": {
-                    "core_coaching_effectiveness": report_data["core_coaching_effectiveness"],
-                    "strengths_and_suggestions": {
-                        "strengths": strengths_list,
-                        "opportunities": opportunities_list,
-                        "next_session_focus": next_focus,
-                        "maps_alignment": maps_alignment
-                    },
-                    "patterns_observed": {
-                        "manager_patterns": manager_patterns,
-                        "employee_patterns": employee_patterns,
-                        "interaction_dynamics": interaction_dynamics,
-                        "conversation_balance": conversation_balance
-                    }
-                }
-            }
-            
-            logger.info(f"Frontend result created successfully. Keys: {frontend_result.keys()}")
-            logger.info(f"Report keys: {frontend_result['report'].keys()}")
-            logger.info(f"Core coaching effectiveness keys: {frontend_result['report']['core_coaching_effectiveness'].keys()}")
-
-            return frontend_result
-
-        else:
-            # Old CompleteAnalysisResult format - keep existing logic
-            stats = result.statistics
-            # ... (original conversion logic)
-
-    except Exception as e:
-        logger.error(f"Error converting analysis result to frontend format: {e}", exc_info=True)
-        # Return minimal fallback structure
-        return {
-            "proficiency_score": 50,
-            "summary": {
-                "conversation_overview": {"total_turns": 0, "practitioner_turns": 0, "client_turns": 0},
-                "mi_quality_indicators": {
-                    "reflection_to_question_ratio": "N/A",
-                    "complex_reflection_percentage": "N/A",
-                    "mi_adherent_ratio": "N/A"
-                }
-            },
-            "report": {
-                "global_ratings": {},
-                "practitioner_patterns": {
-                    "strengths": "Analysis encountered an error",
-                    "challenge_areas": "Please try again"
-                },
-                "actionable_recommendations": {
-                    "immediate_focus": "Check transcript format",
-                    "skill_development": "Ensure proper speaker identification"
-                }
-            },
-            "statistics": {
-                "total_turns": 0,
-                "reflection_to_question_ratio": "N/A",
-                "percentage_complex_reflections": "N/A",
-                "mia_to_mina_ratio": "N/A",
-                "code_counts": {}
-            }
-        }
+    return text

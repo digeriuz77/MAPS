@@ -834,7 +834,7 @@
         async function clearCacheAndAnalyze() {
             try {
                 // Clear cache first
-                await fetch('/api/v1/analysis/cache', { method: 'DELETE' });
+                await fetch('/api/analysis/cache', { method: 'DELETE' });
                 console.log('Cache cleared successfully');
                 
                 // Show info message
@@ -898,7 +898,7 @@
                 // Load conversation from server using correct endpoint
                 try {
                     console.log('📡 Fetching conversation from API:', conversationId);
-                    const response = await fetch(`/api/chat/conversations/${conversationId}`);
+                    const response = await fetch(`/api/scenarios/attempts/${conversationId}/analysis`);
                     console.log('📡 API Response status:', response.status);
                     
                     if (response.ok) {
@@ -1101,7 +1101,7 @@
                 console.log('📡 Submitting conversation analysis for:', conversationId);
                 
                 // Submit for analysis using MAPS conversation endpoint
-                const response = await fetch('/api/v1/maps/analyze/conversation', {
+                const response = await fetch('/api/analysis/conversation', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -1197,7 +1197,7 @@
                 });
                 
                 // Submit for analysis
-                const response = await fetch('/api/v1/analysis/text', {
+                const response = await fetch('/api/analysis/transcript', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -1289,7 +1289,7 @@
                 });
                 
                 // Submit for analysis
-                const response = await fetch('/api/v1/analysis/text', {
+                const response = await fetch('/api/analysis/transcript', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -1342,7 +1342,7 @@
             console.log('Starting MAPS polling for job:', currentJobId);
             pollingInterval = setInterval(async () => {
                 try {
-                    const response = await fetch(`/api/v1/maps/status/${currentJobId}`);
+                    const response = await fetch(`/api/analysis/status/${currentJobId}`);
                     
                     if (!response.ok) {
                         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -1398,7 +1398,7 @@
             console.log('Starting polling for job:', currentJobId);
             pollingInterval = setInterval(async () => {
                 try {
-                    const response = await fetch(`/api/v1/analysis/status/${currentJobId}`);
+                    const response = await fetch(`/api/analysis/status/${currentJobId}`);
                     
                     if (!response.ok) {
                         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -1968,3 +1968,4 @@ Myrtle: You've got to be kidding. If I actually toned it down and showed up, I'd
     
 </body>
 </html>
+

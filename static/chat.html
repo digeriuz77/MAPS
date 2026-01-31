@@ -456,7 +456,7 @@
                 messagesContainer.innerHTML = '';
                 
                 // Start new conversation with API (STAGED SYSTEM)
-                const response = await window.authenticatedFetch('/api/chat/start', {
+                const response = await window.authenticatedFetch('/api/scenarios/{id}/start', {
                     method: 'POST',
                     body: JSON.stringify({ persona_id: personaId })
                 });
@@ -518,7 +518,7 @@
 
             try {
                 // Send message to API using STAGED SYSTEM structure
-                const response = await window.authenticatedFetch('/api/chat/send', {
+                const response = await window.authenticatedFetch('/api/scenarios/attempts/{id}/turn', {
                     method: 'POST',
                     body: JSON.stringify({
                         session_id: currentConversationId,  // Staged system uses session_id

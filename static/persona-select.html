@@ -240,7 +240,7 @@
         // Load personas from API
         async function loadPersonas() {
             try {
-                const response = await fetch('/api/chat/personas');
+                const response = await fetch('/api/scenarios');
                 const personas = await response.json();
                 
                 const grid = document.getElementById('personasGrid');
