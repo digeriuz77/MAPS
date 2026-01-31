@@ -18,12 +18,24 @@ from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, WebSocket, WebSocketDisconnect
 from pydantic import BaseModel, Field
 
+from src.config.settings import get_settings
 from src.dependencies import get_current_user, get_supabase_client
 from src.services.voice_gateway import VoiceGateway, get_voice_gateway
 from src.services.flux_stt_service import FluxSTTService, get_flux_stt_service
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/voice", tags=["voice"])
+
+
+@router.get("/config")
+async def get_voice_config():
+    """Return voice availability and defaults for the frontend."""
+    settings = get_settings()
+    return {
+        "enabled": bool(settings.VOICE_ENABLED),
+        "default_mode": settings.VOICE_DEFAULT_MODE,
+        "max_session_seconds": settings.VOICE_MAX_SESSION_DURATION_SECONDS,
+    }
 
 
 # ========== Request/Response Models ==========
@@ -124,6 +136,9 @@ async def create_voice_session(
     - 'stt_only': Flux STT for transcription only
     - 'tts_only': Text-to-speech for persona responses
     """
+    settings = get_settings()
+    if not settings.VOICE_ENABLED:
+        raise HTTPException(status_code=403, detail="Voice is disabled")
     try:
         session_id = str(uuid.uuid4())
         
@@ -434,7 +449,12 @@ async def voice_websocket(
     - {"type": "error", "message": ...}
     - Binary: TTS audio response
     """
+    settings = get_settings()
     await websocket.accept()
+    if not settings.VOICE_ENABLED:
+        await websocket.send_json({"type": "error", "message": "Voice is disabled"})
+        await websocket.close()
+        return
     
     try:
         # Get session info from database

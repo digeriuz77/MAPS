@@ -1,20 +1,21 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Person-Centred Analysis - MAPS Training</title>
-    
+
     <!-- Auth Blocker - MUST be first to hide page until auth verified -->
     <script src="/static/js/auth-blocker.js"></script>
-    
+
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <!-- Teal Theme CSS -->
     <link rel="stylesheet" href="/static/css/teal-theme.css">
-    
+
     <style>
         /* MAPS Theme Colors */
         :root {
@@ -47,29 +48,30 @@
             justify-content: center;
             gap: 30px;
         }
-        
+
         .nav-bar a {
             color: white;
             text-decoration: none;
             font-weight: 500;
             transition: opacity 0.2s;
         }
-        
+
         .nav-bar a:hover {
             opacity: 0.8;
         }
-        
+
         .nav-bar a.active {
             border-bottom: 2px solid white;
         }
-        
+
         body {
             background: linear-gradient(135deg, var(--light-mist) 0%, rgba(30, 58, 138, 0.05) 50%, rgba(124, 58, 237, 0.05) 100%);
             min-height: 100vh;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            padding-top: 70px; /* Space for fixed nav */
+            padding-top: 70px;
+            /* Space for fixed nav */
         }
-        
+
         /* Navigation Header */
         .nav-header {
             background: rgba(255, 255, 255, 0.95);
@@ -80,7 +82,7 @@
             top: 0;
             z-index: 1000;
         }
-        
+
         .nav-orb {
             width: 40px;
             height: 40px;
@@ -91,14 +93,14 @@
             vertical-align: middle;
             opacity: 0.8;
         }
-        
+
         /* Main Container */
         .analysis-container {
             max-width: 1200px;
             margin: 2rem auto;
             padding: 0 1rem;
         }
-        
+
         /* Upload Section */
         .upload-section {
             background: white;
@@ -107,7 +109,7 @@
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
             margin-bottom: 2rem;
         }
-        
+
         /* Speaker Verification */
         .speaker-preview {
             background: var(--light-mist);
@@ -117,7 +119,7 @@
             max-height: 200px;
             overflow-y: auto;
         }
-        
+
         .speaker-turn {
             padding: 0.5rem;
             margin-bottom: 0.5rem;
@@ -149,7 +151,7 @@
             background: rgba(236, 72, 153, 0.08);
             border-color: var(--maps-pink-accent);
         }
-        
+
         /* Progress Section */
         .progress-section {
             background: white;
@@ -159,13 +161,13 @@
             margin-bottom: 2rem;
             display: none;
         }
-        
+
         .stage-indicator {
             display: flex;
             align-items: center;
             margin-bottom: 1rem;
         }
-        
+
         .stage-icon {
             width: 50px;
             height: 50px;
@@ -178,12 +180,12 @@
             font-size: 1.5rem;
             margin-right: 1rem;
         }
-        
+
         /* Results Section */
         .results-section {
             display: none;
         }
-        
+
         .metric-card {
             background: white;
             border-radius: 15px;
@@ -192,19 +194,19 @@
             text-align: center;
             height: 100%;
         }
-        
+
         .metric-value {
             font-size: 2.5rem;
             font-weight: bold;
             color: var(--maps-blue-primary);
             margin: 0.5rem 0;
         }
-        
+
         .metric-label {
             color: #666;
             font-size: 0.9rem;
         }
-        
+
         .proficiency-score {
             font-size: 4rem;
             font-weight: bold;
@@ -213,7 +215,7 @@
             -webkit-text-fill-color: transparent;
             background-clip: text;
         }
-        
+
         /* Report Sections */
         .report-card {
             background: white;
@@ -222,7 +224,7 @@
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
             margin-bottom: 1.5rem;
         }
-        
+
         .rating-item {
             padding: 1rem;
             background: var(--light-mist);
@@ -230,7 +232,7 @@
             margin-bottom: 1rem;
             border-left: 4px solid var(--primary-teal);
         }
-        
+
         .rating-score {
             display: inline-block;
             width: 30px;
@@ -242,7 +244,7 @@
             line-height: 30px;
             margin-right: 0.5rem;
         }
-        
+
         /* Context Form */
         .context-form {
             background: var(--light-mist);
@@ -250,7 +252,7 @@
             padding: 1.5rem;
             margin-bottom: 1.5rem;
         }
-        
+
         /* Loading Animation */
         .loading-spinner {
             display: inline-block;
@@ -261,12 +263,15 @@
             border-radius: 50%;
             animation: spin 1s ease-in-out infinite;
         }
-        
+
         @keyframes spin {
-            to { transform: rotate(360deg); }
+            to {
+                transform: rotate(360deg);
+            }
         }
     </style>
 </head>
+
 <body>
     <!-- Navigation Bar -->
     <nav class="nav-bar">
@@ -276,37 +281,37 @@
         <a href="/reflection"><i class="fas fa-lightbulb"></i> Reflection</a>
         <a href="/feedback"><i class="fas fa-comment-dots"></i> Feedback</a>
     </nav>
-    
+
     <!-- Main Container -->
     <div class="analysis-container">
         <h1 class="text-center mb-4">Person-Centred Coaching Analysis</h1>
-        
+
         <!-- Upload Section -->
         <div id="uploadSection" class="upload-section">
             <h3 class="mb-4">Upload Transcript for Analysis</h3>
-            
+
             <!-- Context Form -->
             <div class="context-form">
                 <h5>Session Context (Optional)</h5>
                 <div class="row">
                     <div class="col-md-4 mb-3">
                         <label class="form-label">Practitioner Role</label>
-                        <input type="text" id="practitionerRole" class="form-control" 
-                               placeholder="e.g., Therapist, Counselor" value="Manager">
+                        <input type="text" id="practitionerRole" class="form-control"
+                            placeholder="e.g., Therapist, Counselor" value="Manager">
                     </div>
                     <div class="col-md-4 mb-3">
                         <label class="form-label">Client Role</label>
-                        <input type="text" id="clientRole" class="form-control" 
-                               placeholder="e.g., Patient, Client" value="Employee">
+                        <input type="text" id="clientRole" class="form-control" placeholder="e.g., Patient, Client"
+                            value="Employee">
                     </div>
                     <div class="col-md-4 mb-3">
                         <label class="form-label">Scenario</label>
-                        <input type="text" id="scenario" class="form-control" 
-                               placeholder="Brief description" value="Performance review">
+                        <input type="text" id="scenario" class="form-control" placeholder="Brief description"
+                            value="Performance review">
                     </div>
                 </div>
             </div>
-            
+
             <!-- Upload Area -->
             <div class="upload-area">
                 <i class="fas fa-file-alt fa-3x mb-3" style="color: var(--primary-teal);"></i>
@@ -315,13 +320,13 @@
                     Format: Each turn should start with speaker name followed by colon<br>
                     Example: "Therapist: How are you feeling today?"
                 </p>
-                <textarea id="transcriptText" class="form-control mb-3" rows="10" 
-                          placeholder="Paste your conversation transcript here..."></textarea>
+                <textarea id="transcriptText" class="form-control mb-3" rows="10"
+                    placeholder="Paste your conversation transcript here..."></textarea>
                 <button class="btn btn-primary btn-lg" onclick="previewTranscript()">
                     <i class="fas fa-eye"></i> Preview & Verify Speakers
                 </button>
             </div>
-            
+
             <!-- Sample Transcript -->
             <div class="mt-3">
                 <button class="btn btn-outline-secondary btn-sm" onclick="loadSampleTranscript()">
@@ -329,50 +334,55 @@
                 </button>
             </div>
         </div>
-        
+
         <!-- Speaker Verification Section -->
         <div id="verificationSection" class="upload-section" style="display: none;">
             <h3 class="mb-4">Verify Speaker Roles</h3>
             <div class="alert alert-info">
                 <i class="fas fa-info-circle"></i>
-                <strong>Important:</strong> Please verify that speaker roles are correctly identified for accurate analysis.
+                <strong>Important:</strong> Please verify that speaker roles are correctly identified for accurate
+                analysis.
             </div>
-            
+
             <div id="speakerPreview" class="mb-4">
                 <!-- Speaker preview will be populated here -->
             </div>
-            
+
             <div class="verification-controls">
                 <h5>Confirm Speaker Roles:</h5>
                 <div class="alert alert-info mb-3">
                     <i class="fas fa-info-circle"></i>
-                    <strong>Help:</strong> Select which speaker label from your transcript corresponds to each role. 
-                    The <strong>Coach</strong> is the person providing person-centred coaching (usually you), and the <strong>Person</strong> is the individual being coached (usually the AI persona).
+                    <strong>Help:</strong> Select which speaker label from your transcript corresponds to each role.
+                    The <strong>Coach</strong> is the person providing person-centred coaching (usually you), and the
+                    <strong>Person</strong> is the individual being coached (usually the AI persona).
                 </div>
-                
+
                 <div class="row mb-3">
                     <div class="col-md-6">
-                        <label class="form-label">Who is the Coach (providing person-centred coaching)? <span class="text-danger">*</span></label>
+                        <label class="form-label">Who is the Coach (providing person-centred coaching)? <span
+                                class="text-danger">*</span></label>
                         <select id="practitionerSelect" class="form-control" required>
                             <!-- Options populated dynamically -->
                         </select>
-                        <small class="text-muted">The person practicing person-centred coaching skills (typically the human user)</small>
+                        <small class="text-muted">The person practicing person-centred coaching skills (typically the
+                            human user)</small>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label">Who is the Person (receiving coaching)? <span class="text-muted">(Optional)</span></label>
+                        <label class="form-label">Who is the Person (receiving coaching)? <span
+                                class="text-muted">(Optional)</span></label>
                         <select id="clientSelect" class="form-control">
                             <!-- Options populated dynamically -->
                         </select>
                         <small class="text-muted">The person receiving coaching (typically the AI persona)</small>
                     </div>
                 </div>
-                
+
                 <div class="text-center mb-3">
                     <button class="btn btn-outline-primary btn-sm" onclick="autoDetectFromTranscript()">
                         <i class="fas fa-robot"></i> Auto-detect Speaker Roles
                     </button>
                 </div>
-                
+
                 <div class="text-center">
                     <button class="btn btn-secondary me-2" onclick="backToUpload()">
                         <i class="fas fa-arrow-left"></i> Back to Edit
@@ -386,7 +396,7 @@
                 </div>
             </div>
         </div>
-        
+
         <!-- Progress Section -->
         <div id="progressSection" class="progress-section">
             <div class="stage-indicator">
@@ -399,11 +409,12 @@
                 </div>
             </div>
             <div class="progress" style="height: 25px;">
-                <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated" 
-                     style="width: 0%; background: linear-gradient(90deg, var(--primary-teal), var(--soft-seafoam));"></div>
+                <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated"
+                    style="width: 0%; background: linear-gradient(90deg, var(--primary-teal), var(--soft-seafoam));">
+                </div>
             </div>
         </div>
-        
+
         <!-- Results Section -->
         <div id="resultsSection" class="results-section">
             <!-- Overall Score -->
@@ -413,7 +424,7 @@
                 <p class="text-muted">Out of 10</p>
                 <p class="text-muted small" id="mapsValuesSummary">--</p>
             </div>
-            
+
             <!-- Core Coaching Themes -->
             <div class="report-card">
                 <h4 class="mb-3">Core Coaching Themes</h4>
@@ -421,7 +432,7 @@
                     <!-- Populated dynamically -->
                 </div>
             </div>
-            
+
             <!-- Strengths & Suggestions -->
             <div class="row">
                 <div class="col-md-6">
@@ -437,7 +448,7 @@
                     </div>
                 </div>
             </div>
-            
+
             <!-- Action Plan -->
             <div class="report-card">
                 <h4 class="mb-3">Action Plan</h4>
@@ -452,7 +463,7 @@
                     </div>
                 </div>
             </div>
-            
+
             <!-- Action Buttons -->
             <div class="text-center mt-4">
                 <button class="btn btn-primary me-2" onclick="downloadReport('json')">
@@ -470,13 +481,14 @@
             </div>
         </div>
     </div>
-    
+
     <!-- Leave Analysis Modal -->
     <div class="modal fade" id="leaveAnalysisModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title"><i class="fas fa-exclamation-triangle text-warning"></i> Before you leave</h5>
+                    <h5 class="modal-title"><i class="fas fa-exclamation-triangle text-warning"></i> Before you leave
+                    </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
@@ -493,19 +505,19 @@
             </div>
         </div>
     </div>
-    
+
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    
+
     <script>
         let currentTranscript = '';
         let detectedSpeakers = [];
-        
+
         // Extract speakers from transcript with improved parsing for chat exports
         function extractSpeakersFromTranscript(transcript) {
             const lines = transcript.split('\n').filter(line => line.trim());
             const speakers = new Set();
-            
+
             // Enhanced pattern to handle chat export format with timestamps
             // Matches: [timestamp] Speaker: message or just Speaker: message
             const speakerPatterns = [
@@ -514,12 +526,12 @@
                 // Pattern for simple format: Speaker: message
                 /^([A-Z][^:]*?):\s*(.*)$/
             ];
-            
+
             lines.forEach(line => {
                 // Skip obvious metadata lines
-                if (line.includes('Date') || 
-                    line.includes('Session ID') || 
-                    line.includes('Total messages') || 
+                if (line.includes('Date') ||
+                    line.includes('Session ID') ||
+                    line.includes('Total messages') ||
                     line.match(/^\d+\/\d+\/\d+/) || // Date format
                     line.match(/^\d+:\d+/) || // Time format
                     line.match(/^session-/) || // Session ID
@@ -527,16 +539,16 @@
                     line.length < 3) { // Very short lines
                     return;
                 }
-                
+
                 // Try each pattern
                 for (const pattern of speakerPatterns) {
                     const match = line.match(pattern);
                     if (match) {
                         const speaker = match[1].trim();
                         const message = match[2].trim();
-                        
+
                         // Only add if speaker name looks valid and message exists
-                        if (speaker && speaker.length > 0 && 
+                        if (speaker && speaker.length > 0 &&
                             !speaker.match(/^\d/) && // Doesn't start with number
                             !speaker.includes('/') && // Not a date
                             !speaker.includes('AM') && // Not a time
@@ -548,54 +560,54 @@
                     }
                 }
             });
-            
+
             return Array.from(speakers);
         }
-        
+
         // Generate clean preview without timestamps and metadata
         function generateCleanPreview(transcript) {
             const lines = transcript.split('\n').filter(line => line.trim());
             const preview = [];
             let turnCounter = 1;
-            
+
             const speakerPatterns = [
                 /\[.*?\]\s*([A-Z][^:]*?):\s*(.*)$/,
                 /^([A-Z][^:]*?):\s*(.*)$/
             ];
-            
+
             lines.forEach(line => {
                 // Skip metadata lines
-                if (line.includes('Date') || 
-                    line.includes('Session ID') || 
-                    line.includes('Total messages') || 
-                    line.match(/^\d+\/\d+\/\d+/) || 
-                    line.match(/^\d+:\d+/) || 
-                    line.match(/^session-/) || 
-                    line.match(/^\d+$/) || 
+                if (line.includes('Date') ||
+                    line.includes('Session ID') ||
+                    line.includes('Total messages') ||
+                    line.match(/^\d+\/\d+\/\d+/) ||
+                    line.match(/^\d+:\d+/) ||
+                    line.match(/^session-/) ||
+                    line.match(/^\d+$/) ||
                     line.length < 3) {
                     return;
                 }
-                
+
                 // Try to extract speaker and message
                 for (const pattern of speakerPatterns) {
                     const match = line.match(pattern);
                     if (match) {
                         const speaker = match[1].trim();
                         const message = match[2].trim();
-                        
+
                         // Validate speaker and message
-                        if (speaker && speaker.length > 0 && 
-                            !speaker.match(/^\d/) && 
-                            !speaker.includes('/') && 
-                            !speaker.includes('AM') && 
-                            !speaker.includes('PM') && 
-                            message && message.length > 0 && 
+                        if (speaker && speaker.length > 0 &&
+                            !speaker.match(/^\d/) &&
+                            !speaker.includes('/') &&
+                            !speaker.includes('AM') &&
+                            !speaker.includes('PM') &&
+                            message && message.length > 0 &&
                             preview.length < 6) {
-                            
-                            preview.push({ 
-                                speaker, 
-                                text: message, 
-                                index: turnCounter 
+
+                            preview.push({
+                                speaker,
+                                text: message,
+                                index: turnCounter
                             });
                             turnCounter++;
                         }
@@ -603,15 +615,15 @@
                     }
                 }
             });
-            
+
             return preview;
         }
-        
+
         // Auto-detect speaker roles based on common patterns
         function autoDetectSpeakerRoles(speakers) {
             let practitionerIndex = 0;
             let clientIndex = 1;
-            
+
             // Special handling for "You" - this is almost always the practitioner
             const youIndex = speakers.findIndex(speaker => speaker.toLowerCase() === 'you');
             if (youIndex !== -1) {
@@ -621,14 +633,14 @@
                 if (clientIndex === -1) clientIndex = (youIndex + 1) % speakers.length;
                 return { practitionerIndex, clientIndex };
             }
-            
+
             // If no "You", use pattern matching
             speakers.forEach((speaker, index) => {
                 const lowerSpeaker = speaker.toLowerCase();
-                
+
                 // Coach indicators (human providing person-centred coaching)
-                if (lowerSpeaker.includes('user') || 
-                    lowerSpeaker.includes('therapist') || 
+                if (lowerSpeaker.includes('user') ||
+                    lowerSpeaker.includes('therapist') ||
                     lowerSpeaker.includes('counselor') ||
                     lowerSpeaker.includes('coach') ||
                     lowerSpeaker.includes('practitioner') ||
@@ -637,25 +649,25 @@
                     clientIndex = (index + 1) % speakers.length;
                 }
                 // Client indicators (AI personas or clients)
-                else if (lowerSpeaker.includes('andy') || 
-                         lowerSpeaker.includes('persona') || 
-                         lowerSpeaker.includes('ai') || 
-                         lowerSpeaker.includes('bot') ||
-                         lowerSpeaker.includes('client') ||
-                         lowerSpeaker.includes('patient') ||
-                         lowerSpeaker.includes('simon') ||
-                         lowerSpeaker.includes('confrontational') ||
-                         lowerSpeaker.includes('non-compliant') ||
-                         lowerSpeaker.includes('direct') ||
-                         lowerSpeaker.includes('coach')) {
+                else if (lowerSpeaker.includes('andy') ||
+                    lowerSpeaker.includes('persona') ||
+                    lowerSpeaker.includes('ai') ||
+                    lowerSpeaker.includes('bot') ||
+                    lowerSpeaker.includes('client') ||
+                    lowerSpeaker.includes('patient') ||
+                    lowerSpeaker.includes('simon') ||
+                    lowerSpeaker.includes('confrontational') ||
+                    lowerSpeaker.includes('non-compliant') ||
+                    lowerSpeaker.includes('direct') ||
+                    lowerSpeaker.includes('coach')) {
                     clientIndex = index;
                     practitionerIndex = (index + 1) % speakers.length;
                 }
             });
-            
+
             return { practitionerIndex, clientIndex };
         }
-        
+
         // Preview transcript and extract speakers
         function previewTranscript() {
             const transcript = document.getElementById('transcriptText').value.trim();
@@ -663,34 +675,34 @@
                 alert('Please paste a transcript to analyze');
                 return;
             }
-            
+
             currentTranscript = transcript;
-            
+
             // Extract speakers with improved logic
             const speakers = extractSpeakersFromTranscript(transcript);
-            
+
             if (speakers.length < 1) {
                 alert('No speakers detected. Please check that your transcript follows the format: "Speaker: Message" or "[timestamp] Speaker: Message"');
                 return;
             }
-            
+
             if (speakers.length < 2) {
                 const proceed = confirm('Only one speaker detected (' + speakers[0] + '). For person-centred analysis, you typically need at least a coach and person. Do you want to continue anyway?');
                 if (!proceed) {
                     return;
                 }
             }
-            
+
             detectedSpeakers = speakers;
             console.log('Detected speakers:', detectedSpeakers);
-            
+
             // Generate clean preview without timestamps
             const preview = generateCleanPreview(transcript);
-            
+
             // Show verification section
             document.getElementById('uploadSection').style.display = 'none';
             document.getElementById('verificationSection').style.display = 'block';
-            
+
             // Populate speaker preview
             const previewHtml = preview.map(turn => `
                 <div class="speaker-turn">
@@ -698,73 +710,73 @@
                     <div class="text-muted">${turn.text.substring(0, 200)}${turn.text.length > 200 ? '...' : ''}</div>
                 </div>
             `).join('');
-            
+
             document.getElementById('speakerPreview').innerHTML = `
                 <h6>Transcript Preview (first ${preview.length} conversation turns):</h6>
                 <div class="speaker-preview">${previewHtml}</div>
                 <p class="text-muted mt-2">Detected ${detectedSpeakers.length} speaker(s): <strong>${detectedSpeakers.join(', ')}</strong></p>
                 <p class="text-success mt-1"><i class="fas fa-check-circle"></i> Timestamps and metadata have been filtered out</p>
             `;
-            
+
             // Populate speaker dropdowns
             populateSpeakerDropdowns();
         }
-        
+
         function populateSpeakerDropdowns() {
             const practitionerSelect = document.getElementById('practitionerSelect');
             const clientSelect = document.getElementById('clientSelect');
-            
+
             // Clear existing options
             practitionerSelect.innerHTML = '';
             clientSelect.innerHTML = '';
-            
+
             // Add default options
             const defaultPractitionerOption = document.createElement('option');
             defaultPractitionerOption.value = '';
             defaultPractitionerOption.textContent = '-- Select Practitioner --';
             practitionerSelect.appendChild(defaultPractitionerOption);
-            
+
             const defaultClientOption = document.createElement('option');
             defaultClientOption.value = '';
             defaultClientOption.textContent = '-- Select Client (Optional) --';
             clientSelect.appendChild(defaultClientOption);
-            
+
             // Add speaker options
             detectedSpeakers.forEach(speaker => {
                 const option1 = document.createElement('option');
                 option1.value = speaker;
                 option1.textContent = speaker;
                 practitionerSelect.appendChild(option1);
-                
+
                 const option2 = document.createElement('option');
                 option2.value = speaker;
                 option2.textContent = speaker;
                 clientSelect.appendChild(option2);
             });
-            
+
             // Auto-select based on detected patterns
             const { practitionerIndex, clientIndex } = autoDetectSpeakerRoles(detectedSpeakers);
-            
+
             if (practitionerIndex >= 0 && practitionerIndex < detectedSpeakers.length) {
                 practitionerSelect.value = detectedSpeakers[practitionerIndex];
             }
-            
+
             if (clientIndex >= 0 && clientIndex < detectedSpeakers.length && detectedSpeakers.length > 1) {
                 clientSelect.value = detectedSpeakers[clientIndex];
             }
-            
+
             // Add change event listeners to prevent same selection
             practitionerSelect.addEventListener('change', validateSpeakerSelection);
             clientSelect.addEventListener('change', validateSpeakerSelection);
         }
-        
+
         function validateSpeakerSelection() {
             const practitionerSelect = document.getElementById('practitionerSelect');
             const clientSelect = document.getElementById('clientSelect');
-            
+
             const practitioner = practitionerSelect.value;
             const client = clientSelect.value;
-            
+
             // Update client options to show which is selected as practitioner
             Array.from(clientSelect.options).forEach(option => {
                 if (option.value && option.value === practitioner) {
@@ -775,7 +787,7 @@
                     option.disabled = false;
                 }
             });
-            
+
             // Show warning if same speaker selected for both roles
             const warningDiv = document.getElementById('speakerSelectionWarning');
             if (practitioner && client && practitioner === client) {
@@ -792,28 +804,28 @@
                 }
             }
         }
-        
+
         function autoDetectFromTranscript() {
             if (detectedSpeakers.length === 0) {
                 alert('No speakers detected. Please check your transcript format.');
                 return;
             }
-            
+
             const { practitionerIndex, clientIndex } = autoDetectSpeakerRoles(detectedSpeakers);
-            
+
             const practitionerSelect = document.getElementById('practitionerSelect');
             const clientSelect = document.getElementById('clientSelect');
-            
+
             if (practitionerIndex >= 0) {
                 practitionerSelect.value = detectedSpeakers[practitionerIndex];
             }
-            
+
             if (clientIndex >= 0 && detectedSpeakers.length > 1) {
                 clientSelect.value = detectedSpeakers[clientIndex];
             }
-            
+
             validateSpeakerSelection();
-            
+
             // Show feedback
             const infoDiv = document.createElement('div');
             infoDiv.className = 'alert alert-info alert-dismissible fade show mt-2';
@@ -824,7 +836,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             `;
             document.querySelector('.verification-controls').appendChild(infoDiv);
-            
+
             // Auto-remove the alert after 3 seconds
             setTimeout(() => {
                 if (infoDiv && infoDiv.parentNode) {
@@ -832,19 +844,19 @@
                 }
             }, 3000);
         }
-        
+
         function backToUpload() {
             document.getElementById('verificationSection').style.display = 'none';
             document.getElementById('uploadSection').style.display = 'block';
         }
-        
+
         // Clear cache and analyze
         async function clearCacheAndAnalyze() {
             try {
                 // Clear cache first
                 await fetch('/api/analysis/cache', { method: 'DELETE' });
                 console.log('Cache cleared successfully');
-                
+
                 // Show info message
                 const infoDiv = document.createElement('div');
                 infoDiv.className = 'alert alert-success alert-dismissible fade show';
@@ -854,61 +866,63 @@
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 `;
                 document.getElementById('verificationSection').insertBefore(infoDiv, document.getElementById('verificationSection').firstChild);
-                
+
                 // Proceed with analysis
                 confirmAndAnalyze();
-                
+
             } catch (error) {
                 console.error('Failed to clear cache:', error);
                 alert('Failed to clear cache, but proceeding with analysis...');
                 confirmAndAnalyze();
             }
         }
-        
+
         function confirmAndAnalyze() {
             const practitionerSpeaker = document.getElementById('practitionerSelect').value;
             const clientSpeaker = document.getElementById('clientSelect').value;
-            
+
             // Validate practitioner selection (required)
             if (!practitionerSpeaker) {
                 alert('Please select who is the Practitioner before proceeding.');
                 document.getElementById('practitionerSelect').focus();
                 return;
             }
-            
+
             // Validate that they're not the same (if both selected)
             if (practitionerSpeaker && clientSpeaker && practitionerSpeaker === clientSpeaker) {
                 alert('Practitioner and Client cannot be the same speaker!');
                 return;
             }
-            
+
             console.log('Confirmed speakers - Practitioner:', practitionerSpeaker, 'Client:', clientSpeaker);
-            
+
             // Update speaker hints and start analysis
             submitAnalysisWithVerification(practitionerSpeaker, clientSpeaker);
         }
-        
+
         // Check for incoming conversation data on page load
         document.addEventListener('DOMContentLoaded', () => {
             checkForPendingAnalysis();
         });
-        
+
         // Check for conversation data from chat page
         async function checkForPendingAnalysis() {
             // Check URL parameters first
             const urlParams = new URLSearchParams(window.location.search);
             const sessionId = urlParams.get('session_id');
             const conversationId = urlParams.get('conversation_id');
-            
-            console.log('🔍 Checking for pending analysis...', { sessionId, conversationId });
-            
-            if (conversationId) {
+            const attemptId = urlParams.get('attempt_id');
+
+            console.log('🔍 Checking for pending analysis...', { sessionId, conversationId, attemptId });
+
+            if (attemptId || conversationId) {
                 // Load conversation from server using correct endpoint
                 try {
-                    console.log('📡 Fetching conversation from API:', conversationId);
-                    const response = await fetch(`/api/scenarios/attempts/${conversationId}/analysis`);
+                    const targetId = attemptId || conversationId;
+                    console.log('📡 Fetching conversation from API:', targetId);
+                    const response = await fetch(`/api/scenarios/attempts/${targetId}/analysis`);
                     console.log('📡 API Response status:', response.status);
-                    
+
                     if (response.ok) {
                         const data = await response.json();
                         console.log('✅ Conversation data loaded:', data);
@@ -922,7 +936,7 @@
                     console.error('❌ Failed to load conversation:', error);
                 }
             }
-            
+
             // Check sessionStorage for pending analysis
             const pendingData = sessionStorage.getItem('pendingAnalysis');
             const chatData = sessionStorage.getItem('conversationForAnalysis');
@@ -945,24 +959,24 @@
                 }
             }
         }
-        
+
         // Load conversation data into transcript field
         function loadConversationData(conversation) {
             console.log('📋 loadConversationData called with:', conversation);
-            
+
             if (!conversation) {
                 console.error('❌ No conversation data provided');
                 return;
             }
-            
+
             if (!conversation.messages) {
                 console.error('❌ Conversation has no messages:', conversation);
                 alert('This conversation has no messages to analyze.');
                 return;
             }
-            
+
             console.log('✅ Processing', conversation.messages.length, 'messages');
-            
+
             // Format messages as transcript with proper speaker roles
             // API returns {conversation_id, persona: {name, description}, messages: [{role, message, turn_number, timestamp}]}
             // Role is ALWAYS either "user" or "persona" from database
@@ -971,9 +985,9 @@
                 const speaker = msg.role === 'user' ? 'Practitioner' : personaName;
                 return `${speaker}: ${msg.message}`;
             }).join('\n\n');
-            
+
             console.log('✅ Generated transcript, length:', transcript.length);
-            
+
             // Load into textarea
             const textArea = document.getElementById('transcriptText');
             if (!textArea) {
@@ -982,12 +996,12 @@
             }
             textArea.value = transcript;
             console.log('✅ Transcript loaded into textarea');
-            
+
             // Auto-populate context with chat session details
             document.getElementById('practitionerRole').value = 'Person-Centred Coach';
             document.getElementById('clientRole').value = personaName;
             document.getElementById('scenario').value = `Free practice session with ${personaName}`;
-            
+
             // Add enhanced info message
             const infoDiv = document.createElement('div');
             infoDiv.className = 'alert alert-success mb-3';
@@ -1003,10 +1017,10 @@
                     <span class="ms-2">Starting analysis automatically...</span>
                 </div>
             `;
-            
+
             // Hide upload section, show the info message in a dedicated area
             document.getElementById('uploadSection').style.display = 'none';
-            
+
             // Create or update status area
             let statusArea = document.getElementById('autoAnalysisStatus');
             if (!statusArea) {
@@ -1020,40 +1034,41 @@
             }
             statusArea.innerHTML = '';
             statusArea.appendChild(infoDiv);
-            
+
             console.log('✅ Info message added, starting auto-analysis');
-            
+
             // Clear sessionStorage after successfully loading
             // This allows back button to work, but cleans up after user sees analysis
             sessionStorage.removeItem('currentConversation');
             console.log('🧹 Cleared sessionStorage after loading conversation');
-            
-            // AUTOMATICALLY submit for analysis using conversation_id endpoint
+
+            // AUTOMATICALLY submit for analysis using attempt_id endpoint
             // This is more efficient and uses trust metrics from database
             setTimeout(() => {
-                autoSubmitConversationAnalysis(conversation.conversation_id);
+                const analysisId = conversation.attempt_id || conversation.conversation_id;
+                autoSubmitConversationAnalysis(analysisId);
             }, 1000);
         }
-        
+
         // Load conversation from pending sessionStorage data
         function loadConversationFromPending(data) {
             if (!data.messages) return;
-            
+
             // Format messages as transcript
             const transcript = data.messages.map(msg => {
                 const speaker = msg.sender === 'user' ? 'Client' : data.personaName || 'Therapist';
                 return `${speaker}: ${msg.message}`;
             }).join('\n\n');
-            
+
             // Load into textarea
             document.getElementById('transcriptText').value = transcript;
-            
+
             // Auto-populate context
             document.getElementById('practitionerRole').value = data.personaName || 'AI Persona';
-            
+
             // Show upload section with transcript loaded
             document.getElementById('uploadSection').style.display = 'block';
-            
+
             // Add info message
             const infoDiv = document.createElement('div');
             infoDiv.className = 'alert alert-info mb-3';
@@ -1063,11 +1078,11 @@
                 Click "Analyze Transcript" to begin analysis.
             `;
             document.querySelector('.upload-section').insertBefore(
-                infoDiv, 
+                infoDiv,
                 document.querySelector('.upload-section').firstChild
             );
         }
-        
+
         // Stage configurations with more detailed descriptions
         const stageConfigs = {
             'idle': { icon: 'fa-hourglass-start', name: 'Waiting', desc: 'Ready to analyze' },
@@ -1079,15 +1094,15 @@
             'complete': { icon: 'fa-check-circle', name: 'Complete', desc: 'Analysis complete!' },
             'error': { icon: 'fa-exclamation-triangle', name: 'Error', desc: 'An error occurred during analysis' }
         };
-        
+
         let currentJobId = null;
         let currentAnalysisResult = null; // Store result for downloads
         let pollingInterval = null;
-        
+
         // Auto-submit conversation analysis using conversation_id (preferred method)
         async function autoSubmitConversationAnalysis(conversationId) {
             console.log('🚀 Auto-submitting conversation analysis for:', conversationId);
-            
+
             // Hide auto-analysis status, show progress
             const statusArea = document.getElementById('autoAnalysisStatus');
             if (statusArea) {
@@ -1097,17 +1112,17 @@
             document.getElementById('verificationSection').style.display = 'none';
             document.getElementById('progressSection').style.display = 'block';
             document.getElementById('resultsSection').style.display = 'none';
-            
+
             // Show initial progress
             updateProgress({
                 stage: 'fetching',
                 progress: 5,
                 current_item: 'Fetching conversation from database...'
             });
-            
+
             try {
                 console.log('📡 Submitting conversation analysis for:', conversationId);
-                
+
                 // Submit for analysis using MAPS conversation endpoint
                 const response = await fetch('/api/analysis/conversation', {
                     method: 'POST',
@@ -1119,29 +1134,29 @@
                         context: {}
                     })
                 });
-                
+
                 console.log('📡 Analysis submission response status:', response.status);
-                
+
                 if (!response.ok) {
                     const errorData = await response.json();
                     console.error('❌ Analysis submission error:', errorData);
                     throw new Error(errorData.detail || 'Failed to submit analysis');
                 }
-                
+
                 const result = await response.json();
                 console.log('✅ Analysis submission result:', result);
                 currentJobId = result.job_id;
-                
+
                 // Update progress
                 updateProgress({
                     stage: 'analyzing',
                     progress: 15,
                     current_item: 'Analysis started! Evaluating person-centred conditions...'
                 });
-                
+
                 // Start polling for progress using MAPS status endpoint
                 startPollingMaps();
-                
+
             } catch (error) {
                 console.error('❌ Conversation analysis submission failed:', error);
                 updateProgress({
@@ -1155,24 +1170,24 @@
                 }, 2000);
             }
         }
-        
+
         // Auto-submit analysis for database-loaded conversations (no speaker verification needed)
         async function autoSubmitAnalysis(transcript, personaName) {
             console.log('🚀 Auto-submitting analysis for conversation with', personaName);
-            
+
             // Get context from form fields (already populated by loadConversationData)
             const context = {
                 practitioner_role: document.getElementById('practitionerRole').value || 'Person-Centred Coach',
                 client_identifier_hint: personaName,
                 scenario_description: document.getElementById('scenario').value || `Practice session with ${personaName}`
             };
-            
+
             // Speaker hints are simple - database guarantees clean role="user" or role="persona"
             const speakerHints = {
                 practitioner_identifier_hint: 'Practitioner',
                 client_identifier_hint: personaName
             };
-            
+
             // Hide auto-analysis status, show progress
             const statusArea = document.getElementById('autoAnalysisStatus');
             if (statusArea) {
@@ -1182,28 +1197,28 @@
             document.getElementById('verificationSection').style.display = 'none';
             document.getElementById('progressSection').style.display = 'block';
             document.getElementById('resultsSection').style.display = 'none';
-            
+
             // Show initial progress
             updateProgress({
                 stage: 'preprocessing',
                 progress: 5,
                 current_item: 'Submitting transcript for MAPS analysis...'
             });
-            
+
             try {
                 console.log('📡 Submitting analysis:', {
                     transcript_length: transcript.length,
                     context: context,
                     speaker_hints: speakerHints
                 });
-                
+
                 // Update progress
                 updateProgress({
                     stage: 'preprocessing',
                     progress: 10,
                     current_item: 'Connecting to analysis service...'
                 });
-                
+
                 // Submit for analysis
                 const response = await fetch('/api/analysis/transcript', {
                     method: 'POST',
@@ -1216,29 +1231,29 @@
                         speaker_hints: speakerHints
                     })
                 });
-                
+
                 console.log('📡 Analysis submission response status:', response.status);
-                
+
                 if (!response.ok) {
                     const errorData = await response.json();
                     console.error('❌ Analysis submission error:', errorData);
                     throw new Error(errorData.detail || 'Failed to submit analysis');
                 }
-                
+
                 const result = await response.json();
                 console.log('✅ Analysis submission result:', result);
                 currentJobId = result.job_id;
-                
+
                 // Update progress
                 updateProgress({
                     stage: 'coding',
                     progress: 15,
                     current_item: 'Analysis started! Evaluating person-centred conditions...'
                 });
-                
+
                 // Start polling for progress
                 startPolling();
-                
+
             } catch (error) {
                 console.error('❌ Auto-analysis submission failed:', error);
                 updateProgress({
@@ -1252,50 +1267,50 @@
                 }, 2000);
             }
         }
-        
+
         // Submit analysis with verified speaker roles
         async function submitAnalysisWithVerification(practitionerSpeaker, clientSpeaker) {
             const transcript = currentTranscript;
-            
+
             // Get context
             const context = {
                 practitioner_role: document.getElementById('practitionerRole').value || 'Therapist/Coach',
                 client_identifier_hint: clientSpeaker,
                 scenario_description: document.getElementById('scenario').value || 'Motivational interviewing session'
             };
-            
+
             // Create speaker hints with verified roles
             const speakerHints = {
                 practitioner_identifier_hint: practitionerSpeaker,
                 client_identifier_hint: clientSpeaker
             };
-            
+
             // Hide verification, show progress
             document.getElementById('verificationSection').style.display = 'none';
             document.getElementById('progressSection').style.display = 'block';
             document.getElementById('resultsSection').style.display = 'none';
-            
+
             // Show initial progress
             updateProgress({
                 stage: 'preprocessing',
                 progress: 5,
                 current_item: 'Submitting transcript for MAPS analysis...'
             });
-            
+
             try {
                 console.log('Submitting analysis:', {
                     transcript_length: transcript.length,
                     context: context,
                     speaker_hints: speakerHints
                 });
-                
+
                 // Update progress
                 updateProgress({
                     stage: 'preprocessing',
                     progress: 10,
                     current_item: 'Connecting to analysis service...'
                 });
-                
+
                 // Submit for analysis
                 const response = await fetch('/api/analysis/transcript', {
                     method: 'POST',
@@ -1308,29 +1323,29 @@
                         speaker_hints: speakerHints
                     })
                 });
-                
+
                 console.log('Analysis submission response status:', response.status);
-                
+
                 if (!response.ok) {
                     const errorData = await response.json();
                     console.error('Analysis submission error:', errorData);
                     throw new Error(errorData.detail || 'Failed to submit analysis');
                 }
-                
+
                 const result = await response.json();
                 console.log('Analysis submission result:', result);
                 currentJobId = result.job_id;
-                
+
                 // Update progress
                 updateProgress({
                     stage: 'coding',
                     progress: 15,
                     current_item: 'Analysis started! Evaluating person-centred conditions...'
                 });
-                
+
                 // Start polling for progress
                 startPolling();
-                
+
             } catch (error) {
                 console.error('Analysis submission failed:', error);
                 updateProgress({
@@ -1344,23 +1359,23 @@
                 }, 2000);
             }
         }
-        
+
         // Poll for MAPS job status
         function startPollingMaps() {
             console.log('Starting MAPS polling for job:', currentJobId);
             pollingInterval = setInterval(async () => {
                 try {
                     const response = await fetch(`/api/analysis/status/${currentJobId}`);
-                    
+
                     if (!response.ok) {
                         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                     }
-                    
+
                     const status = await response.json();
                     console.log('MAPS polling status update:', status);
-                    
+
                     updateProgress(status);
-                    
+
                     if (status.status === 'complete') {
                         console.log('MAPS analysis complete, displaying results:', status.result);
                         stopPolling();
@@ -1370,14 +1385,14 @@
                         console.error('MAPS analysis failed with error:', status.error);
                         stopPolling();
                         const errorMsg = status.error || 'Unknown error occurred during analysis';
-                        
+
                         // Show detailed error information
                         updateProgress({
                             stage: 'error',
                             progress: 0,
                             current_item: `Error: ${errorMsg}`
                         });
-                        
+
                         // Show user-friendly error message
                         setTimeout(() => {
                             alert(`Analysis failed: ${errorMsg}\n\nPlease check your transcript format and try again.`);
@@ -1391,7 +1406,7 @@
                         window.pollingRetries = 0;
                     }
                     window.pollingRetries++;
-                    
+
                     if (window.pollingRetries > 10) {
                         stopPolling();
                         alert('Lost connection to analysis service. Please refresh and try again.');
@@ -1400,23 +1415,23 @@
                 }
             }, 1000);
         }
-        
+
         // Poll for job status (for transcript analysis)
         function startPolling() {
             console.log('Starting polling for job:', currentJobId);
             pollingInterval = setInterval(async () => {
                 try {
                     const response = await fetch(`/api/analysis/status/${currentJobId}`);
-                    
+
                     if (!response.ok) {
                         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                     }
-                    
+
                     const status = await response.json();
                     console.log('Polling status update:', status);
-                    
+
                     updateProgress(status);
-                    
+
                     if (status.status === 'complete') {
                         console.log('Analysis complete, displaying results:', status.result);
                         stopPolling();
@@ -1426,14 +1441,14 @@
                         console.error('Analysis failed with error:', status.error);
                         stopPolling();
                         const errorMsg = status.error || 'Unknown error occurred during analysis';
-                        
+
                         // Show detailed error information
                         updateProgress({
                             stage: 'error',
                             progress: 0,
                             current_item: `Error: ${errorMsg}`
                         });
-                        
+
                         // Show user-friendly error message
                         setTimeout(() => {
                             alert(`Analysis failed: ${errorMsg}\n\nPlease check your transcript format and try again.`);
@@ -1447,7 +1462,7 @@
                         window.pollingRetries = 0;
                     }
                     window.pollingRetries++;
-                    
+
                     if (window.pollingRetries > 10) {
                         stopPolling();
                         alert('Lost connection to analysis service. Please refresh and try again.');
@@ -1456,36 +1471,36 @@
                 }
             }, 1000);
         }
-        
+
         function stopPolling() {
             if (pollingInterval) {
                 clearInterval(pollingInterval);
                 pollingInterval = null;
             }
         }
-        
+
         // Update progress UI
         function updateProgress(status) {
             const stage = status.stage || 'idle';
             const progress = status.progress || 0;
             const config = stageConfigs[stage] || stageConfigs['idle'];
-            
+
             // Update stage icon with appropriate animation
             const iconClass = `fas ${config.icon}`;
             const shouldSpin = ['coding', 'aggregating', 'supervising', 'parsing'].includes(stage);
             document.getElementById('stageIcon').className = shouldSpin ? `${iconClass} fa-spin` : iconClass;
-            
+
             // Update stage name and description
             document.getElementById('stageName').textContent = config.name;
-            
+
             // Use detailed current_item if available, otherwise use default description
             const description = status.current_item || config.desc;
             document.getElementById('stageDescription').textContent = description;
-            
+
             // Update progress bar
             const progressBar = document.getElementById('progressBar');
             progressBar.style.width = `${Math.max(progress, 0)}%`;
-            
+
             // Add visual feedback for different stages
             if (stage === 'error') {
                 progressBar.style.background = 'linear-gradient(90deg, #E74C3C, #C0392B)';
@@ -1497,13 +1512,13 @@
                 progressBar.style.background = 'linear-gradient(90deg, var(--primary-teal), var(--soft-seafoam))';
                 progressBar.classList.add('progress-bar-animated');
             }
-            
+
             // Reset polling retry counter on successful update
             if (window.pollingRetries) {
                 window.pollingRetries = 0;
             }
         }
-        
+
         // Display results
         function displayResults(result) {
             // Debug logging
@@ -1515,7 +1530,7 @@
                 console.log('🔍 result.report.core_coaching_effectiveness:', result.report.core_coaching_effectiveness);
                 console.log('🔍 result.report.strengths_and_suggestions:', result.report.strengths_and_suggestions);
             }
-            
+
             // Hide progress, show results
             document.getElementById('progressSection').style.display = 'none';
             document.getElementById('resultsSection').style.display = 'block';
@@ -1529,18 +1544,18 @@
                     scoreEl.nextElementSibling.style.display = 'none';
                 }
             }
-            
+
             // MAPS values summary
             document.getElementById('mapsValuesSummary').textContent =
                 result.maps_values_summary || 'No summary available';
 
             // Global ratings - display new 3-theme CoreCoachingEffectiveness structure
             let ratingsHtml = '';
-            
+
             if (result.report.core_coaching_effectiveness) {
                 // New structure: 3 integrated themes
                 const themes = result.report.core_coaching_effectiveness;
-                
+
                 // Define theme display names and descriptions
                 const themeInfo = {
                     foundational_trust_safety: {
@@ -1556,13 +1571,13 @@
                         desc: 'Client Empowerment, Communication Clarity, Confidence-Building'
                     }
                 };
-                
+
                 ratingsHtml = Object.entries(themes).map(([key, theme]) => {
                     const info = themeInfo[key] || { name: key.replace(/_/g, ' '), desc: '' };
-                    const evidencePoints = theme.evidence && theme.evidence.length > 0 
+                    const evidencePoints = theme.evidence && theme.evidence.length > 0
                         ? `<ul class="mt-2 mb-2">${theme.evidence.map(e => `<li class="text-muted small">${e}</li>`).join('')}</ul>`
                         : '';
-                    
+
                     return `
                         <div class="rating-item">
                             <span class="rating-score">${theme.score}</span>
@@ -1586,35 +1601,35 @@
                     `;
                 }).join('');
             }
-            
+
             document.getElementById('globalRatings').innerHTML = ratingsHtml;
 
             // Patterns & recommendations
             const suggestions = result.report.strengths_and_suggestions || {};
-            
+
             // Format strengths as list
             const strengthsList = suggestions.strengths || [];
             document.getElementById('strengths').innerHTML = strengthsList.length > 0
                 ? strengthsList.map(s => `<p><strong>${s.strength}:</strong> ${s.example}</p>`).join('')
                 : 'No strengths identified';
-            
+
             // Format opportunities as list
             const opportunitiesList = suggestions.opportunities || [];
             document.getElementById('challenges').innerHTML = opportunitiesList.length > 0
                 ? opportunitiesList.map(o => `<p><strong>${o.area}:</strong> ${o.suggestion}</p>`).join('')
                 : 'No opportunities identified';
-            
+
             // Format next session focus
             const nextFocus = suggestions.next_session_focus || [];
             document.getElementById('immediateFocus').innerHTML = nextFocus.length > 0
                 ? '<ul>' + nextFocus.map(f => `<li>${f}</li>`).join('') + '</ul>'
                 : 'No focus areas identified';
-            
+
             // MAPS alignment
             document.getElementById('skillDevelopment').textContent =
                 suggestions.maps_alignment || 'No MAPS alignment notes';
         }
-        
+
         // Download report
         async function downloadReport(format) {
             if (!currentJobId || !currentAnalysisResult) {
@@ -1676,8 +1691,8 @@
             const themesHtml = Object.entries(themes).map(([key, t]) => {
                 const info = themeInfo[key] || { name: key.replace(/_/g, ' '), desc: '' };
                 const evidence = Array.isArray(t.evidence) && t.evidence.length
-                  ? `<ul>${t.evidence.map(e => `<li>${e}</li>`).join('')}</ul>`
-                  : '';
+                    ? `<ul>${t.evidence.map(e => `<li>${e}</li>`).join('')}</ul>`
+                    : '';
                 return `
                     <div class="rating">
                         <strong>${info.name}</strong>
@@ -1708,8 +1723,8 @@
 
             const cb = patterns.conversation_balance || {};
             const balanceHtml = (cb.coach_speaking_percentage != null && cb.person_speaking_percentage != null)
-              ? `<p>Coach: ${cb.coach_speaking_percentage}% &nbsp; | &nbsp; Person: ${cb.person_speaking_percentage}%</p>`
-              : '';
+                ? `<p>Coach: ${cb.coach_speaking_percentage}% &nbsp; | &nbsp; Person: ${cb.person_speaking_percentage}%</p>`
+                : '';
             const interactionHtml = patterns.interaction_dynamics ? `<p>${patterns.interaction_dynamics}</p>` : '';
             const trust = patterns.trust_metrics;
             const trustHtml = trust ? `<p>Trust: initial ${trust.initial_trust}, final ${trust.final_trust}, change ${trust.trust_change}</p>` : '';
@@ -1851,12 +1866,12 @@
             document.getElementById('progressSection').style.display = 'none';
             document.getElementById('resultsSection').style.display = 'none';
             document.getElementById('transcriptText').value = '';
-            
+
             // Remove any existing error alerts
             const existingAlerts = document.querySelectorAll('.upload-section .alert, .verification-section .alert');
             existingAlerts.forEach(alert => alert.remove());
         }
-        
+
         // Load sample transcript
         function loadSampleTranscript() {
             const sample = `Myrtle: Hello! I'm Myrtle - Confrontational & Direct. How can I help you today?
@@ -1928,9 +1943,9 @@ Myrtle: Whatever. If it's that important, let's get to it. I can tone it down wi
 You: That's a start towards a solution, thank you.  If we were to meet again in 6 weeks, with you having toned it down, as you say, and also made more commitment to attendance on Monday mornings, what would you report at that point?
 
 Myrtle: You've got to be kidding. If I actually toned it down and showed up, I'd report that things are smoother with clients and maybe even a bit more productive. But honestly, let's see if the rest of the team steps up too. It can't just be on me, right? What are you doing to support that?`;
-            
+
             document.getElementById('transcriptText').value = sample;
-            
+
             // Show info about the sample
             const infoDiv = document.createElement('div');
             infoDiv.className = 'alert alert-success alert-dismissible fade show mt-2';
@@ -1943,7 +1958,7 @@ Myrtle: You've got to be kidding. If I actually toned it down and showed up, I'd
             document.querySelector('.upload-area').appendChild(infoDiv);
         }
     </script>
-    
+
     <!-- Developer Footer -->
     <div class="container">
         <div class="text-center mt-5 pt-4" style="border-top: 1px solid rgba(124, 155, 245, 0.2);">
@@ -1952,17 +1967,17 @@ Myrtle: You've got to be kidding. If I actually toned it down and showed up, I'd
             </small>
         </div>
     </div>
-    
+
     <!-- Supabase SDK -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Auth utilities -->
     <script src="/static/js/supabaseClient.js"></script>
     <script src="/static/js/authGuard.js"></script>
     <script src="/static/js/navigation.js"></script>
-    
+
     <script>
         // Initialize FULL access requirement - BLOCKS until verified
-        (async function() {
+        (async function () {
             try {
                 await initializeSupabase();
                 await requireFullAccess(); // Redirects CONTROL to /thank-you-locked
@@ -1973,7 +1988,7 @@ Myrtle: You've got to be kidding. If I actually toned it down and showed up, I'd
             }
         })();
     </script>
-    
-</body>
-</html>
 
+</body>
+
+</html>

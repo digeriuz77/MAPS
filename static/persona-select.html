@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -21,7 +22,8 @@
             min-height: 100vh;
             display: flex;
             flex-direction: column;
-            padding-top: 70px; /* Space for fixed nav */
+            padding-top: 70px;
+            /* Space for fixed nav */
         }
 
         /* Navigation Bar */
@@ -38,18 +40,18 @@
             justify-content: center;
             gap: 30px;
         }
-        
+
         .nav-bar a {
             color: white;
             text-decoration: none;
             font-weight: 500;
             transition: opacity 0.2s;
         }
-        
+
         .nav-bar a:hover {
             opacity: 0.8;
         }
-        
+
         .nav-bar a.active {
             border-bottom: 2px solid white;
         }
@@ -187,6 +189,7 @@
         }
     </style>
 </head>
+
 <body>
     <!-- Navigation Bar -->
     <nav class="nav-bar">
@@ -213,22 +216,28 @@
     </div>
 
     <!-- Persona Info Modal -->
-    <div class="modal fade" id="personaInfoModal" tabindex="-1" style="display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5);">
-        <div class="modal-dialog" style="position: relative; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; border-radius: 16px; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto;">
+    <div class="modal fade" id="personaInfoModal" tabindex="-1"
+        style="display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog"
+            style="position: relative; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; border-radius: 16px; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto;">
             <div class="modal-content" style="padding: 0;">
-                <div class="modal-header" style="padding: 20px 30px; border-bottom: 1px solid #F8FAFC; display: flex; justify-content: between; align-items: center;">
+                <div class="modal-header"
+                    style="padding: 20px 30px; border-bottom: 1px solid #F8FAFC; display: flex; justify-content: between; align-items: center;">
                     <h5 class="modal-title" style="margin: 0; color: #1E3A8A; font-size: 1.4em;">
                         <i class="fas fa-user-circle"></i> <span id="modalPersonaName">Persona Information</span>
                     </h5>
-                    <button type="button" class="btn-close" onclick="closePersonaModal()" style="background: none; border: none; font-size: 1.5em; cursor: pointer; color: #94a3b8; margin-left: auto;">&times;</button>
+                    <button type="button" class="btn-close" onclick="closePersonaModal()"
+                        style="background: none; border: none; font-size: 1.5em; cursor: pointer; color: #94a3b8; margin-left: auto;">&times;</button>
                 </div>
                 <div class="modal-body" style="padding: 30px;">
                     <div id="modalPersonaContent">
                         <!-- Persona information will be loaded here -->
                     </div>
                 </div>
-                <div class="modal-footer" style="padding: 20px 30px; border-top: 1px solid #F8FAFC; display: flex; gap: 10px; justify-content: flex-end;">
-                    <button type="button" class="btn btn-secondary" onclick="closePersonaModal()" style="background: #1E3A8A; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer;">Close</button>
+                <div class="modal-footer"
+                    style="padding: 20px 30px; border-top: 1px solid #F8FAFC; display: flex; gap: 10px; justify-content: flex-end;">
+                    <button type="button" class="btn btn-secondary" onclick="closePersonaModal()"
+                        style="background: #1E3A8A; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer;">Close</button>
                 </div>
             </div>
         </div>
@@ -242,10 +251,10 @@
             try {
                 const response = await fetch('/api/scenarios');
                 const personas = await response.json();
-                
+
                 const grid = document.getElementById('personasGrid');
                 grid.innerHTML = '';
-                
+
                 personas.forEach(persona => {
                     const card = document.createElement('div');
                     card.className = 'persona-card';
@@ -254,11 +263,11 @@
                         if (e.target.closest('.persona-info-btn')) {
                             return;
                         }
-                        selectPersona(card, persona.id, persona.name);
+                        selectPersona(card, persona.id, persona.title);
                     };
                     card.innerHTML = `
-                        <div class="persona-name">${persona.name}</div>
-                        <div class="persona-description">${persona.description}</div>
+                        <div class="persona-name">${persona.title}</div>
+                        <div class="persona-description">${persona.learning_objective || ''}</div>
                         <div style="display: flex; justify-content: flex-end; margin-top: 15px;">
                             <button class="persona-info-btn" onclick="showPersonaInfo('${persona.id}', event)" style="background: linear-gradient(135deg, #7C3AED 0%, #1E3A8A 100%); color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 0.9em; transition: all 0.2s;">
                                 <i class="fas fa-info-circle"></i> Find out more
@@ -269,7 +278,7 @@
                 });
             } catch (error) {
                 console.error('Error loading personas:', error);
-                document.getElementById('personasGrid').innerHTML = 
+                document.getElementById('personasGrid').innerHTML =
                     '<div class="loading">Error loading personas. Please refresh the page.</div>';
             }
         }
@@ -337,16 +346,16 @@
         // Show persona information modal
         function showPersonaInfo(personaId, event) {
             event.stopPropagation(); // Prevent card click
-            
+
             const info = personaInfo[personaId];
             if (!info) {
                 console.warn('No info available for persona:', personaId);
                 return;
             }
-            
+
             // Store current persona for modal
             currentModalPersona = personaId;
-            
+
             // Update modal content
             document.getElementById('modalPersonaName').textContent = info.title;
             document.getElementById('modalPersonaContent').innerHTML = `
@@ -355,7 +364,7 @@
                     <div style="line-height: 1.6; color: #1E293B;">${info.content}</div>
                 </div>
             `;
-            
+
             // Show modal
             document.getElementById('personaInfoModal').style.display = 'block';
         }
@@ -375,23 +384,23 @@
         }
 
         // Close modal when clicking outside
-        document.getElementById('personaInfoModal').onclick = function(event) {
+        document.getElementById('personaInfoModal').onclick = function (event) {
             if (event.target === this) {
                 closePersonaModal();
             }
         };
     </script>
-    
+
     <!-- Supabase SDK -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Auth utilities -->
     <script src="/static/js/supabaseClient.js"></script>
     <script src="/static/js/authGuard.js"></script>
     <script src="/static/js/navigation.js"></script>
-    
+
     <script>
         // Initialize auth - BLOCKS until verified
-        (async function() {
+        (async function () {
             try {
                 await initializeSupabase();
                 await requireAuth();
@@ -403,4 +412,5 @@
         })();
     </script>
 </body>
+
 </html>

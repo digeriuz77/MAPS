@@ -26,8 +26,6 @@ initialize_character_vector_service(_supabase)
 from src.services.trust_configuration_service import initialize_trust_configuration_service
 initialize_trust_configuration_service(_supabase)
 
-# NOW routes can import enhanced_persona_service safely
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifespan management"""
@@ -39,18 +37,6 @@ async def lifespan(app: FastAPI):
     logger = logging.getLogger(__name__)
     logger.info("Starting AI Persona System")
     logger.info("Database-driven services already initialized at module level")
-
-    # Pre-warm enhanced_persona_service by importing it
-    from src.services.enhanced_persona_service import enhanced_persona_service
-    logger.info("EnhancedPersonaService initialized - ready for conversations")
-
-    # Start periodic forgetting/decay task (non-blocking)
-    try:
-        from src.services.memory_decay_service import memory_decay_service
-        memory_decay_service.start_periodic()
-        logger.info("Memory decay service started")
-    except Exception as e:
-        logger.warning(f"Memory decay service not started: {e}")
 
     app_state.is_initialized = True
     logger.info("AI Persona System started successfully")
@@ -64,6 +50,7 @@ async def lifespan(app: FastAPI):
 def create_app() -> FastAPI:
     """Create and configure FastAPI application"""
     settings = get_settings()
+    logger = logging.getLogger(__name__)
     
     app = FastAPI(
         title="AI Persona System",
@@ -81,10 +68,6 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
     
-    # ENHANCED CHAT SYSTEM ROUTES
-    from src.api.routes.enhanced_chat import router as enhanced_chat_router
-    app.include_router(enhanced_chat_router, prefix="/api/chat", tags=["enhanced-chat"])
-
     # ANALYSIS SYSTEM ROUTES (consolidated - includes former maps_analysis)
     from src.api.routes.analysis import router as analysis_router
     app.include_router(analysis_router, tags=["analysis"])
@@ -136,8 +119,8 @@ def create_app() -> FastAPI:
         """Health check endpoint"""
         try:
             supabase_client = get_supabase_client()
-            personas_result = supabase_client.table('personas').select('persona_id').limit(1).execute()
-            database_status = "healthy" if personas_result.data else "unhealthy"
+            scenarios_result = supabase_client.table('scenarios').select('id').limit(1).execute()
+            database_status = "healthy" if scenarios_result.data else "unhealthy"
 
             # Metrics summary (best-effort)
             metrics_summary = {}

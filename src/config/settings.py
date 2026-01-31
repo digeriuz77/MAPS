@@ -92,7 +92,7 @@ class Settings(BaseSettings):
     DEEPGRAM_FLUX_EOT_TIMEOUT_MS: int = 5000  # Max silence before forced EOT (500-10000)
     
     # Voice Session Settings
-    VOICE_ENABLED: bool = True
+    VOICE_ENABLED: bool = False
     VOICE_DEFAULT_MODE: str = "stt_only"  # "full", "stt_only", "tts_only"
     VOICE_INPUT_SAMPLE_RATE: int = 16000  # For Flux (16000 recommended)
     VOICE_OUTPUT_SAMPLE_RATE: int = 24000  # For TTS

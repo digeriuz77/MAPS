@@ -1,13 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>1-1 Platform - Chat</title>
+    <title>Scenario Practice</title>
     <!-- Auth Blocker -->
     <script src="/static/js/auth-blocker.js"></script>
     <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/voice-ui.css">
     <style>
         * {
             margin: 0;
@@ -38,18 +40,18 @@
             justify-content: center;
             gap: 30px;
         }
-        
+
         .nav-bar a {
             color: white;
             text-decoration: none;
             font-weight: 500;
             transition: opacity 0.2s;
         }
-        
+
         .nav-bar a:hover {
             opacity: 0.8;
         }
-        
+
         .nav-bar a.active {
             border-bottom: 2px solid white;
         }
@@ -291,6 +293,7 @@
         }
     </style>
 </head>
+
 <body>
     <!-- Navigation Bar -->
     <nav class="nav-bar">
@@ -309,21 +312,40 @@
                 <!-- Messages will be added here dynamically -->
             </div>
 
+            <div class="voice-controls" id="voiceControls" style="display: none;">
+                <div class="voice-status voice-status-idle" id="voiceStatus">Ready</div>
+                <div class="voice-mode-selector" id="voiceModeSelector">
+                    <label>
+                        <input type="radio" name="voiceMode" value="stt_only" checked>
+                        STT
+                    </label>
+                    <label>
+                        <input type="radio" name="voiceMode" value="full">
+                        Full Voice
+                    </label>
+                    <label>
+                        <input type="radio" name="voiceMode" value="tts_only">
+                        TTS
+                    </label>
+                </div>
+                <button class="voice-btn voice-btn-record" id="voiceStartBtn" type="button">Start Voice</button>
+                <button class="voice-btn voice-btn-stop" id="voiceStopBtn" type="button" disabled>Stop</button>
+            </div>
+            <div class="voice-transcript-container" id="voiceTranscript" style="display: none;"></div>
+
             <div class="input-area">
                 <div class="input-wrapper">
-                    <textarea 
-                        id="messageInput" 
-                        placeholder="Type your response here..."
-                        rows="2"
-                        disabled
-                    ></textarea>
+                    <textarea id="messageInput" placeholder="Type your response here..." rows="2" disabled></textarea>
                 </div>
                 <button class="send-button" id="sendButton" onclick="sendMessage()" disabled>Send</button>
             </div>
         </div>
 
-        <button class="finish-button" id="downloadBtn" onclick="downloadConversation()" style="display: none; background: #1e40af; margin-bottom: 10px;"><i class="fas fa-download"></i> Download Transcript</button>
-        <button class="finish-button" id="finishButton" onclick="finishConversation()" style="display: none;">Finish & View Analysis</button>
+        <button class="finish-button" id="downloadBtn" onclick="downloadConversation()"
+            style="display: none; background: #1e40af; margin-bottom: 10px;"><i class="fas fa-download"></i> Download
+            Transcript</button>
+        <button class="finish-button" id="finishButton" onclick="finishConversation()" style="display: none;">Finish &
+            View Analysis</button>
 
         <div class="footer">
             <button onclick="goBack()">Previous</button>
@@ -332,29 +354,39 @@
         </div>
     </div>
 
+    <script src="/static/js/voice-client.js"></script>
     <script>
         const messageInput = document.getElementById('messageInput');
         const messagesContainer = document.getElementById('messages');
         const sendButton = document.getElementById('sendButton');
         const finishButton = document.getElementById('finishButton');
         const chatTitle = document.getElementById('chatTitle');
-        
+        const voiceControls = document.getElementById('voiceControls');
+        const voiceStatus = document.getElementById('voiceStatus');
+        const voiceStartBtn = document.getElementById('voiceStartBtn');
+        const voiceStopBtn = document.getElementById('voiceStopBtn');
+        const voiceTranscript = document.getElementById('voiceTranscript');
+        const voiceModeSelector = document.getElementById('voiceModeSelector');
+
         let currentPersona = null;
         let currentConversationId = null;
+        let currentAttemptId = null;
         let messageCount = 0;
         let conversationHistory = [];  // Store all messages for persistence and download
+        let voiceClient = null;
+        let voiceEnabled = false;
 
         // Store persona loading logic to run after auth is complete
         let pendingPersonaLoad = null;
-        
+
         // Auto-load persona from URL or restore from sessionStorage
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             // Check URL for persona parameter first
             const urlParams = new URLSearchParams(window.location.search);
             const personaId = urlParams.get('persona');
 
             // Store the loading logic to run after auth
-            pendingPersonaLoad = async function() {
+            pendingPersonaLoad = async function () {
                 // Try to restore existing conversation from sessionStorage
                 const savedConversation = sessionStorage.getItem('currentConversation');
 
@@ -386,57 +418,60 @@
                 }
             };
         });
-        
+
         // Restore a conversation from saved data
         async function restoreConversation(data) {
             currentConversationId = data.conversationId;
+            currentAttemptId = data.attemptId || null;
             currentPersona = {
                 id: data.personaId,
                 name: data.personaName
             };
             conversationHistory = data.messages || [];
-            
+
             // Update title
             chatTitle.textContent = `Chat with ${data.personaName}`;
-            
+
             // Clear existing messages
             messagesContainer.innerHTML = '';
-            
+
             // Restore all messages to the UI
             conversationHistory.forEach(msg => {
                 const messageDiv = document.createElement('div');
                 messageDiv.className = `message ${msg.role === 'user' ? 'you' : 'persona'}`;
-                
+
                 const header = document.createElement('div');
                 header.className = 'message-header';
                 header.textContent = msg.role === 'user' ? 'You' : data.personaName;
-                
+
                 const content = document.createElement('div');
                 content.className = 'message-content';
                 content.textContent = msg.content;
-                
+
                 messageDiv.appendChild(header);
                 messageDiv.appendChild(content);
                 messagesContainer.appendChild(messageDiv);
             });
-            
+
             // Calculate message count (each pair of user+persona = 1 exchange)
             messageCount = Math.floor(conversationHistory.length / 2);
-            
+
             // Enable input
             messageInput.disabled = false;
             sendButton.disabled = false;
             messageInput.placeholder = 'Continue the conversation...';
-            
+
+            await hydrateVoiceConfig();
+
             // Show finish/download buttons if we have enough messages
             if (messageCount >= 3) {
                 finishButton.style.display = 'block';
                 document.getElementById('downloadBtn').style.display = 'block';
             }
-            
+
             // Scroll to bottom
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
-            
+
             // Focus input
             messageInput.focus();
         }
@@ -449,31 +484,32 @@
                 // Clear any previous conversation from sessionStorage when starting new
                 sessionStorage.removeItem('currentConversation');
                 console.log('🧹 Cleared previous conversation data');
-                
+
                 // Reset conversation history
                 conversationHistory = [];
                 messagesContainer.innerHTML = '';
-                
+
                 // Start new conversation with API (STAGED SYSTEM)
-                const response = await window.authenticatedFetch('/api/scenarios/{id}/start', {
+                const response = await window.authenticatedFetch(`/api/scenarios/${personaId}/start`, {
                     method: 'POST',
-                    body: JSON.stringify({ persona_id: personaId })
+                    body: JSON.stringify({ feedback_frequency: 'key_moments' })
                 });
 
                 const data = await response.json();
-                
+
                 // Use conversation_id (UUID) as the identifier for all operations
-                currentConversationId = data.conversation_id;
+                currentAttemptId = data.attempt_id;
+                currentConversationId = data.attempt_id;
                 currentPersona = { id: personaId, name: data.persona_name };
-                
+
                 console.log(`✅ Started conversation: conv_id=${data.conversation_id}`);
 
                 // Update title
                 chatTitle.textContent = `Chat with ${data.persona_name}`;
 
                 // Add the random initial greeting from the persona
-                if (data.initial_greeting) {
-                    addMessage('persona', data.initial_greeting);
+                if (data.initial_message) {
+                    addMessage('persona', data.initial_message);
                     messageCount = 1; // One greeting message
                 } else {
                     // Fallback if no greeting provided
@@ -494,6 +530,8 @@
 
                 // Focus input
                 messageInput.focus();
+
+                await hydrateVoiceConfig();
 
             } catch (error) {
                 console.error('Failed to start conversation:', error);
@@ -517,21 +555,17 @@
 
             try {
                 // Send message to API using STAGED SYSTEM structure
-                const response = await window.authenticatedFetch('/api/scenarios/attempts/{id}/turn', {
+                const response = await window.authenticatedFetch(`/api/scenarios/attempts/${currentConversationId}/turn`, {
                     method: 'POST',
                     body: JSON.stringify({
-                        session_id: currentConversationId,  // Staged system uses session_id
-                        persona_id: currentPersona.id,  // Required for staged system
-                        message: text,
-                        conversation_history: conversationHistory,  // Provide full context
-                        persona_llm: 'gpt-4o-mini'  // Stage 2 response model
+                        message: text
                     })
                 });
 
                 const data = await response.json();
 
                 // Add persona response
-                addMessage('persona', data.response);
+                addMessage('persona', data.persona_message);
 
                 // Increment message count
                 messageCount++;
@@ -558,15 +592,15 @@
         function addMessage(type, text) {
             const messageDiv = document.createElement('div');
             messageDiv.className = `message ${type}`;
-            
+
             const header = document.createElement('div');
             header.className = 'message-header';
             header.textContent = type === 'you' ? 'You' : (currentPersona ? currentPersona.name : 'Persona');
-            
+
             const content = document.createElement('div');
             content.className = 'message-content';
             content.textContent = text;
-            
+
             messageDiv.appendChild(header);
             messageDiv.appendChild(content);
             messagesContainer.appendChild(messageDiv);
@@ -582,6 +616,7 @@
             if (currentConversationId) {
                 sessionStorage.setItem('currentConversation', JSON.stringify({
                     conversationId: currentConversationId,
+                    attemptId: currentAttemptId,
                     personaName: currentPersona?.name,
                     personaId: currentPersona?.id,
                     messages: conversationHistory
@@ -607,6 +642,7 @@
             // This allows user to click back button and continue conversation
             sessionStorage.setItem('currentConversation', JSON.stringify({
                 conversationId: currentConversationId,
+                attemptId: currentAttemptId,
                 personaName: currentPersona?.name,
                 personaId: currentPersona?.id,
                 messages: conversationHistory
@@ -615,8 +651,75 @@
             console.log('💾 Saved conversation to sessionStorage before finishing');
 
             // Auto-navigate to analysis page
-            window.location.href = `/analysis?conversation_id=${currentConversationId}`;
+            window.location.href = `/analysis?attempt_id=${currentConversationId}`;
         }
+
+        async function hydrateVoiceConfig() {
+            try {
+                const response = await window.authenticatedFetch('/api/voice/config');
+                if (!response.ok) {
+                    voiceControls.style.display = 'none';
+                    voiceTranscript.style.display = 'none';
+                    return;
+                }
+                const config = await response.json();
+                voiceEnabled = !!config.enabled;
+                if (!voiceEnabled) {
+                    voiceControls.style.display = 'none';
+                    voiceTranscript.style.display = 'none';
+                    return;
+                }
+                voiceControls.style.display = 'flex';
+                voiceTranscript.style.display = 'block';
+                const defaultModeInput = voiceModeSelector.querySelector(`input[value="${config.default_mode}"]`);
+                if (defaultModeInput) {
+                    defaultModeInput.checked = true;
+                }
+                if (!voiceClient) {
+                    voiceClient = new VoiceClient({
+                        apiBaseUrl: '/api/voice',
+                        transcriptContainer: '#voiceTranscript',
+                        statusIndicator: '#voiceStatus',
+                        onSpeechFinal: async (text) => {
+                            if (!text || !currentConversationId) return;
+                            await sendVoiceText(text);
+                        }
+                    });
+                }
+            } catch (error) {
+                console.error('Failed to load voice config:', error);
+                voiceControls.style.display = 'none';
+                voiceTranscript.style.display = 'none';
+            }
+        }
+
+        async function sendVoiceText(text) {
+            messageInput.value = text;
+            await sendMessage();
+        }
+
+        voiceStartBtn?.addEventListener('click', async () => {
+            if (!voiceClient || !currentConversationId) return;
+            const selectedMode = voiceModeSelector.querySelector('input[name="voiceMode"]:checked')?.value || 'stt_only';
+            try {
+                voiceStartBtn.disabled = true;
+                await voiceClient.createSession(currentConversationId, selectedMode);
+                await voiceClient.connect();
+                await voiceClient.startRecording();
+                voiceStopBtn.disabled = false;
+            } catch (error) {
+                console.error('Failed to start voice:', error);
+                voiceStartBtn.disabled = false;
+                voiceStopBtn.disabled = true;
+            }
+        });
+
+        voiceStopBtn?.addEventListener('click', async () => {
+            if (!voiceClient) return;
+            voiceStopBtn.disabled = true;
+            await voiceClient.endSession();
+            voiceStartBtn.disabled = false;
+        });
 
         function downloadConversation() {
             if (!conversationHistory || conversationHistory.length === 0) {
@@ -658,27 +761,27 @@ Conversation ID: ${currentConversationId}
 
         function goNext() {
             if (currentConversationId) {
-                window.location.href = `/analysis?conversation_id=${currentConversationId}`;
+                window.location.href = `/analysis?attempt_id=${currentConversationId}`;
             }
         }
     </script>
-    
+
     <!-- Supabase SDK -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Auth utilities -->
     <script src="/static/js/supabaseClient.js"></script>
     <script src="/static/js/authGuard.js"></script>
     <script src="/static/js/navigation.js"></script>
-    
+
     <script>
         // Initialize auth - BLOCKS until verified
-        (async function() {
+        (async function () {
             try {
                 await initializeSupabase();
                 await requireAuth();
                 console.log('✅ Chat page protected by auth');
                 window.authCheckComplete();
-                
+
                 // Now that auth is complete, execute pending persona load
                 if (pendingPersonaLoad) {
                     await pendingPersonaLoad();
@@ -690,4 +793,5 @@ Conversation ID: ${currentConversationId}
         })();
     </script>
 </body>
+
 </html>
