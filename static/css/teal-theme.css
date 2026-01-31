@@ -1,34 +1,49 @@
-/* teal-theme.css - Global Design System for VHL Persona AI Training */
+/* teal-theme.css - MAPS Design System for VHL Persona AI Training */
 
 /* ==================== COLOR VARIABLES ==================== */
 :root {
-    /* Primary Teal Palette */
-    --primary-teal: #008080;      /* RGB(0,128,128) - Primary actions, headers */
-    --light-teal: #b2d8d8;        /* RGB(178,216,216) - Backgrounds, accents */
-    --medium-teal: #66b2b2;       /* RGB(102,178,178) - Hover states */
-    --dark-teal: #006666;         /* RGB(0,102,102) - Text, borders */
-    --darkest-teal: #004c4c;      /* RGB(0,76,76) - Strong emphasis */
-    
+    /* MAPS Color Palette */
+    --maps-blue-primary: #1E3A8A;      /* Deep Royal Blue - Primary actions, headers */
+    --maps-blue-dark: #1e40af;         /* Darker blue for hover states */
+    --maps-blue-darker: #172554;       /* Deepest blue - Strong emphasis */
+    --maps-pink-accent: #EC4899;       /* Magenta/Pink - Accents, highlights */
+    --maps-pink-hover: #DB2777;        /* Darker pink for hover */
+    --maps-purple-start: #7C3AED;      /* Purple for gradient start */
+    --maps-bg-white: #FFFFFF;          /* White backgrounds */
+    --maps-bg-subtle: #F8FAFC;         /* Very light gray-blue backgrounds */
+    --maps-text-primary: #1E293B;      /* Dark text */
+    --maps-text-secondary: #475569;    /* Medium text */
+
+    /* Legacy aliases for compatibility */
+    --primary-teal: var(--maps-blue-primary);
+    --light-teal: var(--maps-bg-subtle);
+    --medium-teal: #cbd5e1;            /* Light slate for hover */
+    --dark-teal: var(--maps-text-secondary);
+    --darkest-teal: var(--maps-text-primary);
+
     /* Neutrals */
     --white: #ffffff;
-    --off-white: #f0f8f8;
-    --light-gray: #e0e0e0;
-    --medium-gray: #999999;
-    --dark-gray: #333333;
+    --off-white: var(--maps-bg-subtle);
+    --light-gray: #e2e8f0;
+    --medium-gray: var(--maps-text-secondary);
+    --dark-gray: var(--maps-text-primary);
     --black: #000000;
-    
-    /* Shadows */
-    --soft-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    --card-shadow: 0 10px 30px rgba(0, 128, 128, 0.15);
-    --deep-shadow: 0 15px 40px rgba(0, 128, 128, 0.2);
-    
+
+    /* MAPS Gradient */
+    --maps-gradient: linear-gradient(135deg, #7C3AED 0%, #1E3A8A 100%);
+
+    /* Shadows - adjusted for MAPS colors */
+    --soft-shadow: 0 4px 6px rgba(30, 58, 138, 0.1);
+    --card-shadow: 0 10px 30px rgba(30, 58, 138, 0.15);
+    --deep-shadow: 0 15px 40px rgba(30, 58, 138, 0.2);
+
     /* Spacing */
     --spacing-xs: 8px;
     --spacing-sm: 12px;
     --spacing-md: 20px;
     --spacing-lg: 32px;
     --spacing-xl: 48px;
-    
+
     /* Border Radius */
     --radius-sm: 8px;
     --radius-md: 12px;
@@ -40,21 +55,21 @@
 body.teal-theme {
     background: linear-gradient(
         135deg,
-        var(--light-teal) 0%,
-        rgba(178, 216, 216, 0.3) 50%,
-        var(--white) 100%
+        var(--maps-bg-subtle) 0%,
+        rgba(248, 250, 252, 0.5) 50%,
+        var(--maps-bg-white) 100%
     );
     min-height: 100vh;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
                  'Helvetica Neue', Arial, sans-serif;
-    color: var(--dark-gray);
+    color: var(--maps-text-primary);
     line-height: 1.6;
     padding: var(--spacing-md);
 }
 
 /* ==================== CARDS ==================== */
 .teal-card {
-    background: var(--white);
+    background: var(--maps-bg-white);
     border-radius: var(--radius-lg);
     padding: var(--spacing-lg);
     box-shadow: var(--card-shadow);
@@ -68,7 +83,7 @@ body.teal-theme {
 }
 
 .teal-card h1, .teal-card h2, .teal-card h3 {
-    color: var(--primary-teal);
+    color: var(--maps-blue-primary);
     margin-bottom: var(--spacing-md);
 }
 
@@ -88,8 +103,8 @@ body.teal-theme {
 .teal-input:focus,
 .teal-textarea:focus {
     outline: none;
-    border-color: var(--primary-teal);
-    box-shadow: 0 0 0 3px rgba(0, 128, 128, 0.1);
+    border-color: var(--maps-blue-primary);
+    box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.1);
 }
 
 .teal-input::placeholder,
@@ -104,7 +119,7 @@ textarea.teal-input {
 
 /* ==================== BUTTONS ==================== */
 .btn-teal-primary {
-    background: var(--primary-teal);
+    background: var(--maps-blue-primary);
     color: var(--white);
     border: none;
     border-radius: 25px;
@@ -120,9 +135,9 @@ textarea.teal-input {
 }
 
 .btn-teal-primary:hover:not(:disabled) {
-    background: var(--dark-teal);
+    background: var(--maps-blue-dark);
     transform: translateY(-2px);
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 6px 12px rgba(30, 58, 138, 0.25);
 }
 
 .btn-teal-primary:active {
@@ -136,9 +151,9 @@ textarea.teal-input {
 }
 
 .btn-teal-secondary {
-    background: var(--white);
-    color: var(--primary-teal);
-    border: 2px solid var(--primary-teal);
+    background: var(--maps-bg-white);
+    color: var(--maps-blue-primary);
+    border: 2px solid var(--maps-blue-primary);
     border-radius: 25px;
     padding: 10px 24px;
     font-size: 14px;
@@ -148,7 +163,7 @@ textarea.teal-input {
 }
 
 .btn-teal-secondary:hover:not(:disabled) {
-    background: var(--primary-teal);
+    background: var(--maps-blue-primary);
     color: var(--white);
 }
 
@@ -164,14 +179,14 @@ textarea.teal-input {
     justify-content: space-between;
     align-items: center;
     padding: var(--spacing-md);
-    border-top: 2px solid var(--light-teal);
+    border-top: 2px solid var(--maps-bg-subtle);
     margin-top: var(--spacing-xl);
-    background: var(--white);
+    background: var(--maps-bg-white);
 }
 
 .vhl-footer .copyright {
     font-size: 0.85rem;
-    color: var(--dark-teal);
+    color: var(--maps-text-secondary);
     font-weight: 500;
 }
 
@@ -179,21 +194,21 @@ textarea.teal-input {
 h1 {
     font-size: 2.5rem;
     font-weight: 700;
-    color: var(--primary-teal);
+    color: var(--maps-blue-primary);
     margin-bottom: var(--spacing-md);
 }
 
 h2 {
     font-size: 2rem;
     font-weight: 600;
-    color: var(--dark-teal);
+    color: var(--maps-text-secondary);
     margin-bottom: var(--spacing-md);
 }
 
 h3 {
     font-size: 1.5rem;
     font-weight: 600;
-    color: var(--dark-teal);
+    color: var(--maps-text-secondary);
     margin-bottom: var(--spacing-sm);
 }
 
@@ -225,15 +240,15 @@ h3 {
     body.teal-theme {
         padding: var(--spacing-sm);
     }
-    
+
     .teal-card {
         padding: var(--spacing-md);
     }
-    
+
     h1 {
         font-size: 2rem;
     }
-    
+
     .vhl-footer {
         flex-direction: column;
         gap: var(--spacing-sm);
@@ -246,16 +261,16 @@ h3 {
 .teal-textarea:focus-visible,
 .btn-teal-primary:focus-visible,
 .btn-teal-secondary:focus-visible {
-    outline: 3px solid var(--primary-teal);
+    outline: 3px solid var(--maps-blue-primary);
     outline-offset: 2px;
 }
 
 /* High contrast mode support */
 @media (prefers-contrast: high) {
     .teal-card {
-        border: 2px solid var(--dark-teal);
+        border: 2px solid var(--maps-text-primary);
     }
-    
+
     .btn-teal-primary {
         border: 2px solid var(--black);
     }
@@ -307,7 +322,7 @@ h3 {
     display: block;
     font-size: 3rem;
     font-weight: bold;
-    color: var(--primary-teal);
+    color: var(--maps-blue-primary);
     margin-bottom: var(--spacing-md);
 }
 
@@ -315,7 +330,7 @@ h3 {
     width: 100%;
     height: 8px;
     border-radius: 4px;
-    background: var(--light-teal);
+    background: var(--maps-bg-subtle);
     outline: none;
     -webkit-appearance: none;
 }
@@ -326,7 +341,7 @@ h3 {
     width: 24px;
     height: 24px;
     border-radius: 50%;
-    background: var(--primary-teal);
+    background: var(--maps-pink-accent);
     cursor: pointer;
     box-shadow: var(--soft-shadow);
 }
@@ -335,7 +350,7 @@ h3 {
     width: 24px;
     height: 24px;
     border-radius: 50%;
-    background: var(--primary-teal);
+    background: var(--maps-pink-accent);
     cursor: pointer;
     border: none;
     box-shadow: var(--soft-shadow);
@@ -352,7 +367,7 @@ h3 {
 .question-label {
     display: block;
     font-weight: 600;
-    color: var(--dark-teal);
+    color: var(--maps-text-secondary);
     margin-bottom: var(--spacing-sm);
 }
 
@@ -369,7 +384,7 @@ h3 {
 .question-card label {
     display: block;
     font-weight: 600;
-    color: var(--dark-teal);
+    color: var(--maps-text-secondary);
     margin-bottom: var(--spacing-sm);
     font-size: 1.1rem;
 }
@@ -384,10 +399,10 @@ h3 {
 }
 
 .summary-content {
-    background: var(--off-white);
+    background: var(--maps-bg-subtle);
     padding: var(--spacing-md);
     border-radius: var(--radius-sm);
-    border-left: 4px solid var(--primary-teal);
+    border-left: 4px solid var(--maps-pink-accent);
     line-height: 1.8;
     white-space: pre-wrap;
 }
@@ -401,7 +416,7 @@ h3 {
 
 .success-icon {
     font-size: 80px;
-    color: var(--primary-teal);
+    color: var(--maps-blue-primary);
     margin-bottom: 30px;
     animation: scaleIn 0.5s ease;
 }
@@ -414,6 +429,6 @@ h3 {
 .thankyou-message {
     font-size: 1.3rem;
     line-height: 1.8;
-    color: var(--dark-teal);
+    color: var(--maps-text-secondary);
     margin-bottom: 40px;
 }

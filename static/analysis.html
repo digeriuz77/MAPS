@@ -16,24 +16,32 @@
     <link rel="stylesheet" href="/static/css/teal-theme.css">
     
     <style>
-        /* Teal Theme Colors */
+        /* MAPS Theme Colors */
         :root {
-            --primary-teal: #008080;
-            --light-teal: #b2d8d8;
-            --medium-teal: #66b2b2;
-            --dark-teal: #006666;
-            --darkest-teal: #004c4c;
-            --light-mist: #e6f2f2;
+            --maps-blue-primary: #1E3A8A;
+            --maps-blue-dark: #1e40af;
+            --maps-pink-accent: #EC4899;
+            --maps-purple-start: #7C3AED;
+            --maps-bg-subtle: #F8FAFC;
+            --maps-text-primary: #1E293B;
+            --maps-text-secondary: #475569;
+            /* Legacy aliases for compatibility */
+            --primary-teal: #1E3A8A;
+            --light-teal: #F8FAFC;
+            --medium-teal: #cbd5e1;
+            --dark-teal: #475569;
+            --darkest-teal: #1E293B;
+            --light-mist: #F8FAFC;
         }
-        
+
         .nav-bar {
             position: fixed;
             top: 0;
             left: 0;
             right: 0;
-            background: var(--primary-teal);
+            background: linear-gradient(135deg, #7C3AED 0%, #1E3A8A 100%);
             padding: 15px 30px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 8px rgba(30, 58, 138, 0.2);
             z-index: 1000;
             display: flex;
             justify-content: center;
@@ -56,7 +64,7 @@
         }
         
         body {
-            background: linear-gradient(135deg, var(--light-mist) 0%, rgba(0, 128, 128, 0.08) 50%, rgba(178, 216, 216, 0.08) 100%);
+            background: linear-gradient(135deg, var(--light-mist) 0%, rgba(30, 58, 138, 0.05) 50%, rgba(124, 58, 237, 0.05) 100%);
             min-height: 100vh;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             padding-top: 70px; /* Space for fixed nav */
@@ -76,7 +84,7 @@
         .nav-orb {
             width: 40px;
             height: 40px;
-            background: radial-gradient(circle at 30% 30%, var(--light-teal), var(--primary-teal));
+            background: linear-gradient(135deg, #7C3AED 0%, #1E3A8A 100%);
             border-radius: 50%;
             display: inline-block;
             margin-right: 0.5rem;
@@ -114,32 +122,32 @@
             padding: 0.5rem;
             margin-bottom: 0.5rem;
             border-radius: 8px;
-            border-left: 4px solid var(--primary-teal);
+            border-left: 4px solid var(--maps-pink-accent);
         }
-        
+
         .speaker-name {
             font-weight: bold;
-            color: var(--primary-teal);
+            color: var(--maps-blue-primary);
         }
-        
+
         .verification-controls {
-            background: rgba(0, 128, 128, 0.05);
+            background: rgba(30, 58, 138, 0.05);
             border-radius: 15px;
             padding: 1.5rem;
         }
-        
+
         .upload-area {
-            border: 2px dashed var(--primary-teal);
+            border: 2px dashed var(--maps-blue-primary);
             border-radius: 15px;
             padding: 3rem;
             text-align: center;
-            background: rgba(0, 128, 128, 0.05);
+            background: rgba(30, 58, 138, 0.02);
             transition: all 0.3s ease;
         }
-        
+
         .upload-area:hover {
-            background: rgba(0, 128, 128, 0.1);
-            border-color: var(--light-teal);
+            background: rgba(236, 72, 153, 0.08);
+            border-color: var(--maps-pink-accent);
         }
         
         /* Progress Section */
@@ -161,7 +169,7 @@
         .stage-icon {
             width: 50px;
             height: 50px;
-            background: var(--primary-teal);
+            background: linear-gradient(135deg, #7C3AED 0%, #1E3A8A 100%);
             border-radius: 50%;
             display: flex;
             align-items: center;
@@ -188,7 +196,7 @@
         .metric-value {
             font-size: 2.5rem;
             font-weight: bold;
-            color: var(--primary-teal);
+            color: var(--maps-blue-primary);
             margin: 0.5rem 0;
         }
         

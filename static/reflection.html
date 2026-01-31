@@ -22,9 +22,9 @@
             top: 0;
             left: 0;
             right: 0;
-            background: var(--primary-teal);
+            background: linear-gradient(135deg, #7C3AED 0%, #1E3A8A 100%);
             padding: 15px 30px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 8px rgba(30, 58, 138, 0.2);
             z-index: 1000;
             display: flex;
             justify-content: center;
@@ -87,7 +87,7 @@
         
         <!-- Summary Section (Hidden Initially) -->
         <div id="summarySection" class="teal-card" style="display:none; margin-top: 30px;">
-            <h3 style="color: var(--primary-teal); margin-bottom: 20px;">
+            <h3 style="color: #1E3A8A; margin-bottom: 20px;">
                 <i class="fas fa-star"></i> Your Reflection Summary
             </h3>
             <div id="summaryText" class="summary-content"></div>
@@ -95,7 +95,7 @@
         
         <!-- Download and Email Options (Shown After Summary) -->
         <div id="actionsSection" class="teal-card" style="display:none; margin-top: 20px;">
-            <h4 style="color: var(--primary-teal); margin-bottom: 15px;">
+            <h4 style="color: #1E3A8A; margin-bottom: 15px;">
                 <i class="fas fa-share-alt"></i> Save Your Reflection
             </h4>
             
@@ -113,7 +113,7 @@
             
             <!-- App Feedback Button -->
             <div style="margin-top: 30px; text-align: center; border-top: 1px solid #e0e0e0; padding-top: 20px;">
-                <h5 style="color: var(--primary-teal); margin-bottom: 15px;">
+                <h5 style="color: #1E3A8A; margin-bottom: 15px;">
                     <i class="fas fa-star"></i> Help Us Improve
                 </h5>
                 <p style="margin-bottom: 15px; color: #666;">How was your experience using this practice platform?</p>
@@ -133,7 +133,7 @@
     <!-- Loading Indicator -->
     <div id="loadingOverlay" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center;">
         <div style="background:white; padding:30px; border-radius:12px; text-align:center;">
-            <i class="fas fa-spinner fa-spin fa-3x" style="color: var(--primary-teal); margin-bottom:15px;"></i>
+            <i class="fas fa-spinner fa-spin fa-3x" style="color: #1E3A8A; margin-bottom:15px;"></i>
             <p style="margin:0; font-weight:600;">Generating your summary...</p>
         </div>
     </div>

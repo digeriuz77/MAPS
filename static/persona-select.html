@@ -17,7 +17,7 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #b2d8d8 0%, #66b2b2 100%);
+            background: linear-gradient(135deg, #F8FAFC 0%, #e2e8f0 100%);
             min-height: 100vh;
             display: flex;
             flex-direction: column;
@@ -30,9 +30,9 @@
             top: 0;
             left: 0;
             right: 0;
-            background: #008080;
+            background: linear-gradient(135deg, #7C3AED 0%, #1E3A8A 100%);
             padding: 15px 30px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 8px rgba(30, 58, 138, 0.2);
             z-index: 1000;
             display: flex;
             justify-content: center;
@@ -65,7 +65,7 @@
         }
 
         h1 {
-            color: #004c4c;
+            color: #1E3A8A;
             text-align: center;
             margin-bottom: 40px;
             font-size: 2em;
@@ -73,7 +73,7 @@
         }
 
         .subtitle {
-            color: #006666;
+            color: #475569;
             text-align: center;
             margin-bottom: 30px;
             font-size: 1.1em;
@@ -90,7 +90,7 @@
             background: white;
             border-radius: 16px;
             padding: 30px;
-            box-shadow: 0 8px 20px rgba(0, 76, 76, 0.15);
+            box-shadow: 0 8px 20px rgba(30, 58, 138, 0.15);
             cursor: pointer;
             transition: all 0.3s ease;
             border: 3px solid transparent;
@@ -98,24 +98,24 @@
 
         .persona-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 12px 30px rgba(0, 76, 76, 0.25);
-            border-color: #008080;
+            box-shadow: 0 12px 30px rgba(30, 58, 138, 0.25);
+            border-color: #EC4899;
         }
 
         .persona-card.selected {
-            border-color: #008080;
-            background: linear-gradient(135deg, #ffffff 0%, #e6f5f5 100%);
+            border-color: #EC4899;
+            background: linear-gradient(135deg, #ffffff 0%, #fce7f3 100%);
         }
 
         .persona-name {
-            color: #004c4c;
+            color: #1E3A8A;
             font-size: 1.8em;
             font-weight: 700;
             margin-bottom: 15px;
         }
 
         .persona-description {
-            color: #006666;
+            color: #475569;
             font-size: 1em;
             line-height: 1.6;
         }
@@ -129,7 +129,7 @@
         }
 
         .footer button {
-            background: #008080;
+            background: #1E3A8A;
             color: white;
             border: none;
             padding: 12px 30px;
@@ -137,29 +137,29 @@
             font-size: 1em;
             cursor: pointer;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 12px rgba(0, 128, 128, 0.3);
+            box-shadow: 0 4px 12px rgba(30, 58, 138, 0.3);
         }
 
         .footer button:hover:not(:disabled) {
-            background: #006666;
+            background: #1e40af;
             transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(0, 128, 128, 0.4);
+            box-shadow: 0 6px 16px rgba(30, 58, 138, 0.4);
         }
 
         .footer button:disabled {
-            background: #66b2b2;
+            background: #cbd5e1;
             cursor: not-allowed;
             opacity: 0.6;
         }
 
         .copyright {
-            color: #004c4c;
+            color: #1E293B;
             font-size: 0.85em;
         }
 
         .loading {
             text-align: center;
-            color: #004c4c;
+            color: #1E3A8A;
             font-size: 1.2em;
             padding: 40px;
         }
@@ -208,7 +208,7 @@
         <div class="footer">
             <button onclick="goBack()">Previous</button>
             <span class="copyright">©VHL 2025</span>
-            <span style="opacity: 0.6; color: #004c4c;">Click a persona to begin</span>
+            <span style="opacity: 0.6; color: #475569;">Click a persona to begin</span>
         </div>
     </div>
 
@@ -216,19 +216,19 @@
     <div class="modal fade" id="personaInfoModal" tabindex="-1" style="display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5);">
         <div class="modal-dialog" style="position: relative; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; border-radius: 16px; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto;">
             <div class="modal-content" style="padding: 0;">
-                <div class="modal-header" style="padding: 20px 30px; border-bottom: 1px solid #e6f5f5; display: flex; justify-content: between; align-items: center;">
-                    <h5 class="modal-title" style="margin: 0; color: #004c4c; font-size: 1.4em;">
+                <div class="modal-header" style="padding: 20px 30px; border-bottom: 1px solid #F8FAFC; display: flex; justify-content: between; align-items: center;">
+                    <h5 class="modal-title" style="margin: 0; color: #1E3A8A; font-size: 1.4em;">
                         <i class="fas fa-user-circle"></i> <span id="modalPersonaName">Persona Information</span>
                     </h5>
-                    <button type="button" class="btn-close" onclick="closePersonaModal()" style="background: none; border: none; font-size: 1.5em; cursor: pointer; color: #666; margin-left: auto;">&times;</button>
+                    <button type="button" class="btn-close" onclick="closePersonaModal()" style="background: none; border: none; font-size: 1.5em; cursor: pointer; color: #94a3b8; margin-left: auto;">&times;</button>
                 </div>
                 <div class="modal-body" style="padding: 30px;">
                     <div id="modalPersonaContent">
                         <!-- Persona information will be loaded here -->
                     </div>
                 </div>
-                <div class="modal-footer" style="padding: 20px 30px; border-top: 1px solid #e6f5f5; display: flex; gap: 10px; justify-content: flex-end;">
-                    <button type="button" class="btn btn-secondary" onclick="closePersonaModal()" style="background: #008080; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer;">Close</button>
+                <div class="modal-footer" style="padding: 20px 30px; border-top: 1px solid #F8FAFC; display: flex; gap: 10px; justify-content: flex-end;">
+                    <button type="button" class="btn btn-secondary" onclick="closePersonaModal()" style="background: #1E3A8A; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer;">Close</button>
                 </div>
             </div>
         </div>
@@ -260,7 +260,7 @@
                         <div class="persona-name">${persona.name}</div>
                         <div class="persona-description">${persona.description}</div>
                         <div style="display: flex; justify-content: flex-end; margin-top: 15px;">
-                            <button class="persona-info-btn" onclick="showPersonaInfo('${persona.id}', event)" style="background: #008080; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 0.9em; transition: all 0.2s;">
+                            <button class="persona-info-btn" onclick="showPersonaInfo('${persona.id}', event)" style="background: linear-gradient(135deg, #7C3AED 0%, #1E3A8A 100%); color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 0.9em; transition: all 0.2s;">
                                 <i class="fas fa-info-circle"></i> Find out more
                             </button>
                         </div>
@@ -351,8 +351,8 @@
             document.getElementById('modalPersonaName').textContent = info.title;
             document.getElementById('modalPersonaContent').innerHTML = `
                 <div class="persona-info-content">
-                    <h6 style="color: #008080; margin-bottom: 15px;">${info.subtitle}</h6>
-                    <div style="line-height: 1.6; color: #004c4c;">${info.content}</div>
+                    <h6 style="color: #EC4899; margin-bottom: 15px;">${info.subtitle}</h6>
+                    <div style="line-height: 1.6; color: #1E293B;">${info.content}</div>
                 </div>
             `;
             

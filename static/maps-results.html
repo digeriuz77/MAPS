@@ -21,9 +21,9 @@
             top: 0;
             left: 0;
             right: 0;
-            background: var(--primary-teal);
+            background: linear-gradient(135deg, #7C3AED 0%, #1E3A8A 100%);
             padding: 15px 30px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 8px rgba(30, 58, 138, 0.2);
             z-index: 1000;
             display: flex;
             justify-content: center;
@@ -53,7 +53,7 @@
         
         .page-title {
             text-align: center;
-            color: var(--primary-teal);
+            color: #1E3A8A;
             margin-bottom: 2rem;
         }
         
@@ -67,20 +67,20 @@
         .tab-button {
             padding: 12px 24px;
             background: white;
-            border: 2px solid var(--primary-teal);
+            border: 2px solid #1E3A8A;
             border-radius: 25px;
-            color: var(--primary-teal);
+            color: #1E3A8A;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s;
         }
-        
+
         .tab-button:hover {
-            background: var(--light-teal);
+            background: #F8FAFC;
         }
-        
+
         .tab-button.active {
-            background: var(--primary-teal);
+            background: linear-gradient(135deg, #7C3AED 0%, #1E3A8A 100%);
             color: white;
         }
         
@@ -107,34 +107,34 @@
         }
         
         .card-title {
-            color: var(--primary-teal);
+            color: #1E3A8A;
             font-size: 1.5rem;
             margin-bottom: 1rem;
             padding-bottom: 0.5rem;
-            border-bottom: 2px solid var(--light-teal);
+            border-bottom: 2px solid #F8FAFC;
         }
-        
+
         .condition-item {
             margin-bottom: 1.5rem;
             padding: 1rem;
-            background: var(--light-mist);
+            background: #F8FAFC;
             border-radius: 10px;
         }
-        
+
         .condition-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 0.5rem;
         }
-        
+
         .condition-name {
             font-weight: 600;
-            color: var(--dark-teal);
+            color: #475569;
         }
-        
+
         .score-badge {
-            background: var(--primary-teal);
+            background: #1E3A8A;
             color: white;
             padding: 4px 12px;
             border-radius: 15px;
@@ -170,7 +170,7 @@
         .overall-score {
             text-align: center;
             padding: 2rem;
-            background: linear-gradient(135deg, var(--primary-teal), var(--medium-teal));
+            background: linear-gradient(135deg, #7C3AED 0%, #1E3A8A 100%);
             color: white;
             border-radius: 15px;
             margin-bottom: 2rem;
@@ -190,8 +190,8 @@
         .pattern-item {
             padding: 0.75rem 1rem;
             margin-bottom: 0.5rem;
-            background: var(--light-mist);
-            border-left: 4px solid var(--medium-teal);
+            background: #F8FAFC;
+            border-left: 4px solid #EC4899;
             border-radius: 5px;
         }
         
@@ -244,18 +244,18 @@
         }
         
         .maps-values-box {
-            background: linear-gradient(135deg, #e6f2f2, #d4ebeb);
+            background: linear-gradient(135deg, #ede9fe, #dbeafe);
             padding: 1.5rem;
             border-radius: 10px;
             margin-top: 1.5rem;
-            border: 2px solid var(--medium-teal);
+            border: 2px solid #EC4899;
         }
-        
+
         .maps-value-badge {
             display: inline-block;
             padding: 6px 12px;
             margin: 0.25rem;
-            background: var(--primary-teal);
+            background: linear-gradient(135deg, #7C3AED 0%, #1E3A8A 100%);
             color: white;
             border-radius: 15px;
             font-size: 0.85rem;
@@ -322,13 +322,13 @@
             <div class="assessment-card">
                 <h2 class="card-title"><i class="fas fa-search"></i> Patterns Observed</h2>
                 
-                <h3 style="color: var(--dark-teal); margin-top: 1rem;">Coach Patterns</h3>
+                <h3 style="color: #475569; margin-top: 1rem;">Coach Patterns</h3>
                 <ul class="pattern-list" id="coachPatterns"></ul>
                 
-                <h3 style="color: var(--dark-teal); margin-top: 1.5rem;">Person Patterns</h3>
+                <h3 style="color: #475569; margin-top: 1.5rem;">Person Patterns</h3>
                 <ul class="pattern-list" id="personPatterns"></ul>
                 
-                <div style="margin-top: 1.5rem; padding: 1rem; background: var(--light-mist); border-radius: 8px;">
+                <div style="margin-top: 1.5rem; padding: 1rem; background: #F8FAFC; border-radius: 8px;">
                     <strong>Interaction Dynamics:</strong>
                     <p id="interactionDynamics" style="margin: 0.5rem 0 0 0;"></p>
                 </div>
@@ -354,7 +354,7 @@
             
             <!-- MAPS Alignment -->
             <div class="maps-values-box">
-                <h3 style="color: var(--darkest-teal); margin-bottom: 1rem;">
+                <h3 style="color: #1E293B; margin-bottom: 1rem;">
                     <i class="fas fa-check-circle"></i> MAPS Values Alignment
                 </h3>
                 <div style="margin-bottom: 1rem;">

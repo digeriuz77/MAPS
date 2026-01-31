@@ -16,9 +16,9 @@
             top: 0;
             left: 0;
             right: 0;
-            background: var(--primary-teal);
+            background: linear-gradient(135deg, #7C3AED 0%, #1E3A8A 100%);
             padding: 15px 30px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 8px rgba(30, 58, 138, 0.2);
             z-index: 1000;
             display: flex;
             justify-content: center;
@@ -46,18 +46,18 @@
             background: white;
             border-radius: 16px;
             padding: 50px 40px;
-            box-shadow: 0 8px 20px rgba(0, 76, 76, 0.15);
+            box-shadow: 0 8px 20px rgba(30, 58, 138, 0.15);
             text-align: center;
         }
-        
+
         .lock-icon {
             font-size: 4em;
-            color: var(--medium-teal);
+            color: #EC4899;
             margin-bottom: var(--spacing-lg);
         }
-        
+
         h1 {
-            color: var(--dark-teal);
+            color: #1E3A8A;
             margin-bottom: var(--spacing-md);
             font-size: 2em;
             font-weight: 600;
@@ -85,39 +85,39 @@
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 12px rgba(0, 128, 128, 0.2);
+            box-shadow: 0 4px 12px rgba(30, 58, 138, 0.2);
         }
-        
+
         .btn-primary {
-            background: var(--primary-teal);
+            background: #1E3A8A;
             color: white;
         }
-        
+
         .btn-primary:hover {
-            background: var(--dark-teal);
+            background: #1e40af;
             transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(0, 128, 128, 0.3);
+            box-shadow: 0 6px 16px rgba(30, 58, 138, 0.3);
         }
-        
+
         .btn-secondary {
             background: white;
-            color: var(--primary-teal);
-            border: 2px solid var(--primary-teal);
+            color: #1E3A8A;
+            border: 2px solid #1E3A8A;
         }
-        
+
         .btn-secondary:hover {
-            background: var(--light-teal);
+            background: #F8FAFC;
             transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(0, 128, 128, 0.3);
+            box-shadow: 0 6px 16px rgba(30, 58, 138, 0.3);
         }
-        
+
         .btn-logout {
-            background: var(--medium-teal);
+            background: #cbd5e1;
             color: white;
         }
-        
+
         .btn-logout:hover {
-            background: var(--dark-teal);
+            background: #94a3b8;
             transform: translateY(-2px);
         }
         
@@ -130,35 +130,36 @@
             justify-content: space-between;
             align-items: center;
             padding: 20px 40px;
-            background: linear-gradient(135deg, #b2d8d8 0%, #66b2b2 100%);
+            background: linear-gradient(135deg, #7C3AED 0%, #1E3A8A 100%);
         }
-        
+
         .vhl-footer button {
-            background: var(--primary-teal);
-            color: white;
+            background: white;
+            color: #1E3A8A;
             border: none;
             padding: 12px 30px;
             border-radius: 8px;
             font-size: 1em;
             cursor: pointer;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 12px rgba(0, 128, 128, 0.3);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
-        
+
         .vhl-footer button:disabled {
-            background: var(--medium-teal);
+            background: #cbd5e1;
             cursor: not-allowed;
             opacity: 0.5;
+            color: #64748b;
         }
-        
+
         .vhl-footer button:not(:disabled):hover {
-            background: var(--dark-teal);
+            background: #F8FAFC;
             transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(0, 128, 128, 0.4);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
         }
-        
+
         .copyright {
-            color: var(--dark-teal);
+            color: white;
             font-size: 0.85em;
         }
         

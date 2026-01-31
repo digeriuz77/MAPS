@@ -1,6 +1,6 @@
 /**
- * Voice UI Styles
- * 
+ * Voice UI Styles - MAPS Design System
+ *
  * Styles for voice interaction components including:
  * - Status indicators
  * - Recording controls
@@ -30,58 +30,58 @@
 }
 
 .voice-status-idle {
-    background-color: #f0f0f0;
-    color: #666;
+    background-color: #F8FAFC;
+    color: #475569;
 }
 
 .voice-status-idle::before {
-    background-color: #999;
+    background-color: #94a3b8;
     animation: none;
 }
 
 .voice-status-connecting {
-    background-color: #fff3e0;
-    color: #e65100;
+    background-color: #fef3c7;
+    color: #92400e;
 }
 
 .voice-status-connecting::before {
-    background-color: #ff9800;
+    background-color: #f59e0b;
 }
 
 .voice-status-listening {
-    background-color: #e3f2fd;
-    color: #1565c0;
+    background-color: #ede9fe;
+    color: #5b21b6;
 }
 
 .voice-status-listening::before {
-    background-color: #2196f3;
+    background-color: #7C3AED;
 }
 
 .voice-status-processing {
-    background-color: #f3e5f5;
-    color: #7b1fa2;
+    background-color: #fce7f3;
+    color: #9d174d;
 }
 
 .voice-status-processing::before {
-    background-color: #9c27b0;
+    background-color: #EC4899;
 }
 
 .voice-status-speaking {
-    background-color: #e8f5e9;
-    color: #2e7d32;
+    background-color: #dbeafe;
+    color: #1e40af;
 }
 
 .voice-status-speaking::before {
-    background-color: #4caf50;
+    background-color: #1E3A8A;
 }
 
 .voice-status-error {
-    background-color: #ffebee;
-    color: #c62828;
+    background-color: #fee2e2;
+    color: #991b1b;
 }
 
 .voice-status-error::before {
-    background-color: #f44336;
+    background-color: #dc2626;
     animation: none;
 }
 
@@ -120,7 +120,7 @@
     font-size: 16px;
     font-weight: 500;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.3s ease;
 }
 
 .voice-btn:disabled {
@@ -129,46 +129,47 @@
 }
 
 .voice-btn-record {
-    background-color: #f44336;
+    background: linear-gradient(135deg, #7C3AED 0%, #1E3A8A 100%);
     color: white;
 }
 
 .voice-btn-record:hover:not(:disabled) {
-    background-color: #d32f2f;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(30, 58, 138, 0.25);
 }
 
 .voice-btn-record.recording {
-    background-color: #c62828;
+    background: #dc2626;
     animation: recording-pulse 1s infinite;
 }
 
 .voice-btn-stop {
-    background-color: #607d8b;
+    background-color: #64748b;
     color: white;
 }
 
 .voice-btn-stop:hover:not(:disabled) {
-    background-color: #455a64;
+    background-color: #475569;
 }
 
 .voice-btn-end {
-    background-color: #9e9e9e;
+    background-color: #94a3b8;
     color: white;
 }
 
 .voice-btn-end:hover:not(:disabled) {
-    background-color: #757575;
+    background-color: #64748b;
 }
 
 @keyframes recording-pulse {
 
     0%,
     100% {
-        box-shadow: 0 0 0 0 rgba(244, 67, 54, 0.4);
+        box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.4);
     }
 
     50% {
-        box-shadow: 0 0 0 10px rgba(244, 67, 54, 0);
+        box-shadow: 0 0 0 10px rgba(220, 38, 38, 0);
     }
 }
 
@@ -179,9 +180,9 @@
     max-height: 300px;
     overflow-y: auto;
     padding: 16px;
-    background-color: #fafafa;
+    background-color: #F8FAFC;
     border-radius: 8px;
-    border: 1px solid #e0e0e0;
+    border: 1px solid #e2e8f0;
 }
 
 .transcript-entry {
@@ -193,24 +194,24 @@
 
 .transcript-final {
     background-color: white;
-    border-left: 3px solid #4caf50;
+    border-left: 3px solid #1E3A8A;
 }
 
 .transcript-interim {
-    background-color: #fff8e1;
-    border-left: 3px solid #ffc107;
+    background-color: #fef3c7;
+    border-left: 3px solid #f59e0b;
     font-style: italic;
     opacity: 0.8;
 }
 
 .transcript-user {
-    background-color: #e3f2fd;
-    border-left: 3px solid #2196f3;
+    background-color: #dbeafe;
+    border-left: 3px solid #1E3A8A;
 }
 
 .transcript-agent {
-    background-color: #f3e5f5;
-    border-left: 3px solid #9c27b0;
+    background-color: #fce7f3;
+    border-left: 3px solid #EC4899;
 }
 
 
@@ -221,7 +222,7 @@
     flex-wrap: wrap;
     gap: 16px;
     padding: 16px;
-    background-color: #f5f5f5;
+    background-color: #F8FAFC;
     border-radius: 8px;
 }
 
@@ -233,19 +234,19 @@
     background-color: white;
     border-radius: 8px;
     min-width: 100px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 6px rgba(30, 58, 138, 0.1);
 }
 
 .metric-label {
     font-size: 12px;
-    color: #666;
+    color: #475569;
     margin-bottom: 4px;
 }
 
 .metric-value {
     font-size: 24px;
     font-weight: 600;
-    color: #333;
+    color: #1E293B;
 }
 
 
@@ -262,7 +263,7 @@
 .voice-activity-bar {
     width: 4px;
     height: 20px;
-    background-color: #2196f3;
+    background-color: #EC4899;
     border-radius: 2px;
     animation: voice-activity 0.5s ease infinite;
 }
@@ -312,14 +313,14 @@
     padding: 20px;
     background-color: white;
     border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 10px 30px rgba(30, 58, 138, 0.15);
 }
 
 .speech-analysis-title {
     font-size: 18px;
     font-weight: 600;
     margin-bottom: 16px;
-    color: #333;
+    color: #1E3A8A;
 }
 
 .analysis-scores {
@@ -336,12 +337,12 @@
 .analysis-score-value {
     font-size: 32px;
     font-weight: 700;
-    color: #2196f3;
+    color: #1E3A8A;
 }
 
 .analysis-score-label {
     font-size: 14px;
-    color: #666;
+    color: #475569;
     margin-top: 4px;
 }
 
@@ -352,7 +353,7 @@
 .analysis-insights-title {
     font-size: 14px;
     font-weight: 600;
-    color: #333;
+    color: #1E293B;
     margin-bottom: 8px;
 }
 
@@ -361,8 +362,9 @@
     align-items: flex-start;
     padding: 8px;
     margin-bottom: 4px;
-    background-color: #f5f5f5;
+    background-color: #F8FAFC;
     border-radius: 4px;
+    border-left: 3px solid #7C3AED;
 }
 
 .analysis-insight::before {
@@ -375,8 +377,9 @@
     align-items: flex-start;
     padding: 8px;
     margin-bottom: 4px;
-    background-color: #fff3e0;
+    background-color: #fef3c7;
     border-radius: 4px;
+    border-left: 3px solid #f59e0b;
 }
 
 .analysis-improvement::before {
@@ -391,7 +394,7 @@
     display: flex;
     gap: 8px;
     padding: 8px;
-    background-color: #f0f0f0;
+    background-color: #F8FAFC;
     border-radius: 8px;
 }
 
@@ -403,16 +406,17 @@
     background-color: transparent;
     font-size: 14px;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.3s ease;
 }
 
 .voice-mode-option:hover {
-    background-color: rgba(0, 0, 0, 0.05);
+    background-color: rgba(30, 58, 138, 0.05);
 }
 
 .voice-mode-option.active {
-    background-color: white;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    background: linear-gradient(135deg, #7C3AED 0%, #1E3A8A 100%);
+    color: white;
+    box-shadow: 0 4px 6px rgba(30, 58, 138, 0.15);
     font-weight: 500;
 }
 
