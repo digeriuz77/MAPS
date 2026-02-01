@@ -27,12 +27,13 @@ This document provides a comprehensive implementation plan for integrating struc
 | Phase | Name | Status | Key Deliverables |
 |-------|------|--------|------------------|
 | 0 | Foundation Assessment | ✅ COMPLETE | Framework alignment, content classification |
-| 1 | Import Script & Module Refactoring | ✅ COMPLETE | 12 MAPS modules + seed scripts |
-| 2 | Service Layer Updates | ⏳ PENDING | `src/services/mi_module_service.py` updates |
-| 3 | API Layer Updates | ⏳ PENDING | `src/api/routes/mi_practice.py` updates |
-| 4 | Frontend Integration | ⏳ PENDING | Content filtering UI |
-| 5 | Testing & Verification | ⏳ PENDING | Test suite, verification queries |
-| 6 | Documentation | ⏳ PENDING | Updated docs and guides |
+| 1 | Initial Module Conversion | ⏳ SUPERSEDED | Initial conversion approach (replaced) |
+| 2 | Module Restructuring | 🔄 IN PROGRESS | Correct SHARED/Customer-Facing/Colleague-Facing structure |
+| 3 | Service Layer Updates | ⏳ PENDING | `src/services/mi_module_service.py` updates |
+| 4 | API Layer Updates | ⏳ PENDING | `src/api/routes/mi_practice.py` updates |
+| 5 | Frontend Integration | ⏳ PENDING | Content filtering UI |
+| 6 | Testing & Verification | ⏳ PENDING | Test suite, verification queries |
+| 7 | Documentation | ⏳ PENDING | Updated docs and guides |
 
 ---
 
@@ -150,7 +151,7 @@ This document provides a comprehensive implementation plan for integrating struc
 
 ---
 
-## Phase 2: Module JSON Refactoring ⏳ PENDING
+## Phase 2: Module Restructuring 🔄 IN PROGRESS
 
 ### 2.1 JSON Structure Update
 
@@ -237,19 +238,69 @@ These modules apply core skills to internal colleague contexts.
 
 ### 2.4 Migration Notes
 
-**Previous modules (incorrectly classified):** The original `module_*.json` files were healthcare-focused MI modules that were converted with simple word substitutions. These are being replaced/deprecated in favor of the new structure above.
+**Previous modules (incorrectly classified):** The original `module_*_maps.json` files were healthcare-focused MI modules that were converted with simple word substitutions. These are being replaced/deprecated in favor of the new structure above.
 
 **Key Differences:**
 - **SHARED modules** use neutral language (person, situation, change, reflection) that applies universally
 - **CUSTOMER-FACING modules** are specific MAPS scenarios (debt advice, budgeting, pensions) with financial context
 - **COLLEAGUE-FACING modules** are specific MAPS scenarios (performance reviews, coaching) with workplace context
 
-### 2.4 Deliverables
+### 2.4 Module Examples Created
 
-- [ ] 12 module JSON files refactored with external/internal split
-- [ ] MaPS terminology applied throughout
-- [ ] Content classification tags added
-- [ ] Import script tested with all modules
+**Shared Module Example: `shared_simple_reflections.json`**
+- Uses neutral language: "person", "situation", "change"
+- Teaches core reflection skill without specific context
+- Applies universally to customers AND colleagues
+- MAPS competencies: A6 (Rapport), B6 (Communication), 2.1.1 (Reflective Listening)
+
+**Customer-Facing Example: `customer_debt_initial.json`**
+- Domain 2 (Debt) specific scenario
+- Customer seeking debt advice, feeling ashamed/overwhelmed
+- Specific MAPS competencies: A6 (Rapport), A3 (Impartiality), A5 (Flexibility), B6 (Communication)
+- Real financial guidance context with shame, hesitation, empowerment themes
+
+**Colleague-Facing Example: `colleague_performance_review.json`**
+- Performance review coaching scenario
+- Colleague defensive, wants effort recognized, development-focused
+- MAPS competencies: A6 (Rapport), A4 (Diplomacy), B6 (Communication), C1 (Self-Management)
+- Real workplace context with defensiveness, effort recognition, growth themes
+
+### 2.5 Language Guidelines
+
+**SHARED Modules (Neutral):**
+- Use: "person", "individual", "participant"
+- Avoid: "customer", "colleague", "patient", "client"
+- Focus: The skill itself, not the context
+
+**Customer-Facing Modules:**
+- Use: "customer", "client" (money guidance context)
+- MAPS Domains: 1 (Knowing Customer), 2 (Debt), 5 (Budgeting), 11 (Pensions)
+- Themes: Financial anxiety, debt stress, budgeting, savings, pensions
+
+**Colleague-Facing Modules:**
+- Use: "colleague", "team member" (workplace context)
+- Themes: Performance, development, coaching, team dynamics, career growth
+- Tone: Collaborative, developmental, supportive
+
+### 2.6 Deliverables
+
+- [x] Module structure redesign documented
+- [x] Example modules created (1 shared, 1 customer-facing, 1 colleague-facing)
+- [ ] Remaining 11 SHARED modules created
+- [ ] Remaining 5 CUSTOMER-FACING modules created
+- [ ] Remaining 4 COLLEAGUE-FACING modules created
+- [ ] Seed scripts generated for all new modules
+- [ ] Old deprecated modules removed/archived
+
+### 2.7 Progress Log
+
+**2026-02-01 - Module Restructuring:**
+- ✅ Identified classification error: MI techniques are neutral strategies, not context-specific
+- ✅ Created `shared_simple_reflections.json` - neutral language core skill module
+- ✅ Created `customer_debt_initial.json` - Domain 2 debt advice scenario
+- ✅ Created `colleague_performance_review.json` - performance review coaching scenario
+- ✅ Updated implementation plan with correct structure
+- ✅ Documented language guidelines for each module type
 
 ---
 
@@ -486,6 +537,10 @@ SELECT code, title, content_type FROM mi_learning_paths;
 
 ---
 
-**Document Version:** 4.0
+**Document Version:** 5.0
 **Last Updated:** 2026-02-01
-**Status:** Phase 1 Complete - 12 MAPS modules converted with seed scripts generated
+**Status:** Phase 2 IN PROGRESS - Module Restructuring (SHARED/Customer-Facing/Colleague-Facing)
+
+**Recent Changes:**
+- v5.0: Corrected module classification - SHARED modules for core skills, Customer-Facing for MAPS financial scenarios, Colleague-Facing for workplace scenarios
+- v4.0: Phase 1 Complete - 12 MAPS modules converted (now superseded by corrected structure)
