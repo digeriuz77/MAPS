@@ -101,6 +101,16 @@ def create_app() -> FastAPI:
     except Exception as e:
         logger.error(f"Failed to load voice routes: {e}")
     
+    # MI PRACTICE MODULE ROUTES (Structured dialogue training)
+    try:
+        from src.api.routes.mi_practice import router as mi_practice_router
+        app.include_router(mi_practice_router, tags=["mi-practice"])
+        logger.info("MI Practice routes loaded successfully")
+    except ImportError as e:
+        logger.warning(f"MI Practice routes not available: {e}")
+    except Exception as e:
+        logger.error(f"Failed to load MI Practice routes: {e}")
+    
     # Mount static files
     static_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "static")
     if os.path.exists(static_path):

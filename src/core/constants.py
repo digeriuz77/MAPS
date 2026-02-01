@@ -2,7 +2,6 @@
 Application-wide constants
 """
 
-# Legacy constants for compatibility
 SAFETY_CONFIDENCE_THRESHOLD = 0.8
 CRISIS_DETECTION_THRESHOLD = 0.9
 PROFANITY_WARNING_THRESHOLD = 0.7

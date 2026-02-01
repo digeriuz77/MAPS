@@ -84,7 +84,7 @@ This document provides a comprehensive implementation plan for integrating struc
 
 ---
 
-## Phase 1: Import Script Development ⏳ PENDING
+## Phase 1: Import Script Development & Module Refactoring ⏳ IN PROGRESS
 
 ### 1.1 Create Import Script
 
@@ -103,7 +103,23 @@ This document provides a comprehensive implementation plan for integrating struc
 python scripts/import_modules.py [--clear-existing]
 ```
 
-### 1.2 Database Schema Validation
+### 1.2 Module JSON Refactoring (PRE-REQUISITE)
+
+**CRITICAL:** Existing modules use healthcare/patient language. MUST refactor to MAPS terminology before seeding.
+
+**Refactor First:** Module JSON files in `src/data/mi_modules/` must be updated to use MAPS-appropriate language.
+
+### 1.3 Create Supabase Seed Scripts
+
+**Location:** `supabase/seed/seed_mi_module_*.sql`
+
+**Each seed script must:**
+- Use proper Supabase SQL syntax with JSONB casting
+- Include `ON CONFLICT (code) DO UPDATE` for idempotency
+- Use MAPS terminology (customer/colleague, not patient)
+- Follow the naming convention: `seed_mi_module_XX_<name>.sql`
+
+### 1.4 Database Schema Validation
 
 **Current Schema:** [`supabase/migrations/current/0004_current_mi_practice_tables.sql`](../supabase/migrations/current/0004_current_mi_practice_tables.sql)
 
@@ -117,11 +133,23 @@ python scripts/import_modules.py [--clear-existing]
 | `dialogue_structure` | JSONB | External content only |
 | `maps_rubric` | JSONB | Internal scoring config |
 
-### 1.3 Deliverables
+### 1.5 Deliverables
 
-- [ ] `scripts/import_modules.py` created
-- [ ] Import script tested with sample module
+- [x] `scripts/import_modules.py` exists (uses existing code)
+- [x] Supabase seed script template created
+- [x] Module 1 refactored to MAPS terminology (`module_1_simple_reflections_maps.json`)
+- [x] Module 1 Supabase seed script created with MAPS terminology
+- [ ] Modules 2-12 refactored to MAPS terminology
+- [ ] Modules 2-12 Supabase seed scripts created
 - [ ] Database schema validated for import
+
+### 1.6 Progress Log
+
+**2026-02-01:**
+- Created `module_1_simple_reflections_maps.json` with Customer-Facing financial context
+- Terminology mapping applied: patient→customer, smoking→spending, health→financial, therapeutic→professional
+- Created `seed_mi_module_01_simple_reflections.sql` with MAPS-compliant content
+- Removed old seed scripts that used healthcare language
 
 ---
 

@@ -1,0 +1,531 @@
+{
+  "id": "644eaf8e-362c-4b14-967f-9c9f12129c9f",
+  "code": "mi-collaborative-climate--agenda--007",
+  "title": "Module 7: Collaborative Climate & Focusing",
+  "mi_focus_area": "Building Rapport",
+  "difficulty_level": "intermediate",
+  "estimated_minutes": 10,
+  "learning_objective": "Create a collaborative rather than authoritative conversational climate; Invite the patient to set priorities collaboratively; Use transparency about time and structure; Balance flexibility with focus",
+  "scenario_context": "Learn to establish a collaborative partnership and set a shared agenda at the start of conversations about weight loss",
+  "persona_config": {
+    "name": "Well,",
+    "role": "patient/client",
+    "background": "Learn to establish a collaborative partnership and set a shared agenda at the start of conversations about weight loss",
+    "personality_traits": [
+      "neutral"
+    ],
+    "tone_spectrum": {
+      "word_complexity": 0.3,
+      "sentence_length": 0.3,
+      "emotional_expressiveness": 0.2,
+      "disclosure_level": 0.1,
+      "response_latency": 0.3,
+      "confidence_level": 0.2
+    },
+    "starting_tone_position": 0.2,
+    "triggers": [
+      "direct criticism",
+      "being told what to do",
+      "lecturing",
+      "judgment"
+    ],
+    "comfort_topics": [
+      "autonomy",
+      "understanding",
+      "being heard",
+      "personal choice"
+    ]
+  },
+  "dialogue_structure": {
+    "start_node_id": "collab_1",
+    "nodes": {
+      "collab_1": {
+        "id": "collab_1",
+        "persona_text": "Well, I sit at a desk all day for work. By evening I'm too tired to do anything except watch TV. I used to be more active when I was younger.",
+        "persona_mood": "neutral_uncertain",
+        "themes": [
+          "General"
+        ],
+        "choice_points": [
+          {
+            "id": "cp_collab_1_0",
+            "option_text": "You need to start exercising at least 30 minutes a day and cut your calorie intake by 500 calories.",
+            "preview_hint": "MI-consistent approach",
+            "rapport_impact": 0,
+            "resistance_impact": 0,
+            "tone_shift": 0.0,
+            "technique_tags": [
+              "unknown"
+            ],
+            "competency_links": [],
+            "feedback": {
+              "immediate": "This directive approach ignores the patient's perspective and imposes an agenda, likely increasing resistance.",
+              "learning_note": "Watch for patient resistance signals - defensiveness or disengagement."
+            },
+            "next_node_id": "collab_2a",
+            "exploration_depth": "surface"
+          },
+          {
+            "id": "cp_collab_1_1",
+            "option_text": "You notice quite a contrast between your current lifestyle and how you used to be. What would be most useful to focus on today?",
+            "preview_hint": "MI-consistent approach",
+            "rapport_impact": 0,
+            "resistance_impact": 0,
+            "tone_shift": 0.0,
+            "technique_tags": [
+              "unknown"
+            ],
+            "competency_links": [],
+            "feedback": {
+              "immediate": "This validates the patient's observation and invites them to set priorities, creating a collaborative climate.",
+              "learning_note": "Validation acknowledges the patient's experience without judgment."
+            },
+            "next_node_id": "collab_2b",
+            "exploration_depth": "surface"
+          },
+          {
+            "id": "cp_collab_1_2",
+            "option_text": "Let me explain the health risks of being sedentary and overweight. It's very important you understand this.",
+            "preview_hint": "MI-consistent approach",
+            "rapport_impact": 0,
+            "resistance_impact": 0,
+            "tone_shift": 0.0,
+            "technique_tags": [
+              "unknown"
+            ],
+            "competency_links": [],
+            "feedback": {
+              "immediate": "This takes an expert stance that may feel patronizing and doesn't honor patient autonomy.",
+              "learning_note": "Continue practicing MI techniques to build your therapeutic skills."
+            },
+            "next_node_id": "collab_2c",
+            "exploration_depth": "surface"
+          }
+        ],
+        "is_endpoint": false,
+        "endpoint_type": null
+      },
+      "collab_2a": {
+        "id": "collab_2a",
+        "persona_text": "That sounds like a lot. I don't think I can do all that right now. I barely have time as it is.",
+        "persona_mood": "neutral_uncertain",
+        "themes": [
+          "General"
+        ],
+        "choice_points": [
+          {
+            "id": "cp_collab_2a_0",
+            "option_text": "If you don't make time, your health will continue to decline. It's really up to you.",
+            "preview_hint": "MI-consistent approach",
+            "rapport_impact": 0,
+            "resistance_impact": 0,
+            "tone_shift": 0.0,
+            "technique_tags": [
+              "unknown"
+            ],
+            "competency_links": [],
+            "feedback": {
+              "immediate": "This sounds like a threat disguised as respecting choice, damaging the relationship.",
+              "learning_note": "Continue practicing MI techniques to build your therapeutic skills."
+            },
+            "next_node_id": "collab_end_poor",
+            "exploration_depth": "surface"
+          },
+          {
+            "id": "cp_collab_2a_1",
+            "option_text": "I hear that feels overwhelming. Let's step back - what matters most to you about your health right now?",
+            "preview_hint": "MI-consistent approach",
+            "rapport_impact": 0,
+            "resistance_impact": 0,
+            "tone_shift": 0.0,
+            "technique_tags": [
+              "unknown"
+            ],
+            "competency_links": [],
+            "feedback": {
+              "immediate": "Good recovery - acknowledging the discord and returning to collaboration.",
+              "learning_note": "Continue practicing MI techniques to build your therapeutic skills."
+            },
+            "next_node_id": "collab_3b",
+            "exploration_depth": "surface"
+          }
+        ],
+        "is_endpoint": false,
+        "endpoint_type": null
+      },
+      "collab_2b": {
+        "id": "collab_2b",
+        "persona_text": "I guess I'm most worried about my weight and how tired I feel all the time. But I'm not sure where to start.",
+        "persona_mood": "neutral_uncertain",
+        "themes": [
+          "General"
+        ],
+        "choice_points": [
+          {
+            "id": "cp_collab_2b_0",
+            "option_text": "Those are connected concerns. We have about 15 minutes today - would it help to explore what might be behind that fatigue?",
+            "preview_hint": "MI-consistent approach",
+            "rapport_impact": 0,
+            "resistance_impact": 0,
+            "tone_shift": 0.0,
+            "technique_tags": [
+              "unknown"
+            ],
+            "competency_links": [],
+            "feedback": {
+              "immediate": "Excellent - makes connections, is transparent about time, and seeks permission to focus.",
+              "learning_note": "Continue practicing MI techniques to build your therapeutic skills."
+            },
+            "next_node_id": "collab_3c",
+            "exploration_depth": "surface"
+          },
+          {
+            "id": "cp_collab_2b_1",
+            "option_text": "The fatigue is probably from being overweight. Let's create an exercise plan.",
+            "preview_hint": "MI-consistent approach",
+            "rapport_impact": 0,
+            "resistance_impact": 0,
+            "tone_shift": 0.0,
+            "technique_tags": [
+              "unknown"
+            ],
+            "competency_links": [],
+            "feedback": {
+              "immediate": "This jumps ahead without exploring the patient's perspective, taking control.",
+              "learning_note": "Continue practicing MI techniques to build your therapeutic skills."
+            },
+            "next_node_id": "collab_2a",
+            "exploration_depth": "surface"
+          },
+          {
+            "id": "cp_collab_2b_2",
+            "option_text": "Let's tackle both - your weight and your energy levels. We need to cover diet, exercise, and sleep.",
+            "preview_hint": "MI-consistent approach",
+            "rapport_impact": 0,
+            "resistance_impact": 0,
+            "tone_shift": 0.0,
+            "technique_tags": [
+              "unknown"
+            ],
+            "competency_links": [],
+            "feedback": {
+              "immediate": "Too many topics at once can overwhelm and dilute focus.",
+              "learning_note": "Continue practicing MI techniques to build your therapeutic skills."
+            },
+            "next_node_id": "collab_3d",
+            "exploration_depth": "surface"
+          }
+        ],
+        "is_endpoint": false,
+        "endpoint_type": null
+      },
+      "collab_2c": {
+        "id": "collab_2c",
+        "persona_text": "I know it's not good for me. I've heard all this before.",
+        "persona_mood": "withdrawn_disengaged",
+        "themes": [
+          "General"
+        ],
+        "choice_points": [
+          {
+            "id": "cp_collab_2c_0",
+            "option_text": "You've heard the information before. What would be more helpful for you today?",
+            "preview_hint": "MI-consistent approach",
+            "rapport_impact": 0,
+            "resistance_impact": 0,
+            "tone_shift": 0.0,
+            "technique_tags": [
+              "unknown"
+            ],
+            "competency_links": [],
+            "feedback": {
+              "immediate": "Good pivot - acknowledging without judgment and returning control to the patient.",
+              "learning_note": "Continue practicing MI techniques to build your therapeutic skills."
+            },
+            "next_node_id": "collab_3b",
+            "exploration_depth": "surface"
+          },
+          {
+            "id": "cp_collab_2c_1",
+            "option_text": "Well, hearing it and acting on it are two different things. That's why we need a concrete plan.",
+            "preview_hint": "MI-consistent approach",
+            "rapport_impact": 0,
+            "resistance_impact": 0,
+            "tone_shift": 0.0,
+            "technique_tags": [
+              "unknown"
+            ],
+            "competency_links": [],
+            "feedback": {
+              "immediate": "This sounds critical and maintains the non-collaborative dynamic.",
+              "learning_note": "Continue practicing MI techniques to build your therapeutic skills."
+            },
+            "next_node_id": "collab_end_poor",
+            "exploration_depth": "surface"
+          }
+        ],
+        "is_endpoint": false,
+        "endpoint_type": null
+      },
+      "collab_3b": {
+        "id": "collab_3b",
+        "persona_text": "I want to have more energy to play with my kids when I get home from work. That's what really matters to me.",
+        "persona_mood": "neutral_uncertain",
+        "themes": [
+          "Relationships",
+          "Goals"
+        ],
+        "choice_points": [
+          {
+            "id": "cp_collab_3b_0",
+            "option_text": "Playing with your kids is really important to you. That's a wonderful motivation. Should we stay with this focus for now?",
+            "preview_hint": "MI-consistent approach",
+            "rapport_impact": 0,
+            "resistance_impact": 0,
+            "tone_shift": 0.0,
+            "technique_tags": [
+              "unknown"
+            ],
+            "competency_links": [],
+            "feedback": {
+              "immediate": "Perfect - affirms values and collaboratively confirms the direction.",
+              "learning_note": "Continue practicing MI techniques to build your therapeutic skills."
+            },
+            "next_node_id": "collab_4",
+            "exploration_depth": "surface"
+          },
+          {
+            "id": "cp_collab_3b_1",
+            "option_text": "That's great, but we also need to discuss your weight and diet.",
+            "preview_hint": "MI-consistent approach",
+            "rapport_impact": 0,
+            "resistance_impact": 0,
+            "tone_shift": 0.0,
+            "technique_tags": [
+              "unknown"
+            ],
+            "competency_links": [],
+            "feedback": {
+              "immediate": "The 'but' dismisses what the patient just shared as important.",
+              "learning_note": "Continue practicing MI techniques to build your therapeutic skills."
+            },
+            "next_node_id": "collab_3d",
+            "exploration_depth": "surface"
+          }
+        ],
+        "is_endpoint": false,
+        "endpoint_type": null
+      },
+      "collab_3c": {
+        "id": "collab_3c",
+        "persona_text": "Yes, I think understanding the tiredness would help. Sometimes I wonder if it's just being at a desk all day or something more.",
+        "persona_mood": "neutral_uncertain",
+        "themes": [
+          "General"
+        ],
+        "choice_points": [
+          {
+            "id": "cp_collab_3c_0",
+            "option_text": "What have you noticed about when you feel most tired versus when you have more energy?",
+            "preview_hint": "MI-consistent approach",
+            "rapport_impact": 0,
+            "resistance_impact": 0,
+            "tone_shift": 0.0,
+            "technique_tags": [
+              "unknown"
+            ],
+            "competency_links": [],
+            "feedback": {
+              "immediate": "Good - stays within the agreed focus and invites the patient's observations.",
+              "learning_note": "Continue practicing MI techniques to build your therapeutic skills."
+            },
+            "next_node_id": "collab_4",
+            "exploration_depth": "surface"
+          },
+          {
+            "id": "cp_collab_3c_1",
+            "option_text": "It's probably your weight and lack of exercise. Most people feel tired when they're sedentary.",
+            "preview_hint": "MI-consistent approach",
+            "rapport_impact": 0,
+            "resistance_impact": 0,
+            "tone_shift": 0.0,
+            "technique_tags": [
+              "unknown"
+            ],
+            "competency_links": [],
+            "feedback": {
+              "immediate": "This shifts back to an expert stance rather than exploring collaboratively.",
+              "learning_note": "Continue practicing MI techniques to build your therapeutic skills."
+            },
+            "next_node_id": "collab_2c",
+            "exploration_depth": "surface"
+          }
+        ],
+        "is_endpoint": false,
+        "endpoint_type": null
+      },
+      "collab_3d": {
+        "id": "collab_3d",
+        "persona_text": "That's a lot to think about. I'm not sure I can focus on everything at once.",
+        "persona_mood": "neutral_uncertain",
+        "themes": [
+          "General"
+        ],
+        "choice_points": [
+          {
+            "id": "cp_collab_3d_0",
+            "option_text": "You're right - that is a lot. What feels like the most important place to start?",
+            "preview_hint": "MI-consistent approach",
+            "rapport_impact": 0,
+            "resistance_impact": 0,
+            "tone_shift": 0.0,
+            "technique_tags": [
+              "unknown"
+            ],
+            "competency_links": [],
+            "feedback": {
+              "immediate": "Good recovery - validates concern and invites the patient to prioritize.",
+              "learning_note": "Validation acknowledges the patient's experience without judgment."
+            },
+            "next_node_id": "collab_3b",
+            "exploration_depth": "surface"
+          },
+          {
+            "id": "cp_collab_3d_1",
+            "option_text": "These are all connected, so we need to address them all together.",
+            "preview_hint": "MI-consistent approach",
+            "rapport_impact": 0,
+            "resistance_impact": 0,
+            "tone_shift": 0.0,
+            "technique_tags": [
+              "unknown"
+            ],
+            "competency_links": [],
+            "feedback": {
+              "immediate": "This ignores the patient's stated concern and maintains practitioner control.",
+              "learning_note": "Continue practicing MI techniques to build your therapeutic skills."
+            },
+            "next_node_id": "collab_end_poor",
+            "exploration_depth": "surface"
+          }
+        ],
+        "is_endpoint": false,
+        "endpoint_type": null
+      },
+      "collab_4": {
+        "id": "collab_4",
+        "persona_text": "I feel most tired after sitting all day, but then I also don't have energy to do anything active. It's like a cycle.",
+        "persona_mood": "neutral_uncertain",
+        "themes": [
+          "General"
+        ],
+        "choice_points": [
+          {
+            "id": "cp_collab_4_0",
+            "option_text": "You're caught in this cycle where sitting makes you tired, but tiredness keeps you from being active. What might help break that pattern, even in a small way?",
+            "preview_hint": "MI-consistent approach",
+            "rapport_impact": 0,
+            "resistance_impact": 0,
+            "tone_shift": 0.0,
+            "technique_tags": [
+              "unknown"
+            ],
+            "competency_links": [],
+            "feedback": {
+              "immediate": "Excellent - deepens the reflection and continues exploring within the collaborative focus.",
+              "learning_note": "Reflections build rapport by showing you understand the patient's perspective."
+            },
+            "next_node_id": "collab_end_good",
+            "exploration_depth": "surface"
+          },
+          {
+            "id": "cp_collab_4_1",
+            "option_text": "Actually, we should also talk about your eating habits since those affect energy too.",
+            "preview_hint": "MI-consistent approach",
+            "rapport_impact": 0,
+            "resistance_impact": 0,
+            "tone_shift": 0.0,
+            "technique_tags": [
+              "unknown"
+            ],
+            "competency_links": [],
+            "feedback": {
+              "immediate": "This abandons the agreed focus without checking with the patient first.",
+              "learning_note": "Continue practicing MI techniques to build your therapeutic skills."
+            },
+            "next_node_id": "collab_3d",
+            "exploration_depth": "surface"
+          }
+        ],
+        "is_endpoint": false,
+        "endpoint_type": null
+      },
+      "collab_end_good": {
+        "id": "collab_end_good",
+        "persona_text": "Maybe I could try taking a short walk during lunch? Even just 10 minutes to move around.",
+        "persona_mood": "neutral_uncertain",
+        "themes": [
+          "General"
+        ],
+        "choice_points": [],
+        "is_endpoint": true,
+        "endpoint_type": "successful_engagement"
+      },
+      "collab_end_poor": {
+        "id": "collab_end_poor",
+        "persona_text": "I don't think this is helping. Maybe I'll think about it and come back another time.",
+        "persona_mood": "withdrawn_disengaged",
+        "themes": [
+          "General"
+        ],
+        "choice_points": [],
+        "is_endpoint": true,
+        "endpoint_type": "failed_engagement"
+      }
+    }
+  },
+  "target_competencies": [
+    "B1",
+    "B2",
+    "B6",
+    "A2",
+    "A6",
+    "A1"
+  ],
+  "maps_rubric": {
+    "dimensions": {
+      "A6": {
+        "description": "Rapport Building",
+        "weight": 1.5,
+        "positive_signals": [
+          "simple_reflection",
+          "affirmation",
+          "open_question"
+        ],
+        "negative_signals": [
+          "confrontation",
+          "educating",
+          "righting_reflex"
+        ]
+      },
+      "B6": {
+        "description": "Therapeutic Alliance",
+        "weight": 1.5,
+        "positive_signals": [
+          "validation",
+          "empathy",
+          "reflection"
+        ],
+        "negative_signals": [
+          "judgment",
+          "pressure",
+          "explanation"
+        ]
+      }
+    },
+    "overall_scoring_logic": "weighted_average"
+  },
+  "is_active": true,
+  "created_at": "2026-01-31T00:00:00Z",
+  "updated_at": "2026-01-31T00:00:00Z"
+}

@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Session Review - MI Training</title>
+
+    <!-- Auth Blocker - MUST be first to hide page until auth verified -->
+    <script src="/static/js/auth-blocker.js"></script>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/teal-theme.css">
+    <link rel="stylesheet" href="/static/css/mi-practice.css">
+</head>
+
+<body class="teal-theme mi-review-page">
+    <!-- Navigation will be loaded by navigation.js -->
+    <div id="navigation-container"></div>
+
+    <main class="mi-review-container" role="main" aria-label="Session Review">
+        <!-- Review Header -->
+        <header class="review-header" role="banner">
+            <h1 class="review-title">
+                <i class="fas fa-clipboard-check" aria-hidden="true"></i>
+                Session Review
+            </h1>
+            <p class="review-subtitle" id="review-subtitle">Review your practice session performance</p>
+        </header>
+
+        <!-- Overall Score Card -->
+        <section class="review-section score-section" aria-labelledby="score-heading">
+            <h2 id="score-heading" class="visually-hidden">Overall Score</h2>
+            <div class="score-card">
+                <div class="score-main">
+                    <div class="score-circle" id="score-circle" role="img" aria-label="Overall competency score">
+                        <span class="score-value" id="overall-score">-</span>
+                        <span class="score-max">/10</span>
+                    </div>
+                    <div class="score-info">
+                        <h3 class="score-label">Overall Competency</h3>
+                        <p class="score-description" id="score-description">Calculating...</p>
+                        <span class="completion-badge" id="completion-badge">
+                            <i class="fas fa-check-circle" aria-hidden="true"></i>
+                            <span id="completion-status">Completed</span>
+                        </span>
+                    </div>
+                </div>
+                <div class="score-stats">
+                    <div class="stat-box">
+                        <i class="fas fa-exchange-alt" aria-hidden="true"></i>
+                        <span class="stat-value" id="stat-turns">0</span>
+                        <span class="stat-label">Turns Taken</span>
+                    </div>
+                    <div class="stat-box">
+                        <i class="fas fa-clock" aria-hidden="true"></i>
+                        <span class="stat-value" id="stat-duration">0m</span>
+                        <span class="stat-label">Duration</span>
+                    </div>
+                    <div class="stat-box">
+                        <i class="fas fa-tags" aria-hidden="true"></i>
+                        <span class="stat-value" id="stat-techniques">0</span>
+                        <span class="stat-label">Techniques Used</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Competency Breakdown -->
+        <section class="review-section" aria-labelledby="competencies-heading">
+            <h2 id="competencies-heading" class="section-title">
+                <i class="fas fa-chart-bar" aria-hidden="true"></i>
+                Competency Breakdown
+            </h2>
+            <div class="competency-grid" id="competency-container" role="list" aria-label="Competency scores">
+                <!-- Competency bars loaded dynamically -->
+                <div class="loading-state" role="status">
+                    <i class="fas fa-spinner fa-spin" aria-hidden="true"></i>
+                    <span>Loading competencies...</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Session Timeline -->
+        <section class="review-section" aria-labelledby="timeline-heading">
+            <h2 id="timeline-heading" class="section-title">
+                <i class="fas fa-stream" aria-hidden="true"></i>
+                Session Timeline
+            </h2>
+            <div class="timeline-container" id="timeline-container" role="list" aria-label="Session timeline">
+                <!-- Timeline items loaded dynamically -->
+                <div class="loading-state" role="status">
+                    <i class="fas fa-spinner fa-spin" aria-hidden="true"></i>
+                    <span>Loading timeline...</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Key Moments -->
+        <section class="review-section" aria-labelledby="moments-heading">
+            <h2 id="moments-heading" class="section-title">
+                <i class="fas fa-star" aria-hidden="true"></i>
+                Key Moments
+            </h2>
+            <div class="moments-container" id="moments-container" role="list" aria-label="Key moments from session">
+                <!-- Key moments loaded dynamically -->
+                <div class="loading-state" role="status">
+                    <i class="fas fa-spinner fa-spin" aria-hidden="true"></i>
+                    <span>Loading key moments...</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Learning Notes -->
+        <section class="review-section" aria-labelledby="notes-heading">
+            <h2 id="notes-heading" class="section-title">
+                <i class="fas fa-book" aria-hidden="true"></i>
+                Learning Notes
+            </h2>
+            <div class="learning-notes" id="learning-notes-container" role="list" aria-label="Learning notes">
+                <!-- Learning notes loaded dynamically -->
+            </div>
+        </section>
+
+        <!-- Technique Usage -->
+        <section class="review-section" aria-labelledby="techniques-heading">
+            <h2 id="techniques-heading" class="section-title">
+                <i class="fas fa-tools" aria-hidden="true"></i>
+                Techniques Practiced
+            </h2>
+            <div class="techniques-grid" id="techniques-container" role="list" aria-label="Techniques used">
+                <!-- Technique cards loaded dynamically -->
+            </div>
+        </section>
+
+        <!-- Action Buttons -->
+        <footer class="review-actions">
+            <button class="btn-teal-secondary" id="btn-retry">
+                <i class="fas fa-redo" aria-hidden="true"></i>
+                Practice Again
+            </button>
+            <button class="btn-teal-secondary" id="btn-modules">
+                <i class="fas fa-th-large" aria-hidden="true"></i>
+                More Modules
+            </button>
+            <button class="btn-teal-primary" id="btn-progress">
+                <i class="fas fa-chart-line" aria-hidden="true"></i>
+                View My Progress
+            </button>
+        </footer>
+    </main>
+
+    <!-- Detail Modal for Timeline Items -->
+    <div class="modal-overlay" id="detail-modal" role="dialog" aria-labelledby="detail-title" aria-hidden="true">
+        <div class="modal-content detail-modal">
+            <header class="modal-header">
+                <h2 id="detail-title" class="modal-title">Turn Details</h2>
+                <button class="modal-close" id="detail-close" aria-label="Close details">
+                    <i class="fas fa-times" aria-hidden="true"></i>
+                </button>
+            </header>
+            <div class="modal-body" id="detail-body">
+                <!-- Dynamic content -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="/static/js/supabaseClient.js"></script>
+    <script src="/static/js/authGuard.js"></script>
+    <script src="/static/js/navigation.js"></script>
+    <script src="/static/js/mi-components.js"></script>
+    <script src="/static/js/mi-practice.js"></script>
+
+    <script>
+        // Initialize page when DOM is ready
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                // Check authentication
+                await requireAuth();
+
+                // Initialize Supabase
+                await initializeSupabase();
+
+                // Load navigation
+                await loadNavigation();
+
+                // Initialize MI Practice review page
+                if (window.MIPracticeApp) {
+                    await window.MIPracticeApp.initReviewPage();
+                }
+            } catch (error) {
+                console.error('Failed to initialize MI Practice review:', error);
+            }
+        });
+    </script>
+</body>
+
+</html>

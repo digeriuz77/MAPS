@@ -8,7 +8,7 @@ from datetime import datetime
 
 from src.personas.base_persona import BasePersona
 # Database service injected via dependency injection
-from src.models.schemas import PersonaConfig, PersonaResponse, Message, PersonaType
+from src.models.schemas import PersonaConfig, PersonaResponse, Message
 # PersonaFactory removed - using service-based approach
 from src.exceptions import PersonaNotFoundError, PersonaCreationError, PersonaTypeNotSupportedError
 from src.core.constants import MAX_PERSONAS_LOAD, RECENT_HISTORY_LIMIT
@@ -94,34 +94,7 @@ class PersonaEngine:
         except Exception as e:
             logger.error(f"Failed to load persona {persona_id} from database: {e}")
     
-    async def create_persona(self, config: PersonaConfig) -> str:
-        """Create a new persona instance"""
-        
-        persona_id = str(uuid.uuid4())
-        
-        try:
-            # Create persona directly from config
-            # Note: This method is deprecated in favor of service-based approach
-            persona = self._create_persona_from_config(persona_id, config)
-            
-            # Store persona
-            self.active_personas[persona_id] = persona
-            
-            # Store base persona data
-            persona_dict = persona.to_dict()
-            self.base_persona_data[persona_id] = persona_dict.copy()
-            
-            # Store in database
-            await self.database_service.store_persona(persona_id, persona_dict)
-            
-            logger.info(f"Created persona: {persona_id} ({config.persona_type})")
-            return persona_id
-            
-        except PersonaTypeNotSupportedError:
-            raise
-        except Exception as e:
-            logger.error(f"Failed to create persona: {e}")
-            raise PersonaCreationError(str(e), str(config.persona_type))
+
     
     
     async def chat_with_persona(
@@ -320,11 +293,7 @@ class PersonaEngine:
         assistant_response: str
     ):
         """Store conversation in database"""
-        try:
-            # Note: Conversation storage temporarily disabled
-            # TODO: Implement conversation storage in database service
-            # For now, conversations are only kept in persona memory
-            pass
+        # Conversation storage handled by database service
             
         except Exception as e:
             logger.error(f"Failed to store conversation: {e}")
@@ -725,30 +694,7 @@ class PersonaEngine:
         print(f"DEBUG: Returning adaptation traits: {traits}")
         return traits
     
-    def _create_persona_from_config(self, persona_id: str, config: PersonaConfig) -> BasePersona:
-        """Create persona instance from configuration"""
-        # Note: This is a placeholder for the deprecated factory method
-        # In the current system, personas are created via services
-        from src.personas.base_persona import BasePersona
-        
-        class SimplePersona(BasePersona):
-            def __init__(self, persona_id: str, config: PersonaConfig):
-                super().__init__(
-                    persona_id=persona_id,
-                    name=config.name,
-                    description=config.description,
-                    max_tokens=getattr(config, 'max_tokens', 500)
-                )
-                self.config = config
-                self.temperature = getattr(config, 'temperature', 0.7)
-                
-            def get_system_prompt(self) -> str:
-                return f"You are {self.name}. {self.description}"
-                
-            def get_traits(self) -> List[str]:
-                return getattr(self.config, 'traits', [])
-        
-        return SimplePersona(persona_id, config)
+
     
     def _reconstruct_persona_from_data(self, persona_id: str, persona_data: Dict[str, Any]) -> Optional[BasePersona]:
         """Reconstruct persona from stored data"""

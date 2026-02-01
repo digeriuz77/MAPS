@@ -1,20 +1,22 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Welcome - 1-1 Practice Platform</title>
-    
+
     <!-- Auth Blocker - MUST be first to hide page until auth verified -->
     <script src="/static/js/auth-blocker.js"></script>
-    
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="/static/css/teal-theme.css">
     <style>
         body {
-            padding-top: 70px; /* Space for fixed nav */
+            padding-top: 70px;
+            /* Space for fixed nav */
         }
-        
+
         .nav-bar {
             position: fixed;
             top: 0;
@@ -28,33 +30,33 @@
             justify-content: center;
             gap: 30px;
         }
-        
+
         .nav-bar a {
             color: white;
             text-decoration: none;
             font-weight: 500;
             transition: opacity 0.2s;
         }
-        
+
         .nav-bar a:hover {
             opacity: 0.8;
         }
-        
+
         .nav-bar a.active {
             border-bottom: 2px solid white;
         }
-        
+
         .welcome-text {
             color: #1E3A8A;
             margin-bottom: var(--spacing-md);
         }
-        
+
         .intro-list {
             text-align: left;
             margin: var(--spacing-lg) auto;
             max-width: 450px;
         }
-        
+
         .intro-list li {
             margin-bottom: var(--spacing-sm);
             color: var(--dark-gray);
@@ -62,11 +64,13 @@
         }
     </style>
 </head>
+
 <body class="teal-theme">
     <!-- Navigation Bar -->
     <nav class="nav-bar">
         <a href="/welcome" class="active"><i class="fas fa-sign-in-alt"></i> Welcome</a>
         <a href="/persona-select"><i class="fas fa-users"></i> Personas</a>
+        <a href="/mi-practice.html" id="nav-mi-practice"><i class="fas fa-comments"></i> MI Practice</a>
         <a href="/analysis" id="nav-analysis"><i class="fas fa-chart-line"></i> Analysis</a>
         <a href="/reflection" id="nav-reflection"><i class="fas fa-lightbulb"></i> Reflection</a>
         <a href="/feedback" id="nav-feedback"><i class="fas fa-comment-dots"></i> Feedback</a>
@@ -74,75 +78,77 @@
     <div class="login-container">
         <div class="teal-card login-card">
             <h1 class="welcome-text">Welcome to the 1-1 platform.</h1>
-            
+
             <p style="color: #475569; margin-bottom: var(--spacing-md);">
                 Here you will be able to:
             </p>
-            
+
             <ol class="intro-list" id="intro-list">
                 <li>Select someone to talk with in a 1-1</li>
                 <li>Practice your feedback giving skills</li>
+                <li id="mi-practice-item">Practice Motivational Interviewing (MI) techniques</li>
                 <li id="feedback-item">Get some feedback on your performance</li>
                 <li id="reflection-item">Reflect on what went well and what you might do differently next time</li>
             </ol>
-            
-            <button type="button" class="btn-teal-primary" onclick="location.href='/persona-select'" style="font-size: 18px; padding: 14px 40px; margin-top: var(--spacing-md);">
+
+            <button type="button" class="btn-teal-primary" onclick="location.href='/persona-select'"
+                style="font-size: 18px; padding: 14px 40px; margin-top: var(--spacing-md);">
                 Enter
             </button>
-            
+
             <p style="color: var(--medium-gray); font-size: 14px; margin-top: var(--spacing-lg); font-style: italic;">
                 <i class="fas fa-info-circle"></i> Please logout on completion of your practice today.
             </p>
         </div>
     </div>
-    
+
     <footer class="vhl-footer">
         <button class="btn-teal-secondary" disabled style="visibility: hidden;">Previous</button>
         <span class="copyright">©VHL 2025</span>
         <button class="btn-teal-secondary" onclick="location.href='/persona-select'">Next</button>
     </footer>
-    
+
     <!-- Supabase SDK -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Auth utilities -->
     <script src="/static/js/supabaseClient.js"></script>
     <script src="/static/js/authGuard.js"></script>
     <script src="/static/js/navigation.js"></script>
-    
+
     <script>
         // Initialize auth on page load - BLOCKS until verified
-        (async function() {
+        (async function () {
             try {
                 await initializeSupabase();
                 const session = await requireAuth(); // Will redirect if not authenticated
                 console.log('✅ Welcome page protected by auth');
-                
+
                 // Get user role and adjust content
                 const role = await getUserRole(session.user.id);
                 console.log('User role:', role);
-                
+
                 // Hide FULL-only features for CONTROL users
                 if (role === 'CONTROL') {
                     // Hide FULL-only navigation items (Analysis and Reflection)
                     const analysisNav = document.getElementById('nav-analysis');
                     const reflectionNav = document.getElementById('nav-reflection');
-                    
+
                     if (analysisNav) analysisNav.style.display = 'none';
                     if (reflectionNav) reflectionNav.style.display = 'none';
-                    // Note: Feedback is available to all users, so we don't hide it
-                    
-                    // Hide list items 3 and 4 (Analysis and Reflection)
+                    // Note: Feedback and MI Practice are available to all users, so we don't hide them
+
+                    // Hide list items 4 and 5 (Analysis and Reflection)
                     const feedbackItem = document.getElementById('feedback-item');
                     const reflectionItem = document.getElementById('reflection-item');
-                    
+
                     if (feedbackItem) feedbackItem.style.display = 'none';
                     if (reflectionItem) reflectionItem.style.display = 'none';
-                    
-                    console.log('✅ CONTROL view: Hidden analysis and reflection features (feedback still available)');
+
+                    console.log('✅ CONTROL view: Hidden analysis and reflection features (feedback and MI Practice still available)');
                 } else {
                     console.log('✅ FULL access: All features visible');
                 }
-                
+
                 // Auth passed - show page
                 window.authCheckComplete();
             } catch (error) {
@@ -152,4 +158,5 @@
         })();
     </script>
 </body>
+
 </html>

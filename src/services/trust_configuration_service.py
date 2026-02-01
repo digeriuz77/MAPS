@@ -202,7 +202,7 @@ def initialize_trust_configuration_service(supabase_client):
     return trust_configuration_service
 
 def get_trust_configuration_service(supabase_client=None):
-    """Get the global trust configuration service (legacy compatibility)"""
+    """Get the global trust configuration service"""
     if trust_configuration_service is None and supabase_client:
         return initialize_trust_configuration_service(supabase_client)
     return trust_configuration_service

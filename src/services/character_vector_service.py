@@ -5,14 +5,13 @@ ALL persona data loaded from Supabase - NO HARDCODED PERSONAS
 """
 
 import logging
-import json
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 from dataclasses import dataclass
-import numpy as np
 from datetime import datetime
 from supabase import Client
 
 logger = logging.getLogger(__name__)
+
 
 @dataclass
 class CharacterMemory:
@@ -27,18 +26,6 @@ class CharacterMemory:
     embedding: Optional[List[float]] = None
     created_at: Optional[datetime] = None
 
-@dataclass
-class SituationalResponse:
-    """A character's response pattern for specific situations (deprecated - loaded from memories)"""
-    response_id: str
-    persona_id: str
-    situation_tags: List[str]
-    trust_level: float
-    interaction_quality: str
-    response_style: str
-    example_responses: List[str]
-    emotional_tone: str
-    sharing_level: str
 
 class CharacterVectorService:
     """
@@ -49,20 +36,14 @@ class CharacterVectorService:
 
     def __init__(self, supabase_client: Client):
         self.supabase = supabase_client
-
         # Cache for loaded memories
         self._memory_cache: Dict[str, List[CharacterMemory]] = {}
         self._cache_loaded: Dict[str, bool] = {}
 
-        logger.info("🎭 Character Vector Service V2 initialized (database-driven)")
-
     async def _load_memories_from_db(self, persona_id: str) -> List[CharacterMemory]:
-        """
-        Load character memories from database for a specific persona
-        """
-        # Check cache first
-        if persona_id in self._memory_cache:
-            return self._memory_cache[persona_id]
+        """Load all memories for a persona from database"""
+        if persona_id in self._cache_loaded:
+            return self._memory_cache.get(persona_id, [])
 
         try:
             # Load from character_vector_memories table
@@ -71,58 +52,45 @@ class CharacterVectorService:
                 .eq('persona_id', persona_id)\
                 .execute()
 
-            if not result.data:
-                logger.warning(f"No vector memories found for persona {persona_id}")
-                self._memory_cache[persona_id] = []
-                return []
-
-            # Convert to CharacterMemory objects
             memories = []
-            for row in result.data:
-                memory = CharacterMemory(
-                    memory_id=row['memory_id'],
-                    persona_id=row['persona_id'],
-                    memory_type=row['memory_type'],
-                    content=row['content'],
-                    context_tags=row.get('context_tags', []),
-                    emotional_weight=row['emotional_weight'],
-                    trust_level_required=row['trust_level_required'],
-                    embedding=row.get('embedding_json'),  # JSON array for now
-                    created_at=datetime.fromisoformat(row['created_at']) if row.get('created_at') else None
-                )
-                memories.append(memory)
+            if result.data:
+                for row in result.data:
+                    memories.append(CharacterMemory(
+                        memory_id=row['memory_id'],
+                        persona_id=row['persona_id'],
+                        memory_type=row['memory_type'],
+                        content=row['content'],
+                        context_tags=row.get('context_tags', []),
+                        emotional_weight=row.get('emotional_weight', 0.5),
+                        trust_level_required=row.get('trust_level_required', 0.0),
+                        embedding=row.get('embedding'),
+                        created_at=datetime.fromisoformat(row['created_at']) if row.get('created_at') else None
+                    ))
 
             # Cache the results
             self._memory_cache[persona_id] = memories
             self._cache_loaded[persona_id] = True
-
-            logger.info(f"Loaded {len(memories)} vector memories for {persona_id}")
-            return memories
+            logger.debug(f"Loaded {len(memories)} memories for persona {persona_id}")
 
         except Exception as e:
-            logger.error(f"Error loading memories for {persona_id}: {e}")
+            logger.error(f"Error loading character memories for {persona_id}: {e}")
             self._memory_cache[persona_id] = []
-            return []
+            self._cache_loaded[persona_id] = True
 
-    async def get_relevant_memories(self, persona_id: str, context_tags: List[str],
-                            trust_level: float, limit: int = 5) -> List[CharacterMemory]:
+        return self._memory_cache.get(persona_id, [])
+
+    async def get_relevant_memories(
+        self,
+        persona_id: str,
+        context_tags: List[str],
+        trust_level: float,
+        limit: int = 10
+    ) -> List[CharacterMemory]:
         """
-        Retrieve character memories relevant to current context and trust level
-
-        Args:
-            persona_id: Character identifier
-            context_tags: Current conversation context tags
-            trust_level: Current trust level (0.0-1.0)
-            limit: Maximum memories to return
-
-        Returns:
-            List of relevant character memories
+        Get memories relevant to current context that the user has earned access to
         """
         # Load memories from database
         memories = await self._load_memories_from_db(persona_id)
-
-        if not memories:
-            return []
 
         # Filter by trust level
         accessible_memories = [
@@ -132,71 +100,26 @@ class CharacterVectorService:
         # Score by relevance to context tags
         scored_memories = []
         for memory in accessible_memories:
-            relevance_score = len(set(memory.context_tags) & set(context_tags))
-            if relevance_score > 0:
-                scored_memories.append((memory, relevance_score))
+            # Calculate tag overlap
+            if context_tags:
+                overlap = len(set(memory.context_tags) & set(context_tags))
+                score = overlap + memory.emotional_weight
+            else:
+                score = memory.emotional_weight
+            scored_memories.append((memory, score))
 
         # Sort by relevance and emotional weight
         scored_memories.sort(key=lambda x: (x[1], x[0].emotional_weight), reverse=True)
 
         return [memory for memory, _ in scored_memories[:limit]]
 
-    async def get_situational_response(self, persona_id: str, situation_tags: List[str],
-                               trust_level: float, interaction_quality: str) -> Optional[SituationalResponse]:
-        """
-        Get appropriate response pattern for current situation
-        NOTE: SituationalResponse is now deprecated - memories of type 'response_pattern' used instead
-
-        Args:
-            persona_id: Character identifier
-            situation_tags: Current situation context
-            trust_level: Current trust level
-            interaction_quality: Quality of interaction so far
-
-        Returns:
-            Matching situational response or None (converted from response_pattern memories)
-        """
-        # Load memories and filter for response_pattern type
-        memories = await self._load_memories_from_db(persona_id)
-        response_memories = [m for m in memories if m.memory_type == 'response_pattern']
-
-        if not response_memories:
-            return None
-
-        # Find best matching response memory
-        best_match = None
-        best_score = 0
-
-        for memory in response_memories:
-            # Check trust level compatibility (within 0.2 range)
-            trust_diff = abs(memory.trust_level_required - trust_level)
-            if trust_diff > 0.2:
-                continue
-
-            # Score situation tag overlap
-            tag_overlap = len(set(memory.context_tags) & set(situation_tags))
-            if tag_overlap > best_score:
-                best_score = tag_overlap
-                best_match = memory
-
-        # Convert to SituationalResponse format if match found
-        if best_match:
-            return SituationalResponse(
-                response_id=best_match.memory_id,
-                persona_id=best_match.persona_id,
-                situation_tags=best_match.context_tags,
-                trust_level=best_match.trust_level_required,
-                interaction_quality=interaction_quality,
-                response_style=best_match.content,  # Content describes response style
-                example_responses=[best_match.content],
-                emotional_tone="neutral",  # Could be derived from emotional_weight
-                sharing_level="moderate"  # Could be derived from trust_level_required
-            )
-
-        return None
-
-    async def get_character_context(self, persona_id: str, user_input: str,
-                            trust_level: float, interaction_quality: str) -> Dict:
+    async def get_character_context(
+        self,
+        persona_id: str,
+        user_input: str,
+        trust_level: float,
+        interaction_quality: str
+    ) -> Dict:
         """
         Get comprehensive character context for response generation
 
@@ -215,10 +138,6 @@ class CharacterVectorService:
         # Get relevant memories
         relevant_memories = await self.get_relevant_memories(persona_id, context_tags, trust_level)
 
-        # Get situational response pattern
-        situation_tags = self._extract_situation_tags(user_input, interaction_quality)
-        response_pattern = await self.get_situational_response(persona_id, situation_tags, trust_level, interaction_quality)
-
         # Build context dictionary
         context = {
             "memories": [
@@ -233,21 +152,20 @@ class CharacterVectorService:
             "response_guidance": None
         }
 
-        if response_pattern:
+        # Find best response pattern memory for guidance
+        response_memories = [m for m in relevant_memories if m.memory_type == 'response_pattern']
+        if response_memories:
+            best_pattern = response_memories[0]
             context["response_guidance"] = {
-                "style": response_pattern.response_style,
-                "emotional_tone": response_pattern.emotional_tone,
-                "sharing_level": response_pattern.sharing_level,
-                "example_approaches": response_pattern.example_responses[:2]  # Limit examples
+                "style": best_pattern.content,
+                "emotional_weight": best_pattern.emotional_weight,
+                "sharing_level": "high" if best_pattern.trust_level_required < 0.5 else "limited"
             }
 
         return context
 
     def _extract_context_tags(self, user_input: str) -> List[str]:
-        """
-        Extract context tags from user input
-        Simple keyword matching for MVP (could be enhanced with LLM/embeddings)
-        """
+        """Extract context tags from user input"""
         user_lower = user_input.lower()
         tags = []
 
@@ -277,37 +195,8 @@ class CharacterVectorService:
 
         return tags
 
-    def _extract_situation_tags(self, user_input: str, interaction_quality: str) -> List[str]:
-        """
-        Extract situation-specific tags considering interaction quality
-        """
-        tags = self._extract_context_tags(user_input)  # Start with context tags
-
-        user_lower = user_input.lower()
-
-        # Add situation-specific tags
-        if any(word in user_lower for word in ['criticism', 'wrong', 'mistake', 'error', 'problem']):
-            tags.append('criticism')
-        if any(word in user_lower for word in ['achievement', 'success', 'good job', 'well done']):
-            tags.append('praise')
-        if any(word in user_lower for word in ['why', 'how', 'explain', 'understand']):
-            tags.append('seeking_understanding')
-
-        # Consider interaction quality
-        if interaction_quality in ['poor', 'adequate']:
-            tags.append('defensive_situation')
-        elif interaction_quality in ['good', 'excellent']:
-            tags.append('open_situation')
-
-        return tags
-
     def clear_cache(self, persona_id: Optional[str] = None):
-        """
-        Clear memory cache
-
-        Args:
-            persona_id: If provided, clear only this persona's cache. Otherwise clear all.
-        """
+        """Clear memory cache"""
         if persona_id:
             self._memory_cache.pop(persona_id, None)
             self._cache_loaded.pop(persona_id, None)
@@ -320,6 +209,7 @@ class CharacterVectorService:
 
 # Global instance (will be initialized with supabase client)
 character_vector_service = None
+
 
 def initialize_character_vector_service(supabase_client: Client):
     """Initialize the global character vector service"""

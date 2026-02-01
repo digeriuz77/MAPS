@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Facilitative Coaching Practice - MaPS Training Platform</title>
+
+    <!-- Auth Blocker - MUST be first to hide page until auth verified -->
+    <script src="/static/js/auth-blocker.js"></script>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/teal-theme.css">
+    <link rel="stylesheet" href="/static/css/mi-practice.css">
+</head>
+
+<body class="teal-theme mi-practice-page">
+    <!-- Navigation will be loaded by navigation.js -->
+    <div id="navigation-container"></div>
+
+    <main class="mi-practice-container" role="main" aria-label="Facilitative Coaching Practice">
+        <!-- Hero Section -->
+        <section class="mi-hero" aria-labelledby="mi-hero-title">
+            <div class="mi-hero-content">
+                <div class="maps-badge">
+                    <i class="fas fa-certificate" aria-hidden="true"></i>
+                    <span>MaPS Aligned Training</span>
+                </div>
+                <h1 id="mi-hero-title" class="mi-hero-title">
+                    <i class="fas fa-comments" aria-hidden="true"></i>
+                    Facilitative Coaching Practice
+                </h1>
+                <p class="mi-hero-subtitle">
+                    Develop your facilitative coaching skills through structured practice scenarios.<br>
+                    <span class="maps-subtitle">Aligned with the MaPS Money Guidance Competency Framework</span>
+                </p>
+                <div class="mi-hero-stats" id="hero-stats" aria-live="polite">
+                    <div class="stat-item">
+                        <span class="stat-value" id="stat-modules-completed">0</span>
+                        <span class="stat-label">Modules Completed</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value" id="stat-practice-minutes">0</span>
+                        <span class="stat-label">Practice Minutes</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value" id="stat-competency-score">-</span>
+                        <span class="stat-label">MaPS Competencies</span>
+                    </div>
+                </div>
+                <div class="maps-framework-link">
+                    <a href="https://www.moneyandpensionsservice.org.uk/money-guidance-competency-framework"
+                        target="_blank" rel="noopener noreferrer" class="btn-outline">
+                        <i class="fas fa-external-link-alt" aria-hidden="true"></i>
+                        View MaPS Framework
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Learning Paths Section -->
+        <section class="mi-section" aria-labelledby="paths-title">
+            <div class="section-header">
+                <h2 id="paths-title" class="section-title">
+                    <i class="fas fa-route" aria-hidden="true"></i>
+                    Learning Paths
+                </h2>
+                <p class="section-description">Curated sequences of modules to build your skills progressively</p>
+            </div>
+            <div class="learning-paths-grid" id="learning-paths-container" role="list"
+                aria-label="Available learning paths">
+                <!-- Paths loaded dynamically -->
+                <div class="loading-state" role="status" aria-live="polite">
+                    <i class="fas fa-spinner fa-spin" aria-hidden="true"></i>
+                    <span>Loading learning paths...</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module Library Section -->
+        <section class="mi-section" aria-labelledby="modules-title">
+            <div class="section-header">
+                <h2 id="modules-title" class="section-title">
+                    <i class="fas fa-book-open" aria-hidden="true"></i>
+                    Module Library
+                </h2>
+                <p class="section-description">Individual practice scenarios organized by focus area and audience</p>
+            </div>
+
+            <!-- Module Type Filter -->
+            <div class="module-type-tabs" role="tablist" aria-label="Module type selection">
+                <button class="tab-btn active" role="tab" aria-selected="true" data-module-type="all">
+                    <i class="fas fa-th" aria-hidden="true"></i>
+                    All Modules
+                </button>
+                <button class="tab-btn external-tab" role="tab" aria-selected="false" data-module-type="external">
+                    <i class="fas fa-users" aria-hidden="true"></i>
+                    External (Customer-facing)
+                </button>
+                <button class="tab-btn internal-tab" role="tab" aria-selected="false" data-module-type="internal">
+                    <i class="fas fa-user-friends" aria-hidden="true"></i>
+                    Internal (Colleague-facing)
+                </button>
+                <button class="tab-btn both-tab" role="tab" aria-selected="false" data-module-type="both">
+                    <i class="fas fa-random" aria-hidden="true"></i>
+                    Both Audiences
+                </button>
+            </div>
+
+            <!-- Filters -->
+            <div class="module-filters" role="search" aria-label="Module filters">
+                <div class="filter-group">
+                    <label for="filter-focus" class="filter-label">Focus Area</label>
+                    <select id="filter-focus" class="filter-select" aria-label="Filter by focus area">
+                        <option value="">All Areas</option>
+                        <option value="rapport_building">Building Rapport</option>
+                        <option value="probing_questions">Probing Questions</option>
+                        <option value="customer_understanding">Reflections & Understanding</option>
+                        <option value="working_with_resistance">Working with Reluctance</option>
+                        <option value="colleague_support">Colleague Support</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="filter-difficulty" class="filter-label">Difficulty</label>
+                    <select id="filter-difficulty" class="filter-select" aria-label="Filter by difficulty">
+                        <option value="">All Levels</option>
+                        <option value="beginner">Beginner</option>
+                        <option value="intermediate">Intermediate</option>
+                        <option value="advanced">Advanced</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="filter-search" class="filter-label">Search</label>
+                    <input type="search" id="filter-search" class="filter-input" placeholder="Search modules..."
+                        aria-label="Search modules">
+                </div>
+            </div>
+
+            <!-- Module Grid -->
+            <div class="modules-grid" id="modules-container" role="list" aria-label="Available practice modules">
+                <!-- Modules loaded dynamically -->
+                <div class="loading-state" role="status" aria-live="polite">
+                    <i class="fas fa-spinner fa-spin" aria-hidden="true"></i>
+                    <span>Loading modules...</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- MaPS Competency Reference Section -->
+        <section class="mi-section maps-reference-section" aria-labelledby="maps-ref-title">
+            <div class="section-header">
+                <h2 id="maps-ref-title" class="section-title">
+                    <i class="fas fa-certificate" aria-hidden="true"></i>
+                    MaPS Competency Framework Alignment
+                </h2>
+                <p class="section-description">Understanding how these modules align with the MaPS Money Guidance
+                    Competency Framework</p>
+            </div>
+            <div class="maps-competency-grid">
+                <div class="maps-competency-card">
+                    <div class="competency-icon">
+                        <i class="fas fa-hand-holding-heart" aria-hidden="true"></i>
+                    </div>
+                    <h3>Facilitative Approach</h3>
+                    <p>Helping customers identify their own issues, goals and priorities (Domain 1.2.3)</p>
+                </div>
+                <div class="maps-competency-card">
+                    <div class="competency-icon">
+                        <i class="fas fa-balance-scale" aria-hidden="true"></i>
+                    </div>
+                    <h3>Impartiality</h3>
+                    <p>Being objective, not influenced by personal feelings (Section A3)</p>
+                </div>
+                <div class="maps-competency-card">
+                    <div class="competency-icon">
+                        <i class="fas fa-comments" aria-hidden="true"></i>
+                    </div>
+                    <h3>Rapport Building</h3>
+                    <p>Empathising with customers' situations and gauging confidence (Section A6)</p>
+                </div>
+                <div class="maps-competency-card">
+                    <div class="competency-icon">
+                        <i class="fas fa-user-friends" aria-hidden="true"></i>
+                    </div>
+                    <h3>Customer Autonomy</h3>
+                    <p>Facilitating customers to act on their own behalf (Domain 1.2.9)</p>
+                </div>
+            </div>
+            <div class="maps-tier-info">
+                <h4><i class="fas fa-layer-group" aria-hidden="true"></i> Tier Alignment</h4>
+                <ul>
+                    <li><strong>Tier 1:</strong> Building rapport, basic probing questions, factual information</li>
+                    <li><strong>Tier 2:</strong> Coaching for capability, exploring options, empowering autonomy</li>
+                    <li><strong>Tier 3:</strong> Complex cases, specialist guidance, mentoring others</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Progress Overview Section -->
+        <section class="mi-section" aria-labelledby="progress-title">
+            <div class="section-header">
+                <h2 id="progress-title" class="section-title">
+                    <i class="fas fa-chart-line" aria-hidden="true"></i>
+                    Your Progress
+                </h2>
+                <a href="/mi-practice-progress.html" class="btn-text-link">
+                    View Detailed Progress <i class="fas fa-arrow-right" aria-hidden="true"></i>
+                </a>
+            </div>
+            <div class="progress-overview" id="progress-container">
+                <!-- Progress loaded dynamically -->
+                <div class="loading-state" role="status" aria-live="polite">
+                    <i class="fas fa-spinner fa-spin" aria-hidden="true"></i>
+                    <span>Loading progress...</span>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="mi-footer">
+        <p>&copy; 2026 MAPS Training Platform. Aligned with MaPS Money Guidance Competency Framework.</p>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="/static/js/supabaseClient.js"></script>
+    <script src="/static/js/authGuard.js"></script>
+    <script src="/static/js/navigation.js"></script>
+    <script src="/static/js/mi-components.js"></script>
+    <script src="/static/js/mi-practice.js"></script>
+
+    <script>
+        // Initialize page when DOM is ready
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                // Check authentication
+                await requireAuth();
+
+                // Initialize Supabase
+                await initializeSupabase();
+
+                // Load navigation
+                await loadNavigation();
+
+                // Initialize MI Practice landing page
+                if (window.MIPracticeApp) {
+                    await window.MIPracticeApp.initLandingPage();
+                }
+            } catch (error) {
+                console.error('Failed to initialize MI Practice page:', error);
+            }
+        });
+    </script>
+</body>
+
+</html>

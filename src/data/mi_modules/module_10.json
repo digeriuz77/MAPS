@@ -1,0 +1,581 @@
+{
+  "id": "f9dd331f-41da-4f7b-b5ab-d2f42a480f30",
+  "code": "mi-planning--implementation-inten-010",
+  "title": "Module 10: Planning & Implementation Intentions",
+  "mi_focus_area": "Action Planning",
+  "difficulty_level": "advanced",
+  "estimated_minutes": 11,
+  "learning_objective": "Check readiness before moving to planning; Elicit the patient's ideas for plans first; Use if-then implementation intentions; Link plans to existing routines and check confidence",
+  "scenario_context": "Learn to help patients create specific, realistic action plans using implementation intentions",
+  "persona_config": {
+    "name": "That",
+    "role": "patient/client",
+    "background": "Intends to take action soon and may have already taken some small steps toward change.",
+    "personality_traits": [
+      "motivated",
+      "determined",
+      "uncertain",
+      "hopeful"
+    ],
+    "tone_spectrum": {
+      "word_complexity": 0.5,
+      "sentence_length": 0.5,
+      "emotional_expressiveness": 0.5,
+      "disclosure_level": 0.5,
+      "response_latency": 0.6,
+      "confidence_level": 0.5
+    },
+    "starting_tone_position": 0.6,
+    "triggers": [
+      "direct criticism",
+      "being told what to do",
+      "lecturing",
+      "judgment"
+    ],
+    "comfort_topics": [
+      "autonomy",
+      "understanding",
+      "being heard",
+      "personal choice"
+    ]
+  },
+  "dialogue_structure": {
+    "start_node_id": "plan_1",
+    "nodes": {
+      "plan_1": {
+        "id": "plan_1",
+        "persona_text": "I've been thinking about it more, and I think I'm ready to start making some changes with my eating and activity. I want to do something.",
+        "persona_mood": "neutral_uncertain",
+        "themes": [
+          "Goals",
+          "Change"
+        ],
+        "choice_points": [
+          {
+            "id": "cp_plan_1_0",
+            "option_text": "Great! Here's what you need to do: eat 1500 calories a day and exercise for 45 minutes, five times a week.",
+            "preview_hint": "MI-consistent approach",
+            "rapport_impact": 0,
+            "resistance_impact": 0,
+            "tone_shift": 0.0,
+            "technique_tags": [
+              "unknown"
+            ],
+            "competency_links": [],
+            "feedback": {
+              "immediate": "This jumps immediately to a practitioner-generated plan without exploring the patient's ideas.",
+              "learning_note": "Continue practicing MI techniques to build your therapeutic skills."
+            },
+            "next_node_id": "plan_2a",
+            "exploration_depth": "surface"
+          },
+          {
+            "id": "cp_plan_1_1",
+            "option_text": "It sounds like you're feeling ready to take some steps. Would you like to think about what a realistic first step might look like for you?",
+            "preview_hint": "MI-consistent approach",
+            "rapport_impact": 0,
+            "resistance_impact": 0,
+            "tone_shift": 0.0,
+            "technique_tags": [
+              "unknown"
+            ],
+            "competency_links": [],
+            "feedback": {
+              "immediate": "Perfect - acknowledges readiness, asks permission, and invites patient's ideas.",
+              "learning_note": "Continue practicing MI techniques to build your therapeutic skills."
+            },
+            "next_node_id": "plan_2b",
+            "exploration_depth": "surface"
+          },
+          {
+            "id": "cp_plan_1_2",
+            "option_text": "You say you're ready, but are you really? You've said that before.",
+            "preview_hint": "MI-consistent approach",
+            "rapport_impact": 0,
+            "resistance_impact": 0,
+            "tone_shift": 0.0,
+            "technique_tags": [
+              "unknown"
+            ],
+            "competency_links": [],
+            "feedback": {
+              "immediate": "This undermines the patient's expressed readiness rather than supporting it.",
+              "learning_note": "Continue practicing MI techniques to build your therapeutic skills."
+            },
+            "next_node_id": "plan_2c",
+            "exploration_depth": "surface"
+          }
+        ],
+        "is_endpoint": false,
+        "endpoint_type": null
+      },
+      "plan_2a": {
+        "id": "plan_2a",
+        "persona_text": "That sounds really intense. I don't think I can do all that right away.",
+        "persona_mood": "neutral_uncertain",
+        "themes": [
+          "Goals"
+        ],
+        "choice_points": [
+          {
+            "id": "cp_plan_2a_0",
+            "option_text": "If you're serious about losing weight, this is what it takes. You have to commit.",
+            "preview_hint": "MI-consistent approach",
+            "rapport_impact": 0,
+            "resistance_impact": 0,
+            "tone_shift": 0.0,
+            "technique_tags": [
+              "unknown"
+            ],
+            "competency_links": [],
+            "feedback": {
+              "immediate": "This creates pressure and treats planning as fixed rather than collaborative.",
+              "learning_note": "Continue practicing MI techniques to build your therapeutic skills."
+            },
+            "next_node_id": "plan_end_poor",
+            "exploration_depth": "surface"
+          },
+          {
+            "id": "cp_plan_2a_1",
+            "option_text": "That does sound like a lot. What would feel like a realistic place for you to start?",
+            "preview_hint": "MI-consistent approach",
+            "rapport_impact": 0,
+            "resistance_impact": 0,
+            "tone_shift": 0.0,
+            "technique_tags": [
+              "unknown"
+            ],
+            "competency_links": [],
+            "feedback": {
+              "immediate": "Good recovery - validates concern and returns to patient-generated planning.",
+              "learning_note": "Validation acknowledges the patient's experience without judgment."
+            },
+            "next_node_id": "plan_2b",
+            "exploration_depth": "surface"
+          }
+        ],
+        "is_endpoint": false,
+        "endpoint_type": null
+      },
+      "plan_2b": {
+        "id": "plan_2b",
+        "persona_text": "Maybe I could start by swapping my afternoon snack - I usually have chips - for something healthier? And maybe try to walk for 10 minutes a few times a week?",
+        "persona_mood": "neutral_uncertain",
+        "themes": [
+          "Health Concerns"
+        ],
+        "choice_points": [
+          {
+            "id": "cp_plan_2b_0",
+            "option_text": "Those are thoughtful, specific ideas that you came up with. Let's get more specific - would it be okay to think about when and how these would happen?",
+            "preview_hint": "MI-consistent approach",
+            "rapport_impact": 0,
+            "resistance_impact": 0,
+            "tone_shift": 0.0,
+            "technique_tags": [
+              "unknown"
+            ],
+            "competency_links": [],
+            "feedback": {
+              "immediate": "Excellent - affirms patient's ideas and seeks permission to make plans concrete.",
+              "learning_note": "Continue practicing MI techniques to build your therapeutic skills."
+            },
+            "next_node_id": "plan_3a",
+            "exploration_depth": "surface"
+          },
+          {
+            "id": "cp_plan_2b_1",
+            "option_text": "That's a good start, but you'll need to do more than that to see real results.",
+            "preview_hint": "MI-consistent approach",
+            "rapport_impact": 0,
+            "resistance_impact": 0,
+            "tone_shift": 0.0,
+            "technique_tags": [
+              "unknown"
+            ],
+            "competency_links": [],
+            "feedback": {
+              "immediate": "This devalues what the patient proposed as insufficient.",
+              "learning_note": "Continue practicing MI techniques to build your therapeutic skills."
+            },
+            "next_node_id": "plan_2a",
+            "exploration_depth": "surface"
+          },
+          {
+            "id": "cp_plan_2b_2",
+            "option_text": "Let's make it every day, not just a few times a week. You should commit to daily walking.",
+            "preview_hint": "MI-consistent approach",
+            "rapport_impact": 0,
+            "resistance_impact": 0,
+            "tone_shift": 0.0,
+            "technique_tags": [
+              "unknown"
+            ],
+            "competency_links": [],
+            "feedback": {
+              "immediate": "This overrides the patient's realistic assessment of what they can commit to.",
+              "learning_note": "Continue practicing MI techniques to build your therapeutic skills."
+            },
+            "next_node_id": "plan_2c",
+            "exploration_depth": "surface"
+          }
+        ],
+        "is_endpoint": false,
+        "endpoint_type": null
+      },
+      "plan_2c": {
+        "id": "plan_2c",
+        "persona_text": "Well, when you put it like that, I'm not sure I'm ready after all.",
+        "persona_mood": "neutral_uncertain",
+        "themes": [
+          "General"
+        ],
+        "choice_points": [
+          {
+            "id": "cp_plan_2c_0",
+            "option_text": "See, I knew you weren't really ready. Let's just wait until you're more motivated.",
+            "preview_hint": "MI-consistent approach",
+            "rapport_impact": 0,
+            "resistance_impact": 0,
+            "tone_shift": 0.0,
+            "technique_tags": [
+              "unknown"
+            ],
+            "competency_links": [],
+            "feedback": {
+              "immediate": "This damages the relationship and abandons the planning process.",
+              "learning_note": "Continue practicing MI techniques to build your therapeutic skills."
+            },
+            "next_node_id": "plan_end_poor",
+            "exploration_depth": "surface"
+          },
+          {
+            "id": "cp_plan_2c_1",
+            "option_text": "It sounds like I pushed too hard there. What would feel right for you to try?",
+            "preview_hint": "MI-consistent approach",
+            "rapport_impact": 0,
+            "resistance_impact": 0,
+            "tone_shift": 0.0,
+            "technique_tags": [
+              "unknown"
+            ],
+            "competency_links": [],
+            "feedback": {
+              "immediate": "Good - practitioner takes responsibility for the discord and returns to collaboration.",
+              "learning_note": "Continue practicing MI techniques to build your therapeutic skills."
+            },
+            "next_node_id": "plan_2b",
+            "exploration_depth": "surface"
+          }
+        ],
+        "is_endpoint": false,
+        "endpoint_type": null
+      },
+      "plan_3a": {
+        "id": "plan_3a",
+        "persona_text": "Sure, that would help. I usually snack around 3pm at my desk when I hit that afternoon slump.",
+        "persona_mood": "neutral_uncertain",
+        "themes": [
+          "Change"
+        ],
+        "choice_points": [
+          {
+            "id": "cp_plan_3a_0",
+            "option_text": "So if it's 3pm and you're at your desk feeling that slump, what could you do instead of reaching for chips?",
+            "preview_hint": "MI-consistent approach",
+            "rapport_impact": 0,
+            "resistance_impact": 0,
+            "tone_shift": 0.0,
+            "technique_tags": [
+              "unknown"
+            ],
+            "competency_links": [],
+            "feedback": {
+              "immediate": "Perfect - uses if-then format to create a concrete implementation intention.",
+              "learning_note": "Continue practicing MI techniques to build your therapeutic skills."
+            },
+            "next_node_id": "plan_4a",
+            "exploration_depth": "surface"
+          },
+          {
+            "id": "cp_plan_3a_1",
+            "option_text": "You should keep healthy snacks at your desk. I recommend carrot sticks or almonds.",
+            "preview_hint": "MI-consistent approach",
+            "rapport_impact": 0,
+            "resistance_impact": 0,
+            "tone_shift": 0.0,
+            "technique_tags": [
+              "unknown"
+            ],
+            "competency_links": [],
+            "feedback": {
+              "immediate": "This gives advice without eliciting the patient's own ideas first.",
+              "learning_note": "Continue practicing MI techniques to build your therapeutic skills."
+            },
+            "next_node_id": "plan_2a",
+            "exploration_depth": "surface"
+          }
+        ],
+        "is_endpoint": false,
+        "endpoint_type": null
+      },
+      "plan_4a": {
+        "id": "plan_4a",
+        "persona_text": "I could grab the apple I bring for lunch but never eat? Or maybe take a quick walk around the office instead of snacking?",
+        "persona_mood": "neutral_uncertain",
+        "themes": [
+          "General"
+        ],
+        "choice_points": [
+          {
+            "id": "cp_plan_4a_0",
+            "option_text": "Those are both smart alternatives - using something you already have, or movement instead of food. Which feels most doable to you?",
+            "preview_hint": "MI-consistent approach",
+            "rapport_impact": 0,
+            "resistance_impact": 0,
+            "tone_shift": 0.0,
+            "technique_tags": [
+              "unknown"
+            ],
+            "competency_links": [],
+            "feedback": {
+              "immediate": "Good - affirms both options and lets patient choose what fits best.",
+              "learning_note": "Continue practicing MI techniques to build your therapeutic skills."
+            },
+            "next_node_id": "plan_5a",
+            "exploration_depth": "surface"
+          },
+          {
+            "id": "cp_plan_4a_1",
+            "option_text": "Walking is better than the apple because you need the exercise more than changing your snack.",
+            "preview_hint": "MI-consistent approach",
+            "rapport_impact": 0,
+            "resistance_impact": 0,
+            "tone_shift": 0.0,
+            "technique_tags": [
+              "unknown"
+            ],
+            "competency_links": [],
+            "feedback": {
+              "immediate": "This takes over decision-making instead of letting the patient choose.",
+              "learning_note": "Continue practicing MI techniques to build your therapeutic skills."
+            },
+            "next_node_id": "plan_end_poor",
+            "exploration_depth": "surface"
+          }
+        ],
+        "is_endpoint": false,
+        "endpoint_type": null
+      },
+      "plan_5a": {
+        "id": "plan_5a",
+        "persona_text": "I think the apple. The walk might be too much to add right now, but eating the apple I already have - that seems easy.",
+        "persona_mood": "neutral_uncertain",
+        "themes": [
+          "General"
+        ],
+        "choice_points": [
+          {
+            "id": "cp_plan_5a_0",
+            "option_text": "So your plan is: if it's 3pm and I'm at my desk feeling the afternoon slump, then I'll eat my apple instead of chips. How confident do you feel about doing that?",
+            "preview_hint": "MI-consistent approach",
+            "rapport_impact": 0,
+            "resistance_impact": 0,
+            "tone_shift": 0.0,
+            "technique_tags": [
+              "unknown"
+            ],
+            "competency_links": [],
+            "feedback": {
+              "immediate": "Excellent - restates the if-then plan clearly and checks confidence before finalizing.",
+              "learning_note": "Continue practicing MI techniques to build your therapeutic skills."
+            },
+            "next_node_id": "plan_6a",
+            "exploration_depth": "surface"
+          },
+          {
+            "id": "cp_plan_5a_1",
+            "option_text": "Good. Now let's plan your walking schedule in detail too.",
+            "preview_hint": "MI-consistent approach",
+            "rapport_impact": 0,
+            "resistance_impact": 0,
+            "tone_shift": 0.0,
+            "technique_tags": [
+              "unknown"
+            ],
+            "competency_links": [],
+            "feedback": {
+              "immediate": "This moves to another change without completing the first or checking if patient wants to continue.",
+              "learning_note": "Continue practicing MI techniques to build your therapeutic skills."
+            },
+            "next_node_id": "plan_2a",
+            "exploration_depth": "surface"
+          }
+        ],
+        "is_endpoint": false,
+        "endpoint_type": null
+      },
+      "plan_6a": {
+        "id": "plan_6a",
+        "persona_text": "Pretty confident, maybe an 8. I always have an apple with me, and my desk is private so no one will notice.",
+        "persona_mood": "neutral_uncertain",
+        "themes": [
+          "Goals"
+        ],
+        "choice_points": [
+          {
+            "id": "cp_plan_6a_0",
+            "option_text": "An 8 is solid. What would make it easier to remember to do this, especially on tough days?",
+            "preview_hint": "MI-consistent approach",
+            "rapport_impact": 0,
+            "resistance_impact": 0,
+            "tone_shift": 0.0,
+            "technique_tags": [
+              "unknown"
+            ],
+            "competency_links": [],
+            "feedback": {
+              "immediate": "Good - reinforces confidence and prepares for challenges.",
+              "learning_note": "Continue practicing MI techniques to build your therapeutic skills."
+            },
+            "next_node_id": "plan_7a",
+            "exploration_depth": "surface"
+          },
+          {
+            "id": "cp_plan_6a_1",
+            "option_text": "Perfect! So you'll do this every day without fail starting tomorrow.",
+            "preview_hint": "MI-consistent approach",
+            "rapport_impact": 0,
+            "resistance_impact": 0,
+            "tone_shift": 0.0,
+            "technique_tags": [
+              "unknown"
+            ],
+            "competency_links": [],
+            "feedback": {
+              "immediate": "This makes the plan inflexible and pressures absolute adherence.",
+              "learning_note": "Continue practicing MI techniques to build your therapeutic skills."
+            },
+            "next_node_id": "plan_end_poor",
+            "exploration_depth": "surface"
+          }
+        ],
+        "is_endpoint": false,
+        "endpoint_type": null
+      },
+      "plan_7a": {
+        "id": "plan_7a",
+        "persona_text": "Maybe I could put the apple right on my keyboard in the morning? That way I'd see it and remember. And if I have a really bad day and still want chips, that's okay - I can try again the next day.",
+        "persona_mood": "neutral_uncertain",
+        "themes": [
+          "Goals"
+        ],
+        "choice_points": [
+          {
+            "id": "cp_plan_7a_0",
+            "option_text": "You're thinking ahead about both a reminder and how to be flexible with yourself. That's a really thoughtful approach. What about the walking - did you want to make a plan for that too, or start with just the snack swap?",
+            "preview_hint": "MI-consistent approach",
+            "rapport_impact": 0,
+            "resistance_impact": 0,
+            "tone_shift": 0.0,
+            "technique_tags": [
+              "unknown"
+            ],
+            "competency_links": [],
+            "feedback": {
+              "immediate": "Perfect - affirms planning and lets patient decide scope without pressure.",
+              "learning_note": "Continue practicing MI techniques to build your therapeutic skills."
+            },
+            "next_node_id": "plan_end_good",
+            "exploration_depth": "surface"
+          },
+          {
+            "id": "cp_plan_7a_1",
+            "option_text": "No, you can't have chips even on bad days. You have to stick to the plan.",
+            "preview_hint": "MI-consistent approach",
+            "rapport_impact": 0,
+            "resistance_impact": 0,
+            "tone_shift": 0.0,
+            "technique_tags": [
+              "unknown"
+            ],
+            "competency_links": [],
+            "feedback": {
+              "immediate": "This creates unrealistic expectations and treats plans as fixed.",
+              "learning_note": "Continue practicing MI techniques to build your therapeutic skills."
+            },
+            "next_node_id": "plan_end_poor",
+            "exploration_depth": "surface"
+          }
+        ],
+        "is_endpoint": false,
+        "endpoint_type": null
+      },
+      "plan_end_good": {
+        "id": "plan_end_good",
+        "persona_text": "Let me try the snack thing for a couple weeks and see how it goes. Once that's a habit, I'll think about adding the walking. One thing at a time feels more realistic.",
+        "persona_mood": "neutral_uncertain",
+        "themes": [
+          "Identity",
+          "Goals"
+        ],
+        "choice_points": [],
+        "is_endpoint": true,
+        "endpoint_type": "successful_engagement"
+      },
+      "plan_end_poor": {
+        "id": "plan_end_poor",
+        "persona_text": "This all feels like too much pressure. I don't think I'm ready for this after all.",
+        "persona_mood": "neutral_uncertain",
+        "themes": [
+          "Goals"
+        ],
+        "choice_points": [],
+        "is_endpoint": true,
+        "endpoint_type": "failed_engagement"
+      }
+    }
+  },
+  "target_competencies": [
+    "B4",
+    "B5",
+    "A6",
+    "B6"
+  ],
+  "maps_rubric": {
+    "dimensions": {
+      "A6": {
+        "description": "Rapport Building",
+        "weight": 1.5,
+        "positive_signals": [
+          "simple_reflection",
+          "affirmation",
+          "open_question"
+        ],
+        "negative_signals": [
+          "confrontation",
+          "educating",
+          "righting_reflex"
+        ]
+      },
+      "B6": {
+        "description": "Therapeutic Alliance",
+        "weight": 1.5,
+        "positive_signals": [
+          "validation",
+          "empathy",
+          "reflection"
+        ],
+        "negative_signals": [
+          "judgment",
+          "pressure",
+          "explanation"
+        ]
+      }
+    },
+    "overall_scoring_logic": "weighted_average"
+  },
+  "is_active": true,
+  "created_at": "2026-01-31T00:00:00Z",
+  "updated_at": "2026-01-31T00:00:00Z"
+}

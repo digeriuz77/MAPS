@@ -9,6 +9,7 @@ This is the heart of the scenario-based architecture. It orchestrates:
 """
 
 import logging
+from dataclasses import dataclass
 from datetime import datetime
 from typing import Dict, Any, Optional
 
