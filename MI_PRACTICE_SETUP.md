@@ -5,22 +5,68 @@ This guide covers the setup, deployment, and configuration of the MI Practice mo
 ## Table of Contents
 
 1. [Overview](#overview)
-2. [Prerequisites](#prerequisites)
-3. [Database Setup](#database-setup)
-4. [Environment Configuration](#environment-configuration)
-5. [Module Seeding](#module-seeding)
-6. [Running the Application](#running-the-application)
-7. [Adding New Modules](#adding-new-modules)
-8. [Troubleshooting](#troubleshooting)
+2. [Module Classification](#module-classification)
+3. [Prerequisites](#prerequisites)
+4. [Database Setup](#database-setup)
+5. [Environment Configuration](#environment-configuration)
+6. [Module Seeding](#module-seeding)
+7. [Running the Application](#running-the-application)
+8. [Adding New Modules](#adding-new-modules)
+9. [API Reference](#api-reference)
+10. [Troubleshooting](#troubleshooting)
 
 ## Overview
 
-The MI Practice module provides interactive training scenarios for Motivational Interviewing techniques. It includes:
+The MI Practice module provides interactive training scenarios for Motivational Interviewing techniques aligned with the MAPS Money Guidance Competency Framework. It includes:
 
-- **13 Pre-built Modules**: Covering various MI focus areas and difficulty levels
-- **Dynamic Scoring**: Continuous 1-10 spectrum across 5 competency dimensions
+- **20 Practice Modules**: Across three classifications (Shared, Customer-Facing, Colleague-Facing)
+- **8 Learning Pathways**: Structured progression from foundational to advanced skills
+- **Dynamic Scoring**: MAPS competency-based assessment with continuous feedback
 - **Progress Tracking**: Comprehensive analytics and learning insights
 - **Branching Dialogues**: Responsive conversations based on user choices
+
+## Module Classification
+
+MI Practice modules are organized into three categories:
+
+### 1. Shared Modules (Core Skills)
+**Purpose**: Core MI techniques with neutral language applicable universally
+
+| Code | Title | Focus Area | Difficulty |
+|------|-------|------------|------------|
+| `shared-simple-reflections-001` | Simple Reflections | Reflective Listening | Beginner |
+| `shared-open-questions-002` | Open-Ended Questions | Building Rapport | Beginner |
+| `shared-affirmations-004` | Affirmations | Building Confidence | Beginner |
+| `shared-complex-reflections-003` | Complex & Double-Sided Reflections | Exploring Ambivalence | Beginner |
+| `shared-summarizing-005` | Summarizing | Linking & Transitioning | Intermediate |
+| `shared-change-talk-006` | Recognizing & Evoking Change Talk | Evoking | Intermediate |
+| `shared-collaborative-climate-007` | Collaborative Climate | Partnership | Beginner |
+| `shared-confidence-scaling-008` | Confidence Scaling | Assessment | Beginner |
+| `shared-decisional-balance-009` | Decisional Balance | Decision Making | Intermediate |
+| `shared-elicit-provide-elicit-010` | Elicit-Provide-Elicit | Information Exchange | Intermediate |
+| `shared-planning-011` | Planning | Goal Setting | Advanced |
+| `shared-anticipatory-coping-012` | Anticipatory Coping | Sustaining Change | Advanced |
+
+### 2. Customer-Facing Modules (MAPS Financial Scenarios)
+**Purpose**: Apply MI skills to specific money guidance contexts
+
+| Code | Title | MAPS Domain | Difficulty |
+|------|-------|-------------|------------|
+| `customer-debt-initial-001` | Debt Advice: Initial Engagement | Domain 2 (Debt) | Intermediate |
+| `customer-budgeting-002` | Budget Planning with Impartial Guidance | Domain 5 (Budgeting) | Intermediate |
+| `customer-financial-anxiety-003` | Supporting Financial Anxiety | Domain 1 (Knowing Customer) | Intermediate |
+| `customer-savings-goals-004` | Savings Goal Setting | Domain 5 (Budgeting) | Beginner |
+| `customer-pensions-exploration-005` | Pensions Exploration | Domain 11 (Pensions) | Intermediate |
+
+### 3. Colleague-Facing Modules (Workplace Scenarios)
+**Purpose**: Apply MI skills to internal colleague contexts
+
+| Code | Title | Context | Difficulty |
+|------|-------|---------|------------|
+| `colleague-performance-review-001` | Performance Review: Reflective Practice | Annual Review | Intermediate |
+| `colleague-career-development-002` | Career Development: Coaching Conversation | Development | Intermediate |
+| `colleague-skill-gap-003` | Skill Gap Coaching: Development Support | Training | Intermediate |
+| `colleague-team-dynamics-004` | Team Dynamics: Mediation and Facilitation | Team Working | Advanced |
 
 ## Prerequisites
 
@@ -31,7 +77,6 @@ The MI Practice module provides interactive training scenarios for Motivational 
 
 ### Required Accounts
 - Supabase account (https://supabase.com)
-- (Optional) Deepgram account for voice features
 
 ### Python Dependencies
 ```bash
@@ -58,7 +103,8 @@ supabase db push
 ```
 
 **Required Migration Files:**
-- `supabase/0018_create_mi_practice_tables.sql` - Creates core MI Practice tables
+- `supabase/migrations/current/0004_current_mi_practice_tables.sql` - Creates core MI Practice tables
+- `supabase/migrations/current/0005_mi_learning_pathways.sql` - Creates learning pathways table
 
 ### 3. Database Schema
 
@@ -72,6 +118,7 @@ CREATE TABLE mi_practice_modules (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     code VARCHAR(50) UNIQUE NOT NULL,
     title VARCHAR(200) NOT NULL,
+    content_type VARCHAR(50) NOT NULL,  -- 'shared', 'customer_facing', 'colleague_facing'
     mi_focus_area VARCHAR(100),
     difficulty_level VARCHAR(20) DEFAULT 'beginner',
     estimated_minutes INTEGER DEFAULT 5,
@@ -81,6 +128,7 @@ CREATE TABLE mi_practice_modules (
     dialogue_structure JSONB NOT NULL,
     target_competencies TEXT[],
     maps_rubric JSONB NOT NULL,
+    maps_framework_alignment JSONB,
     is_active BOOLEAN DEFAULT true,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
@@ -136,13 +184,7 @@ Defines structured learning sequences.
 ```sql
 CREATE TABLE mi_learning_paths (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    code VARCHAR(50) UNIQUE NOT NULL,
-    title VARCHAR(200) NOT NULL,
-    description TEXT,
-    module_sequence UUID[],
-    target_audience VARCHAR(200),
-    estimated_total_minutes INTEGER,
-    maps_competencies_targeted TEXT[],
+    pathway_data JSONB NOT NULL,  -- Stores full pathway configuration
     is_active BOOLEAN DEFAULT true,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
@@ -169,9 +211,6 @@ SUPABASE_SERVICE_KEY=your-service-role-key
 APP_ENV=development
 DEBUG=true
 LOG_LEVEL=INFO
-
-# (Optional) Deepgram for voice features
-DEEPGRAM_API_KEY=your-deepgram-key
 ```
 
 ### 3. Verify Configuration
@@ -182,39 +221,59 @@ python -c "from src.config.settings import settings; print('Config loaded succes
 
 ## Module Seeding
 
-### 1. Convert Legacy Modules (if applicable)
+### 1. Generate Seed Scripts
 
-If you have legacy module files:
-
-```bash
-python scripts/convert_mi_modules.py
-```
-
-This converts old module formats to the new schema.
-
-### 2. Seed Modules to Database
+From module JSON files:
 
 ```bash
-python scripts/seed_mi_modules.py
+python scripts/generate_seed_scripts.py
 ```
 
-This script:
-- Reads module JSON files from `src/data/mi_modules/`
-- Validates module structure
-- Inserts/updates records in the database
-- Reports any validation errors
+This generates Supabase-compatible seed SQL scripts for:
+- All 20 MI practice modules
+- Learning pathways configuration
+
+### 2. Run Seed Scripts
+
+**Option A: Individual scripts via Supabase SQL Editor**
+```bash
+# Navigate to the seed directory
+cd supabase/seed
+
+# Copy and paste each script into Supabase SQL Editor
+# Scripts are named: seed_{module-code}.sql
+```
+
+**Option B: Batch import via Supabase CLI**
+```bash
+# Run all seed scripts
+for script in supabase/seed/seed_*.sql; do
+    supabase db execute --file "$script"
+done
+```
 
 ### 3. Verify Seeding
 
 Check the Supabase SQL Editor:
 
 ```sql
-SELECT code, title, mi_focus_area, difficulty_level 
-FROM mi_practice_modules 
-WHERE is_active = true;
-```
+-- Verify modules
+SELECT code, title, content_type, mi_focus_area, difficulty_level
+FROM mi_practice_modules
+WHERE is_active = true
+ORDER BY content_type, code;
 
-Expected: 13 modules listed
+-- Expected: 20 modules
+-- 12 shared, 5 customer_facing, 4 colleague_facing
+
+-- Verify learning pathways
+SELECT id, pathway_data->>'name' as name,
+       pathway_data->>'target_audience' as audience
+FROM mi_learning_paths
+WHERE is_active = true;
+
+-- Expected: 8 pathways
+```
 
 ## Running the Application
 
@@ -239,20 +298,18 @@ uvicorn src.main:app --reload --host 0.0.0.0 --port 8000
 
 ### 3. Verify API Endpoints
 
-Test the health check:
-
 ```bash
+# Health check
 curl http://localhost:8000/api/mi-practice/health
-```
 
-Expected response:
-```json
-{
-  "status": "healthy",
-  "module_count": 13,
-  "service": "mi-practice",
-  "timestamp": "2026-02-01T00:00:00"
-}
+# List modules
+curl http://localhost:8000/api/mi-practice/modules
+
+# Get content types
+curl http://localhost:8000/api/mi-practice/content-types
+
+# Filter by content type
+curl http://localhost:8000/api/mi-practice/modules?content_type=shared
 ```
 
 ## Adding New Modules
@@ -263,27 +320,29 @@ Create a new JSON file in `src/data/mi_modules/`:
 
 ```json
 {
-  "code": "mi-focus-area-XXX",
+  "id": "00000000-0000-0000-0001-000000000XXX",
+  "code": "{type}-{slug}-{XXX}",
   "title": "Module Title",
-  "mi_focus_area": "Building Rapport",
+  "content_type": "shared",
+  "mi_focus_area": "Reflective Listening",
   "difficulty_level": "beginner",
-  "estimated_minutes": 5,
+  "estimated_minutes": 10,
   "learning_objective": "What the learner will practice",
   "scenario_context": "Background context for the scenario",
   "persona_config": {
     "name": "Character Name",
-    "role": "team member",
+    "role": "person",
     "background": "Character background",
     "personality_traits": ["trait1", "trait2"],
     "tone_spectrum": {
       "word_complexity": 0.5,
       "sentence_length": 0.5,
-      "emotional_expressiveness": 0.3,
-      "disclosure_level": 0.2,
+      "emotional_expressiveness": 0.5,
+      "disclosure_level": 0.5,
       "response_latency": 0.5,
-      "confidence_level": 0.4
+      "confidence_level": 0.5
     },
-    "starting_tone_position": 0.2,
+    "starting_tone_position": 0.5,
     "triggers": ["trigger1"],
     "comfort_topics": ["topic1"]
   },
@@ -293,17 +352,16 @@ Create a new JSON file in `src/data/mi_modules/`:
       "node_1": {
         "id": "node_1",
         "persona_text": "Character's opening line",
-        "persona_mood": "defensive_guarded",
-        "themes": ["Trust"],
+        "persona_mood": "neutral_curious",
+        "themes": ["Theme1"],
         "choice_points": [
           {
             "id": "cp_1_1",
             "option_text": "User's response option",
             "preview_hint": "Hint about the approach",
             "rapport_impact": 1,
-            "resistance_impact": -1,
             "tone_shift": 0.1,
-            "technique_tags": ["open_question"],
+            "technique_tags": ["reflection"],
             "competency_links": ["A6"],
             "feedback": {
               "immediate": "Immediate feedback",
@@ -323,50 +381,142 @@ Create a new JSON file in `src/data/mi_modules/`:
       "A6": {
         "description": "Rapport Building",
         "weight": 1.5,
-        "positive_signals": ["open_questions"],
+        "positive_signals": ["reflection"],
         "negative_signals": ["confrontation"]
       }
     },
     "overall_scoring_logic": "weighted_average"
-  }
+  },
+  "maps_framework_alignment": {
+    "framework_name": "MaPS Money Guidance Competency Framework",
+    "framework_version": "September 2022",
+    "sections": ["A6", "B6"],
+    "tier_relevance": "All Tiers",
+    "domains": ["Universal Skill"]
+  },
+  "is_active": true,
+  "created_at": "2026-02-01T00:00:00Z",
+  "updated_at": "2026-02-01T00:00:00Z"
 }
 ```
 
 ### 2. Code Naming Convention
 
-Format: `mi-{focus-area}-{number}`
+**Format:** `{type}-{slug}-{number}`
 
-Examples:
-- `mi-building-rapport-001`
-- `mi-explore-resistance-002`
-- `mi-action-planning-001`
+**Types:**
+- `shared-*`: Core technique modules with neutral language
+- `customer-*`: MAPS financial scenarios
+- `colleague-*`: MAPS workplace scenarios
 
-### 3. Focus Areas
+**Examples:**
+- `shared-active-listening-001`
+- `customer-debt-initial-001`
+- `colleague-performance-review-001`
 
-Valid focus areas:
-- Building Rapport
-- Exploring Resistance
-- Action Planning
-- Eliciting Change Talk
-- Affirming
-- Reflective Listening
+### 3. Language Guidelines
 
-### 4. Difficulty Levels
+**Shared Modules:**
+- Use: "person", "individual", "participant"
+- Avoid: "customer", "colleague", "patient", "client"
+- Focus: The skill itself, not the context
 
-- `beginner`: 5-7 minutes, straightforward scenarios
-- `intermediate`: 8-12 minutes, moderate complexity
-- `advanced`: 13-20 minutes, complex multi-layered scenarios
+**Customer-Facing Modules:**
+- Use: "customer", "client"
+- MAPS Domains: 1 (Knowing Customer), 2 (Debt), 5 (Budgeting), 11 (Pensions)
+- Themes: Financial anxiety, debt stress, budgeting, savings, pensions
 
-### 5. Validate and Seed
+**Colleague-Facing Modules:**
+- Use: "colleague", "team member"
+- Themes: Performance, development, coaching, team dynamics, career growth
+- Tone: Collaborative, developmental, supportive
 
-After creating the module file:
+### 4. Generate Seed Script
 
 ```bash
-# Validate JSON syntax
-python -m json.tool src/data/mi_modules/module_new.json
+# Generate seed script for new module
+python scripts/generate_seed_scripts.py
+```
 
-# Seed to database
-python scripts/seed_mi_modules.py
+### 5. Seed to Database
+
+```bash
+# Run generated seed script in Supabase SQL Editor
+supabase/seed/seed_{module-code}.sql
+```
+
+## API Reference
+
+### Module Endpoints
+
+#### List Modules
+```
+GET /api/mi-practice/modules
+```
+
+Query Parameters:
+- `content_type`: Filter by type (`shared`, `customer_facing`, `colleague_facing`)
+- `focus_area`: Filter by MI focus area
+- `difficulty`: Filter by difficulty level
+- `user_id`: Include user progress information
+
+#### Get Module
+```
+GET /api/mi-practice/modules/{module_id}
+```
+
+#### Discovery Endpoints
+
+**Content Types**
+```
+GET /api/mi-practice/content-types
+```
+Returns content types with module counts.
+
+**Focus Areas**
+```
+GET /api/mi-practice/focus-areas
+```
+Returns focus areas with module counts.
+
+**Difficulty Levels**
+```
+GET /api/mi-practice/difficulty-levels
+```
+Returns difficulty levels with module counts.
+
+### Practice Endpoints
+
+#### Start Attempt
+```
+POST /api/mi-practice/modules/{module_id}/start
+```
+
+#### Make Choice
+```
+POST /api/mi-practice/attempts/{attempt_id}/choose
+```
+
+#### Get Attempt Review
+```
+GET /api/mi-practice/attempts/{attempt_id}/review
+```
+
+### Learning Path Endpoints
+
+#### List Learning Paths
+```
+GET /api/mi-practice/learning-paths
+```
+
+#### Get Learning Path
+```
+GET /api/mi-practice/learning-paths/{path_id}
+```
+
+#### Enroll in Path
+```
+POST /api/mi-practice/learning-paths/enroll
 ```
 
 ## Troubleshooting
@@ -389,6 +539,7 @@ python scripts/seed_mi_modules.py
 2. Verify required fields are present
 3. Ensure `code` follows naming convention
 4. Check that `start_node_id` matches a node in `dialogue_structure.nodes`
+5. Validate `content_type` is one of: `shared`, `customer_facing`, `colleague_facing`
 
 ### API 404 Errors
 
@@ -449,6 +600,7 @@ pytest tests/ --cov=src --cov-report=html
 
 - [ ] Navigate to MI Practice from welcome page
 - [ ] View module list with filters
+- [ ] Filter by content type (shared/customer/colleague)
 - [ ] Start a practice attempt
 - [ ] Make choices and see feedback
 - [ ] Complete an attempt
@@ -484,17 +636,28 @@ LOG_LEVEL=WARNING
 - Configure application logs
 - Monitor database performance
 
-## Support
+## MAPS Framework Alignment
 
-For issues or questions:
+All modules align with the **MaPS Money Guidance Competency Framework (September 2022)**.
 
-1. Check this guide's troubleshooting section
-2. Review logs in Supabase Dashboard
-3. Check browser console for frontend errors
-4. Refer to architecture documentation in `plans/`
+### Competency Sections
+- **A**: Working with People
+- **B**: Communication Skills
+- **C**: Knowledge and Understanding
+
+### Tier Relevance
+- **Tier 1**: Universal and Foundation Services
+- **Tier 2**: Specialized and Targeted Services
+- **Tier 3**: Specialist and Intensive Services
+
+### Domains
+- **Domain 1**: Knowing Your Customer
+- **Domain 2**: Debt
+- **Domain 5**: Budgeting
+- **Domain 11**: Pensions
 
 ---
 
-**Last Updated**: 2026-02-01  
-**Version**: 1.0.0  
-**Status**: Production Ready
+**Last Updated**: 2026-02-01
+**Version**: 2.0.0
+**Status**: Phase 3 Complete - 20 modules ready for deployment
