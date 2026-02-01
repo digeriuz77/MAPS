@@ -190,24 +190,59 @@ This document provides a comprehensive implementation plan for integrating struc
 | resistance | hesitation |
 | precontemplation | not yet ready |
 
-### 2.3 Module Files to Update
+### 2.3 Module Structure Redesign
 
-Located in `src/data/mi_modules/`:
+**IMPORTANT CORRECTION:** Most MI techniques are SHARED/NEUTRAL strategies. The classification should be:
 
-| File | Current Title | Target Classification | Status |
-|------|---------------|----------------------|--------|
-| `module_1.json` | Simple Reflections | Customer-Facing | ⏳ |
-| `module_2.json` | Open-Ended Questions | Customer-Facing | ⏳ |
-| `module_3.json` | Complex Reflections | Customer-Facing | ⏳ |
-| `module_4.json` | Affirmations | Customer-Facing | ⏳ |
-| `module_5.json` | Summarizing | Customer-Facing | ⏳ |
-| `module_6.json` | Eliciting Change Talk | Customer-Facing | ⏳ |
-| `module_7.json` | Rolling with Resistance | Customer-Facing | ⏳ |
-| `module_8.json` | Developing Discrepancy | Customer-Facing | ⏳ |
-| `module_9.json` | Colleague Coaching | Colleague-Facing | ⏳ |
-| `module_10.json` | Handling Objections | Customer-Facing | ⏳ |
-| `module_11.json` | Action Planning | Customer-Facing | ⏳ |
-| `module_12.json` | Difficult Conversations | Colleague-Facing | ⏳ |
+**Shared Modules (Core Technique Practice - Neutral Language):**
+These modules teach the core MI skills that apply to both customer and colleague contexts.
+
+| Code | Title | Focus Area | Difficulty | Status |
+|------|-------|------------|------------|--------|
+| `shared-simple-reflections-001` | Simple Reflections - Core Skill Practice | Reflective Listening | beginner | ✅ Created |
+| `shared-open-questions-002` | Open-Ended Questions | Building Rapport | beginner | ⏳ Pending |
+| `shared-complex-reflections-003` | Complex & Double-Sided Reflections | Reflective Listening | beginner | ⏳ Pending |
+| `shared-affirmations-004` | Affirmations | Building Rapport | beginner | ⏳ Pending |
+| `shared-summarizing-005` | Summarizing | Linking & Transitioning | intermediate | ⏳ Pending |
+| `shared-change-talk-006` | Recognizing & Evoking Goal Acknowledgment | Eliciting | intermediate | ⏳ Pending |
+| `shared-collaborative-climate-007` | Collaborative Climate & Focusing | Partnership | intermediate | ⏳ Pending |
+| `shared-confidence-scaling-008` | Confidence Scaling | Assessment | beginner | ⏳ Pending |
+| `shared-decisional-balance-009` | Decisional Balance | Exploring Ambivalence | intermediate | ⏳ Pending |
+| `shared-elicit-provide-elicit-010` | Elicit-Provide-Elicit | Information Exchange | intermediate | ⏳ Pending |
+| `shared-planning-011` | Planning & Implementation | Goal Setting | intermediate | ⏳ Pending |
+| `shared-anticipatory-coping-012` | Anticipatory Coping & Maintenance | Sustaining Change | advanced | ⏳ Pending |
+
+**Customer-Facing Modules (Specific MAPS Financial Scenarios):**
+These modules apply core skills to specific money guidance contexts.
+
+| Code | Title | MAPS Domain | Difficulty | Status |
+|------|-------|-------------|------------|--------|
+| `customer-debt-initial-001` | Debt Advice: Initial Engagement | Domain 2 (Debt) | beginner | ✅ Created |
+| `customer-budgeting-002` | Budget Planning Discussion | Domain 5 (Budgeting) | beginner | ⏳ Pending |
+| `customer-financial-anxiety-003` | Supporting Financial Anxiety | Domain 1 (Knowing Customer) | intermediate | ⏳ Pending |
+| `customer-savings-goals-004` | Savings Goal Setting | Domain 5 (Budgeting) | beginner | ⏳ Pending |
+| `customer-pensions-exploration-005` | Pensions Exploration | Domain 11 (Pensions) | intermediate | ⏳ Pending |
+| `customer-spending-habits-006` | Spending Habits Review | Domain 5 (Budgeting) | intermediate | ⏳ Pending |
+
+**Colleague-Facing Modules (Specific MAPS Performance Scenarios):**
+These modules apply core skills to internal colleague contexts.
+
+| Code | Title | Context | Difficulty | Status |
+|------|-------|---------|------------|--------|
+| `colleague-performance-review-001` | Performance Review: Supporting Development | Annual Review | intermediate | ✅ Created |
+| `colleague-career-development-002` | Career Development Coaching | Development | intermediate | ⏳ Pending |
+| `colleague-skill-gap-003` | Skill Gap Coaching | Training | intermediate | ⏳ Pending |
+| `colleague-team-dynamics-004` | Team Dynamics Mediation | Team Working | advanced | ⏳ Pending |
+| `colleague-pip-support-005` | Performance Improvement Plan | Support | advanced | ⏳ Pending |
+
+### 2.4 Migration Notes
+
+**Previous modules (incorrectly classified):** The original `module_*.json` files were healthcare-focused MI modules that were converted with simple word substitutions. These are being replaced/deprecated in favor of the new structure above.
+
+**Key Differences:**
+- **SHARED modules** use neutral language (person, situation, change, reflection) that applies universally
+- **CUSTOMER-FACING modules** are specific MAPS scenarios (debt advice, budgeting, pensions) with financial context
+- **COLLEAGUE-FACING modules** are specific MAPS scenarios (performance reviews, coaching) with workplace context
 
 ### 2.4 Deliverables
 
