@@ -620,11 +620,12 @@ SELECT code, title, content_type FROM mi_learning_paths;
 
 ---
 
-**Document Version:** 6.0
+**Document Version:** 7.0
 **Last Updated:** 2026-02-01
-**Status:** Phase 2 COMPLETE - 20 modules created, Learning Pathways ready
+**Status:** Phase 3 COMPLETE - 20 modules, Learning Pathways, Service/API updates ready
 
 **Recent Changes:**
+- v7.0: Phase 3 COMPLETE - Content type filtering support in models, services, and API; Updated MI_PRACTICE_SETUP.md documentation
 - v6.0: Phase 2 COMPLETE - All 20 modules created (12 shared, 5 customer-facing, 4 colleague-facing), Learning Pathways configured
 - v5.0: Corrected module classification - SHARED modules for core skills, Customer-Facing for MAPS financial scenarios, Colleague-Facing for workplace scenarios
 - v4.0: Phase 1 Complete - 12 MAPS modules converted (now superseded by corrected structure)
