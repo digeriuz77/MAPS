@@ -29,11 +29,10 @@ This document provides a comprehensive implementation plan for integrating struc
 | 0 | Foundation Assessment | ✅ COMPLETE | Framework alignment, content classification |
 | 1 | Initial Module Conversion | ⏳ SUPERSEDED | Initial conversion approach (replaced) |
 | 2 | Module Restructuring | ✅ COMPLETE | 20 modules + Learning Pathways |
-| 3 | Service Layer Updates | ⏳ PENDING | `src/services/mi_module_service.py` updates |
-| 4 | API Layer Updates | ⏳ PENDING | `src/api/routes/mi_practice.py` updates |
-| 5 | Frontend Integration | ⏳ PENDING | Content filtering UI |
-| 6 | Testing & Verification | ⏳ PENDING | Test suite, verification queries |
-| 7 | Documentation | ⏳ PENDING | Updated docs and guides |
+| 3 | Service/API Updates | ✅ COMPLETE | Content type filtering support |
+| 4 | Frontend Integration | ⏳ PENDING | Content filtering UI |
+| 5 | Testing & Verification | ⏳ PENDING | Test suite, verification queries |
+| 6 | Documentation | ⏳ PENDING | Updated docs and guides |
 
 ---
 
@@ -324,7 +323,71 @@ These modules apply core skills to internal colleague contexts.
 
 ---
 
-## Phase 3: Service Layer Updates ⏳ PENDING
+## Phase 3: Service/API Updates ✅ COMPLETE
+
+### 3.1 Models Updated
+
+**File:** `src/models/mi_models.py`
+
+**Changes:**
+- Added `ContentType` enum: `SHARED`, `CUSTOMER_FACING`, `COLLEAGUE_FACING`
+- Added `content_type` field to `MIPracticeModule`
+- Added `content_type` field to `MIPracticeModuleSummary`
+- Fixed broken `MIPracticeModule` class definition
+- Added `maps_framework_alignment` field support
+
+### 3.2 Service Layer Updated
+
+**File:** `src/services/mi_module_service.py`
+
+**Changes:**
+- Added `content_type` parameter to `list_modules()` method
+- Added `get_content_types()` method for discovery
+- Updated module building to include `content_type`
+- Updated all module retrieval methods to include `content_type`
+- Added `maps_framework_alignment` support
+
+### 3.3 API Layer Updated
+
+**File:** `src/api/routes/mi_practice.py`
+
+**Changes:**
+- Added `content_type` query parameter to `GET /modules` endpoint
+- Added `GET /content-types` endpoint for discovery
+- Updated documentation for content types
+- Imported `ContentType` enum
+
+### 3.4 New API Endpoints
+
+```
+GET /api/mi-practice/modules?content_type=shared
+GET /api/mi-practice/content-types
+```
+
+### 3.5 Deliverables
+
+- [x] `ContentType` enum added
+- [x] `MIPracticeModule.content_type` added
+- [x] `MIPracticeModuleSummary.content_type` added
+- [x] `MIModuleService.list_modules(content_type=...)` updated
+- [x] `MIModuleService.get_content_types()` added
+- [x] `GET /modules?content_type=...` endpoint updated
+- [x] `GET /content-types` endpoint added
+
+### 3.6 Progress Log
+
+**2026-02-01 - Phase 3 COMPLETE:**
+- ✅ Added ContentType enum to models
+- ✅ Updated MIPracticeModule with content_type field
+- ✅ Updated MIPracticeModuleSummary with content_type field
+- ✅ Added content_type filtering to list_modules()
+- ✅ Added get_content_types() discovery method
+- ✅ Added GET /content-types API endpoint
+- ✅ Updated API documentation
+
+---
+
+## Phase 4: Frontend Integration ⏳ PENDING
 
 ### 3.1 MIModuleService Updates
 
