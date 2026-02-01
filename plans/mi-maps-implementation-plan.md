@@ -27,13 +27,12 @@ This document provides a comprehensive implementation plan for integrating struc
 | Phase | Name | Status | Key Deliverables |
 |-------|------|--------|------------------|
 | 0 | Foundation Assessment | ✅ COMPLETE | Framework alignment, content classification |
-| 1 | Import Script Development | ⏳ PENDING | `scripts/import_modules.py` |
-| 2 | Module JSON Refactoring | ⏳ PENDING | 12 modules with external/internal split |
-| 3 | Service Layer Updates | ⏳ PENDING | `src/services/mi_module_service.py` updates |
-| 4 | API Layer Updates | ⏳ PENDING | `src/api/routes/mi_practice.py` updates |
-| 5 | Frontend Integration | ⏳ PENDING | Content filtering UI |
-| 6 | Testing & Verification | ⏳ PENDING | Test suite, verification queries |
-| 7 | Documentation | ⏳ PENDING | Updated docs and guides |
+| 1 | Import Script & Module Refactoring | ✅ COMPLETE | 12 MAPS modules + seed scripts |
+| 2 | Service Layer Updates | ⏳ PENDING | `src/services/mi_module_service.py` updates |
+| 3 | API Layer Updates | ⏳ PENDING | `src/api/routes/mi_practice.py` updates |
+| 4 | Frontend Integration | ⏳ PENDING | Content filtering UI |
+| 5 | Testing & Verification | ⏳ PENDING | Test suite, verification queries |
+| 6 | Documentation | ⏳ PENDING | Updated docs and guides |
 
 ---
 
@@ -84,72 +83,70 @@ This document provides a comprehensive implementation plan for integrating struc
 
 ---
 
-## Phase 1: Import Script Development & Module Refactoring ⏳ IN PROGRESS
+## Phase 1: Import Script Development & Module Refactoring ✅ COMPLETE
 
 ### 1.1 Create Import Script
 
 **Reference:** [`mi-learning-platform/scripts/import_modules.py`](C:/builds/mi-learning-platform/scripts/import_modules.py)
 
-**File to Create:** `scripts/import_modules.py`
+**Status:** ✅ Complete - `scripts/import_modules.py` exists (uses existing code)
 
-**Purpose:** Import module content from JSON files into Supabase database
+### 1.2 Module JSON Refactoring
 
-**Key Functions:**
-- `import_module(supabase, module_file)` - Import single module
-- `main()` - Main entry point for batch import
+**Status:** ✅ Complete - All 12 modules refactored to MAPS terminology
 
-**Usage:**
-```bash
-python scripts/import_modules.py [--clear-existing]
-```
-
-### 1.2 Module JSON Refactoring (PRE-REQUISITE)
-
-**CRITICAL:** Existing modules use healthcare/patient language. MUST refactor to MAPS terminology before seeding.
-
-**Refactor First:** Module JSON files in `src/data/mi_modules/` must be updated to use MAPS-appropriate language.
+**Converted Modules:**
+| Module | Code | Classification | Status |
+|--------|------|----------------|--------|
+| 1: Simple Reflections | `maps-simple-reflections-001` | Customer-Facing | ✅ |
+| 2: Open-Ended Questions | `maps-openended-questions-vs-closed--002` | Customer-Facing | ✅ |
+| 3: Complex Reflections | `maps-complex-reflections-and-double-003` | Customer-Facing | ✅ |
+| 4: Affirmations | `maps-affirmations-004` | Customer-Facing | ✅ |
+| 5: Summarizing | `maps-summarizing-005` | Customer-Facing | ✅ |
+| 6: Change Talk | `maps-change-talk-recognition-and-ev-006` | Customer-Facing | ✅ |
+| 7: Collaborative Climate | `maps-collaborative-climate--agenda--007` | Customer-Facing | ✅ |
+| 8: Confidence Scaling | `maps-confidence-scaling-008` | Customer-Facing | ✅ |
+| 9: Decisional Balance | `maps-decisional-balance-009` | Colleague-Facing | ✅ |
+| 10: Planning | `maps-planning--implementation-inten-010` | Customer-Facing | ✅ |
+| 11: Giving Information | `maps-elicitprovideelicit-011` | Customer-Facing | ✅ |
+| 12: Anticipatory Coping | `maps-anticipatory-coping--relapse-p-012` | Colleague-Facing | ✅ |
 
 ### 1.3 Create Supabase Seed Scripts
 
+**Status:** ✅ Complete - All 12 seed scripts created
+
 **Location:** `supabase/seed/seed_mi_module_*.sql`
 
-**Each seed script must:**
-- Use proper Supabase SQL syntax with JSONB casting
-- Include `ON CONFLICT (code) DO UPDATE` for idempotency
-- Use MAPS terminology (customer/colleague, not patient)
-- Follow the naming convention: `seed_mi_module_XX_<name>.sql`
+**Features:**
+- ✅ Proper Supabase SQL syntax with JSONB casting
+- ✅ `ON CONFLICT (code) DO UPDATE` for idempotency
+- ✅ MAPS terminology (customer/colleague, not patient)
+- ✅ Generated automatically via `scripts/generate_seed_scripts.py`
 
-### 1.4 Database Schema Validation
+### 1.4 Helper Scripts Created
 
-**Current Schema:** [`supabase/migrations/current/0004_current_mi_practice_tables.sql`](../supabase/migrations/current/0004_current_mi_practice_tables.sql)
-
-**Required Fields:**
-| Field | Type | Content |
-|-------|------|---------|
-| `code` | VARCHAR | Module identifier |
-| `title` | VARCHAR | Module title |
-| `content_type` | VARCHAR | customer_facing, colleague_facing, shared |
-| `difficulty_level` | VARCHAR | beginner, intermediate, advanced |
-| `dialogue_structure` | JSONB | External content only |
-| `maps_rubric` | JSONB | Internal scoring config |
+| Script | Purpose |
+|--------|---------|
+| `scripts/convert_mi_modules.py` | Converts healthcare modules to MAPS terminology |
+| `scripts/generate_seed_scripts.py` | Generates Supabase seed SQL from converted modules |
 
 ### 1.5 Deliverables
 
 - [x] `scripts/import_modules.py` exists (uses existing code)
 - [x] Supabase seed script template created
-- [x] Module 1 refactored to MAPS terminology (`module_1_simple_reflections_maps.json`)
-- [x] Module 1 Supabase seed script created with MAPS terminology
-- [ ] Modules 2-12 refactored to MAPS terminology
-- [ ] Modules 2-12 Supabase seed scripts created
-- [ ] Database schema validated for import
+- [x] All 12 module JSON files refactored to MAPS terminology
+- [x] All 12 Supabase seed scripts created
+- [x] Helper scripts for conversion and generation
+- [x] Database schema validated for import
 
 ### 1.6 Progress Log
 
 **2026-02-01:**
-- Created `module_1_simple_reflections_maps.json` with Customer-Facing financial context
-- Terminology mapping applied: patient→customer, smoking→spending, health→financial, therapeutic→professional
-- Created `seed_mi_module_01_simple_reflections.sql` with MAPS-compliant content
-- Removed old seed scripts that used healthcare language
+- ✅ Created `module_1_simple_reflections_maps.json` with Customer-Facing financial context
+- ✅ Converted all 12 modules using `scripts/convert_mi_modules.py`
+- ✅ Generated all 12 seed scripts using `scripts/generate_seed_scripts.py`
+- ✅ Terminology mapping applied throughout: patient→customer/colleague, smoking→spending/performance, health→financial/performance, therapeutic→professional
+- ✅ Content classifications applied: 10 Customer-Facing, 2 Colleague-Facing
 
 ---
 
@@ -454,6 +451,6 @@ SELECT code, title, content_type FROM mi_learning_paths;
 
 ---
 
-**Document Version:** 3.0  
-**Last Updated:** 2026-02-01  
-**Status:** Phase 0 Complete - Ready for Phase 1
+**Document Version:** 4.0
+**Last Updated:** 2026-02-01
+**Status:** Phase 1 Complete - 12 MAPS modules converted with seed scripts generated
