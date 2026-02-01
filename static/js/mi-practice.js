@@ -21,7 +21,7 @@
             focusArea: '',
             difficulty: '',
             search: '',
-            moduleType: 'all'  // NEW: filter by module type (external, internal, both)
+            contentType: 'all'  // Filter by content type: shared, customer_facing, colleague_facing
         }
     };
 
@@ -55,7 +55,7 @@
             const params = new URLSearchParams();
             if (filters.focusArea) params.append('focus_area', filters.focusArea);
             if (filters.difficulty) params.append('difficulty', filters.difficulty);
-            if (filters.moduleType && filters.moduleType !== 'all') params.append('module_type', filters.moduleType);
+            if (filters.contentType && filters.contentType !== 'all') params.append('content_type', filters.contentType);
             if (state.currentUser?.id) params.append('user_id', state.currentUser.id);
 
             return this.request(`/modules?${params}`);
@@ -222,7 +222,7 @@
     }
 
     // ============================================
-    // MODULE TYPE FILTERING
+    // CONTENT TYPE FILTERING
     // ============================================
 
     function setupModuleTypeTabs() {
@@ -241,7 +241,7 @@
                 tab.setAttribute('aria-selected', 'true');
 
                 // Update filter and reload modules
-                state.filters.moduleType = tab.getAttribute('data-module-type');
+                state.filters.contentType = tab.getAttribute('data-content-type');
                 loadModules();
             });
         });

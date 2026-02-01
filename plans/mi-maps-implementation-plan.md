@@ -604,8 +604,8 @@ SELECT code, title, content_type FROM mi_learning_paths;
 - [ ] Update API documentation
 
 ### Phase 5: Frontend Updates
-- [ ] Add content type filter
-- [ ] Add classification badges
+- [x] Add content type filter
+- [x] Add classification badges
 - [ ] Update persona context
 
 ### Phase 6: Testing
@@ -620,11 +620,12 @@ SELECT code, title, content_type FROM mi_learning_paths;
 
 ---
 
-**Document Version:** 7.0
+**Document Version:** 7.1
 **Last Updated:** 2026-02-01
-**Status:** Phase 3 COMPLETE - 20 modules, Learning Pathways, Service/API updates ready
+**Status:** Phase 4 COMPLETE - Frontend integration for content type filtering done
 
 **Recent Changes:**
+- v7.1: Phase 4 COMPLETE - Frontend integration updated with content type filtering (shared, customer_facing, colleague_facing)
 - v7.0: Phase 3 COMPLETE - Content type filtering support in models, services, and API; Updated MI_PRACTICE_SETUP.md documentation
 - v6.0: Phase 2 COMPLETE - All 20 modules created (12 shared, 5 customer-facing, 4 colleague-facing), Learning Pathways configured
 - v5.0: Corrected module classification - SHARED modules for core skills, Customer-Facing for MAPS financial scenarios, Colleague-Facing for workplace scenarios

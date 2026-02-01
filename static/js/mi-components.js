@@ -23,14 +23,14 @@
             card.className = 'module-card';
             card.setAttribute('role', 'listitem');
             card.setAttribute('data-module-id', module.id);
-            card.setAttribute('data-module-type', module.module_type || 'both');
+            card.setAttribute('data-content-type', module.content_type || 'shared');
 
             const difficultyClass = `difficulty-${module.difficulty_level}`;
             const focusAreaIcon = this.getFocusAreaIcon(module.mi_focus_area);
 
-            // Determine module type label and icon
-            const moduleType = module.module_type || 'both';
-            const moduleTypeInfo = this.getModuleTypeInfo(moduleType);
+            // Determine content type label and icon
+            const contentType = module.content_type || 'shared';
+            const contentTypeInfo = this.getContentTypeInfo(contentType);
 
             // Get MaPS competencies from maps_rubric
             const targetCompetencies = module.maps_rubric?.target_competencies || module.target_competencies || [];
@@ -38,9 +38,9 @@
 
             card.innerHTML = `
                 <div class="module-card-header">
-                    <div class="module-type-badge ${moduleTypeInfo.class}">
-                        <i class="fas ${moduleTypeInfo.icon}" aria-hidden="true"></i>
-                        <span>${moduleTypeInfo.label}</span>
+                    <div class="module-type-badge ${contentTypeInfo.class}">
+                        <i class="fas ${contentTypeInfo.icon}" aria-hidden="true"></i>
+                        <span>${contentTypeInfo.label}</span>
                     </div>
                     <span class="module-difficulty ${difficultyClass}">
                         ${module.difficulty_level}
@@ -114,32 +114,32 @@
         },
 
         /**
-         * Get module type information for display
-         * @param {string} moduleType - The module type
-         * @returns {Object} Module type info with icon, label, and class
+         * Get content type information for display
+         * @param {string} contentType - The content type (shared, customer_facing, colleague_facing)
+         * @returns {Object} Content type info with icon, label, and class
          */
-        getModuleTypeInfo(moduleType) {
+        getContentTypeInfo(contentType) {
             const types = {
-                'external': {
+                'shared': {
+                    icon: 'fa-shapes',
+                    label: 'Core Skills',
+                    class: 'type-shared',
+                    description: 'Core MI techniques applicable to all contexts'
+                },
+                'customer_facing': {
                     icon: 'fa-users',
-                    label: 'External (Customer)',
-                    class: 'type-external',
-                    description: 'Customer-facing scenarios'
+                    label: 'Customer-Facing',
+                    class: 'type-customer',
+                    description: 'MAPS financial scenarios'
                 },
-                'internal': {
-                    icon: 'fa-user-friends',
-                    label: 'Internal (Colleague)',
-                    class: 'type-internal',
-                    description: 'Colleague support scenarios'
-                },
-                'both': {
-                    icon: 'fa-random',
-                    label: 'Both Audiences',
-                    class: 'type-both',
-                    description: 'Applicable to both customers and colleagues'
+                'colleague_facing': {
+                    icon: 'fa-user-group',
+                    label: 'Colleague-Facing',
+                    class: 'type-colleague',
+                    description: 'MAPS workplace scenarios'
                 }
             };
-            return types[moduleType] || types['both'];
+            return types[contentType] || types['shared'];
         },
 
         /**

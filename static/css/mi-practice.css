@@ -1891,19 +1891,19 @@
     letter-spacing: 0.025em;
 }
 
-.type-external {
+.type-shared {
+    background: #E0E7FF;
+    color: #3730A3;
+}
+
+.type-customer {
     background: #DBEAFE;
     color: #1E40AF;
 }
 
-.type-internal {
+.type-colleague {
     background: #FEF3C7;
     color: #92400E;
-}
-
-.type-both {
-    background: #E0E7FF;
-    color: #3730A3;
 }
 
 /* MaPS Alignment Badge */
