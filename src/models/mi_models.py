@@ -2,7 +2,7 @@
 MI Practice Module Models
 Pydantic schemas for Motivational Interviewing practice modules
 """
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from typing import Dict, List, Any, Optional
 from datetime import datetime
 from enum import Enum
@@ -66,26 +66,25 @@ class ChoicePoint(BaseModel):
     # Branching
     next_node_id: str = Field(..., description="ID of the next node to navigate to")
     exploration_depth: str = Field("surface", description="surface, middle, or deep")
-    
-    class Config:
-        json_schema_extra = {
-            "example": {
-                "id": "cp_start_1",
-                "option_text": "Thanks for coming in. I wanted to check in about how things are going.",
-                "preview_hint": "Open, appreciative invitation",
-                "rapport_impact": 1,
-                "resistance_impact": -1,
-                "tone_shift": 0.1,
-                "technique_tags": ["open_question", "rapport_building"],
-                "competency_links": ["A6", "B6"],
-                "feedback": {
-                    "immediate": "Starting with appreciation helps establish safety.",
-                    "learning_note": "Open questions invite the person to share their perspective."
-                },
-                "next_node_id": "node_2_open",
-                "exploration_depth": "surface"
-            }
+
+    model_config = ConfigDict(json_schema_extra={
+        "example": {
+            "id": "cp_start_1",
+            "option_text": "Thanks for coming in. I wanted to check in about how things are going.",
+            "preview_hint": "Open, appreciative invitation",
+            "rapport_impact": 1,
+            "resistance_impact": -1,
+            "tone_shift": 0.1,
+            "technique_tags": ["open_question", "rapport_building"],
+            "competency_links": ["A6", "B6"],
+            "feedback": {
+                "immediate": "Starting with appreciation helps establish safety.",
+                "learning_note": "Open questions invite the person to share their perspective."
+            },
+            "next_node_id": "node_2_open",
+            "exploration_depth": "surface"
         }
+    })
 
 
 class DialogueNode(BaseModel):
@@ -97,40 +96,38 @@ class DialogueNode(BaseModel):
     choice_points: List[ChoicePoint] = Field(default_factory=list, description="Available choices")
     is_endpoint: bool = Field(False, description="Whether this is an ending node")
     endpoint_type: Optional[str] = Field(None, description="Type of ending if applicable")
-    
-    class Config:
-        json_schema_extra = {
-            "example": {
-                "id": "node_1",
-                "persona_text": "I'm not sure why we're meeting. Is this about my performance?",
-                "persona_mood": "defensive_guarded",
-                "themes": ["Work Performance", "Trust"],
-                "choice_points": [],
-                "is_endpoint": False
-            }
+
+    model_config = ConfigDict(json_schema_extra={
+        "example": {
+            "id": "node_1",
+            "persona_text": "I'm not sure why we're meeting. Is this about my performance?",
+            "persona_mood": "defensive_guarded",
+            "themes": ["Work Performance", "Trust"],
+            "choice_points": [],
+            "is_endpoint": False
         }
+    })
 
 
 class DialogueStructure(BaseModel):
     """Complete dialogue tree structure"""
     start_node_id: str = Field(..., description="ID of the starting node")
     nodes: Dict[str, DialogueNode] = Field(default_factory=dict, description="All nodes by ID")
-    
-    class Config:
-        json_schema_extra = {
-            "example": {
-                "start_node_id": "node_1",
-                "nodes": {
-                    "node_1": {
-                        "id": "node_1",
-                        "persona_text": "I'm not sure why we're meeting...",
-                        "persona_mood": "defensive_guarded",
-                        "themes": ["Trust"],
-                        "choice_points": []
-                    }
+
+    model_config = ConfigDict(json_schema_extra={
+        "example": {
+            "start_node_id": "node_1",
+            "nodes": {
+                "node_1": {
+                    "id": "node_1",
+                    "persona_text": "I'm not sure why we're meeting...",
+                    "persona_mood": "defensive_guarded",
+                    "themes": ["Trust"],
+                    "choice_points": []
                 }
             }
         }
+    })
 
 
 # ============================================
@@ -156,18 +153,17 @@ class ToneSpectrumConfig(BaseModel):
     
     # Hedging language (0.0=hedged "perhaps/maybe", 1.0=confident assertions)
     confidence_level: float = Field(0.5, ge=0.0, le=1.0)
-    
-    class Config:
-        json_schema_extra = {
-            "example": {
-                "word_complexity": 0.3,
-                "sentence_length": 0.4,
-                "emotional_expressiveness": 0.2,
-                "disclosure_level": 0.1,
-                "response_latency": 0.3,
-                "confidence_level": 0.2
-            }
+
+    model_config = ConfigDict(json_schema_extra={
+        "example": {
+            "word_complexity": 0.3,
+            "sentence_length": 0.4,
+            "emotional_expressiveness": 0.2,
+            "disclosure_level": 0.1,
+            "response_latency": 0.3,
+            "confidence_level": 0.2
         }
+    })
 
 
 class PersonaConfig(BaseModel):
@@ -186,27 +182,26 @@ class PersonaConfig(BaseModel):
     # Triggers and sensitivities
     triggers: List[str] = Field(default_factory=list, description="Topics/approaches that increase resistance")
     comfort_topics: List[str] = Field(default_factory=list, description="Topics that decrease resistance")
-    
-    class Config:
-        json_schema_extra = {
-            "example": {
-                "name": "Jordan",
-                "role": "team member",
-                "background": "Recently disengaged employee with performance concerns",
-                "personality_traits": ["defensive", "guarded", "values autonomy"],
-                "tone_spectrum": {
-                    "word_complexity": 0.4,
-                    "sentence_length": 0.3,
-                    "emotional_expressiveness": 0.2,
-                    "disclosure_level": 0.1,
-                    "response_latency": 0.3,
-                    "confidence_level": 0.3
-                },
-                "starting_tone_position": 0.2,
-                "triggers": ["direct criticism", "being told what to do"],
-                "comfort_topics": ["autonomy", "growth opportunities"]
-            }
+
+    model_config = ConfigDict(json_schema_extra={
+        "example": {
+            "name": "Jordan",
+            "role": "team member",
+            "background": "Recently disengaged employee with performance concerns",
+            "personality_traits": ["defensive", "guarded", "values autonomy"],
+            "tone_spectrum": {
+                "word_complexity": 0.4,
+                "sentence_length": 0.3,
+                "emotional_expressiveness": 0.2,
+                "disclosure_level": 0.1,
+                "response_latency": 0.3,
+                "confidence_level": 0.3
+            },
+            "starting_tone_position": 0.2,
+            "triggers": ["direct criticism", "being told what to do"],
+            "comfort_topics": ["autonomy", "growth opportunities"]
         }
+    })
 
 
 # ============================================
@@ -225,21 +220,20 @@ class MAPSRubric(BaseModel):
     """MAPS competency scoring rubric for a module"""
     dimensions: Dict[str, CompetencyIndicator] = Field(default_factory=dict)
     overall_scoring_logic: str = Field("average", description="How to calculate overall score")
-    
-    class Config:
-        json_schema_extra = {
-            "example": {
-                "dimensions": {
-                    "A6": {
-                        "description": "Rapport Building",
-                        "weight": 1.5,
-                        "positive_signals": ["open_questions", "affirmations"],
-                        "negative_signals": ["confrontation"]
-                    }
-                },
-                "overall_scoring_logic": "weighted_average"
-            }
+
+    model_config = ConfigDict(json_schema_extra={
+        "example": {
+            "dimensions": {
+                "A6": {
+                    "description": "Rapport Building",
+                    "weight": 1.5,
+                    "positive_signals": ["open_questions", "affirmations"],
+                    "negative_signals": ["confrontation"]
+                }
+            },
+            "overall_scoring_logic": "weighted_average"
         }
+    })
 
 
 # ============================================
@@ -301,20 +295,19 @@ class MIPracticeModule(BaseModel):
     is_active: bool = True
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
-    
-    class Config:
-        json_schema_extra = {
-            "example": {
-                "code": "mi-explore-resistance-001",
-                "title": "Exploring Resistance with Jordan",
-                "mi_focus_area": "Exploring Resistance",
-                "difficulty_level": "intermediate",
-                "estimated_minutes": 8,
-                "learning_objective": "Practice responding to defensive statements without triggering additional resistance",
-                "scenario_context": "Jordan is a team member who has become disengaged recently...",
-                "target_competencies": ["A6", "B6", "1.2.1"]
-            }
+
+    model_config = ConfigDict(json_schema_extra={
+        "example": {
+            "code": "mi-explore-resistance-001",
+            "title": "Exploring Resistance with Jordan",
+            "mi_focus_area": "Exploring Resistance",
+            "difficulty_level": "intermediate",
+            "estimated_minutes": 8,
+            "learning_objective": "Practice responding to defensive statements without triggering additional resistance",
+            "scenario_context": "Jordan is a team member who has become disengaged recently...",
+            "target_competencies": ["A6", "B6", "1.2.1"]
         }
+    })
 
 
 class MIPracticeModuleSummary(BaseModel):
@@ -519,7 +512,12 @@ class EnrollPathResponse(BaseModel):
     path_title: str
     current_module_id: str
     message: str
-)
+
+
+class MIPracticeModuleSummary(BaseModel):
+    """Summary of an MI practice module (for listing)"""
+    id: str
+    code: str
     title: str = Field(..., min_length=5, max_length=200)
 
     # Categorization
@@ -539,25 +537,24 @@ class EnrollPathResponse(BaseModel):
     # MAPS alignment
     target_competencies: List[str] = Field(default_factory=list)
     maps_rubric: MAPSRubric
-    
+
     # Metadata
     is_active: bool = True
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
-    
-    class Config:
-        json_schema_extra = {
-            "example": {
-                "code": "mi-explore-resistance-001",
-                "title": "Exploring Resistance with Jordan",
-                "mi_focus_area": "Exploring Resistance",
-                "difficulty_level": "intermediate",
-                "estimated_minutes": 8,
-                "learning_objective": "Practice responding to defensive statements without triggering additional resistance",
-                "scenario_context": "Jordan is a team member who has become disengaged recently...",
-                "target_competencies": ["A6", "B6", "1.2.1"]
-            }
+
+    model_config = ConfigDict(json_schema_extra={
+        "example": {
+            "code": "mi-explore-resistance-001",
+            "title": "Exploring Resistance with Jordan",
+            "mi_focus_area": "Exploring Resistance",
+            "difficulty_level": "intermediate",
+            "estimated_minutes": 8,
+            "learning_objective": "Practice responding to defensive statements without triggering additional resistance",
+            "scenario_context": "Jordan is a team member who has become disengaged recently...",
+            "target_competencies": ["A6", "B6", "1.2.1"]
         }
+    })
 
 
 class MIPracticeModuleSummary(BaseModel):
