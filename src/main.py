@@ -76,8 +76,12 @@ def create_app() -> FastAPI:
     try:
         from src.api.routes.metrics import router as metrics_router
         app.include_router(metrics_router)
-    except Exception:
-        pass
+        # Initialize metrics service with database connection
+        from src.dependencies import get_metrics_service
+        get_metrics_service()
+        logger.info("Metrics service initialized with database integration")
+    except Exception as e:
+        logger.warning(f"Metrics routes not available: {e}")
 
     # FEEDBACK SYSTEM ROUTES
     from src.api.routes.feedback import router as feedback_router

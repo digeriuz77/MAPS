@@ -113,3 +113,16 @@ def get_mi_progress_service() -> "MIProgressService":
         _app_state.mi_progress_service = MIProgressService(get_supabase_client())
         logger.info("MI Progress Service initialized")
     return _app_state.mi_progress_service
+
+# ============================================
+# METRICS SERVICE DEPENDENCY
+# ============================================
+
+def get_metrics_service():
+    """
+    Get metrics service instance with database integration.
+    
+    Lazily initializes the service with Supabase connection.
+    """
+    from src.services.metrics_service import get_metrics_service as get_metrics
+    return get_metrics(get_supabase_client())
