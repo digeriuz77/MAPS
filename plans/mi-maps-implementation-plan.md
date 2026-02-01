@@ -1,323 +1,420 @@
 # MAPS Training Module Implementation Plan
 
-> **Related Documents:**
-> - [`supabase/MIGRATION_STRATEGY.md`](../supabase/MIGRATION_STRATEGY.md) - Database migration organization
-> - [`supabase/SEED_STRATEGY.md`](../supabase/SEED_STRATEGY.md) - Seed data strategy
+> **Reference Implementation:**
+> - [`mi-learning-platform/scripts/import_modules.py`](C:/builds/mi-learning-platform/scripts/import_modules.py) - Module import script
+> - [`mi-learning-platform/app/db/migrations/001_init_schema.sql`](C:/builds/mi-learning-platform/app/db/migrations/001_init_schema.sql) - Reference schema
+> - [`supabase/MIGRATION_STRATEGY.md`](../supabase/MIGRATION_STRATEGY.md) - MAPS migration organization
+> - [`supabase/SEED_STRATEGY.md`](../supabase/SEED_STRATEGY.md) - MAPS seed strategy
 
 ## Executive Summary
 
-This document provides an implementation plan for integrating structured practice dialogues into the MAPS application, aligned with the Money and Pensions Service (MaPS) "Guidance Competency Framework."
+This document provides an implementation plan for integrating structured practice dialogues into the MAPS application, following the approach established in `mi-learning-platform`.
 
-**Framework Context:**
-MaPS describes their coaching approach as **"facilitative"** and **"empowering,"** rooted in "Foundation Skills and Behaviours" rather than adopting named proprietary models (like MI or GROW).
+**Reference Approach:**
+- Modules stored as JSON files in `src/data/mi_modules/`
+- Imported to database via `scripts/import_modules.py`
+- Database schema stores dialogue content as JSONB
 
-Key principles from MaPS:
-- **Facilitation over Instruction**: "Facilitate customers to act on their own behalf"
-- **Empowerment and Behavior Change**: Coaching to improve financial capability
-- **Impartiality and Non-Directive**: "The decision is yours" - guidance helps identify options
-- **Foundation Competencies**: Personal qualities, transferable skills, self-management
-
-## Key Principles
-
-- Do NOT explicitly label coaching techniques to learners
-- Focus on nuance exploration, not right/wrong answers
-- Provide progress tracking and analytics aligned with MAPS competency framework
-- Use MaPS-appropriate terminology (customer/client, colleague - not patient)
-- Maintain separation between learner-facing content and system scoring data
-- Reference existing migration and seed strategies for implementation details
+**Key Changes for MAPS:**
+1. Content separation: Learner-facing vs System-only content
+2. MaPS terminology: Replace MI/healthcare language with MaPS-appropriate terms
+3. Module classification: Customer-Facing, Colleague-Facing, Shared
 
 ---
 
-## Phase Overview
+## Phase 0: Foundation Assessment ✅ COMPLETE
 
-| Phase | Name | Key Deliverables | Status |
-|-------|------|------------------|--------|
-| 0 | Foundation Assessment | Framework alignment review, content classification | 🔄 CURRENT |
-| 1 | Content Separation | Split tables/models into learner/system content | ⏳ FUTURE |
-| 2 | Module Refactoring | Rewrite 13 modules with MaPS terminology | ⏳ FUTURE |
-| 3 | Service Updates | Updated services for content separation | ⏳ FUTURE |
-| 4 | Frontend UI | Updated UI with proper content filtering | ⏳ FUTURE |
-| 5 | Integration & Testing | Full integration, analytics | ⏳ FUTURE |
+### 0.1 Framework Alignment
 
----
+**MaPS Competency Framework Alignment:** [`supabase/MIGRATION_STRATEGY.md`](../supabase/MIGRATION_STRATEGY.md#maps-competency-framework-alignment)
 
-## Phase 0: Foundation Assessment
-
-### 0.1 Framework Alignment Review
-
-**MaPS Competency Framework Reference:** [`supabase/MIGRATION_STRATEGY.md`](../supabase/MIGRATION_STRATEGY.md)
-
-**MaPS Foundation Competencies:**
-
-| Competency | Description | Application |
-|------------|-------------|-------------|
-| A1 | Personal Integrity | Acting as role model, commitment to equal opportunities |
-| A2 | Self-awareness | Knowing strengths/limitations, controlling emotions |
-| A3 | Impartiality | Objective, not influenced by personal feelings |
-| A4 | Diplomacy | Sensitive and skilful in managing relations |
-| A5 | Flexibility | Adapting approach to customer needs |
-| A6 | Rapport building | Empathising, gauging confidence, building trust |
-| B1 | Literacy | Written communication skills |
-| B2 | Numeracy | Scenario scoring |
-| B6 | Communication | Verbal/written communication, appropriate language |
-| C1 | Self-management | Recognizing limits, resilience |
-| C2 | Improve practice | Accepting feedback, evaluating performance |
-
-### 0.2 Module Content Classification
-
-**Classification System:**
+### 0.2 Content Classification
 
 | Classification | Description | Language |
 |---------------|-------------|----------|
-| **Customer-Facing** | Direct work with external customers/clients | Use "customer", "client", "you" |
-| **Colleague-Facing** | Internal coaching with colleagues | Use "colleague", "team member", "you" |
-| **Shared** | Applicable to both contexts | Neutral language, adaptable |
+| **Customer-Facing** | External customers/clients | "customer", "client" |
+| **Colleague-Facing** | Internal colleagues | "colleague", "team member" |
+| **Shared** | Neutral, adaptable | Neutral language |
 
-### 0.3 Internal/External Content Analysis
+### 0.3 Internal/External Content Split
 
-**Current Issue:** The `dialogue_structure` field contains mixed content:
+**Reference:** [`mi-learning-platform/mi_modules/module_1.json`](C:/builds/mi-learning-platform/mi_modules/module_1.json) for JSON structure
 
+**Current JSON Structure (needs splitting):**
 ```json
 {
-  "choice_points": [{
-    "id": "cp_1",
-    "option_text": "How can I help you today?",           // EXTERNAL - shown to learner
-    "preview_hint": "Open question approach",              // EXTERNAL - shown to learner
-    "rapport_impact": 1,                                    // INTERNAL - system scoring
-    "resistance_impact": -1,                                // INTERNAL - system scoring
-    "technique_tags": ["open_question"],                    // INTERNAL - system scoring
-    "competency_links": ["A6", "B1"],                       // INTERNAL - system scoring
-    "feedback": {
-      "immediate": "Good open question...",                 // EXTERNAL - shown to learner
-      "learning_note": "Open questions invite..."           // EXTERNAL - shown to learner
-    }
-  }]
+  "dialogue_tree": {
+    "title": "Module 1: Simple Reflections...",
+    "learning_objective": "...",
+    "nodes": [
+      {
+        "id": "node_1",
+        "patient_statement": "...",
+        "practitioner_choices": [
+          {
+            "text": "Response option",              // EXTERNAL
+            "technique": "Simple reflection",       // INTERNAL
+            "next_node_id": "node_2",              // EXTERNAL
+            "feedback": "Feedback text",            // EXTERNAL
+            "rapport_impact": 1,                    // INTERNAL
+            "resistance_impact": -1                 // INTERNAL
+          }
+        ]
+      }
+    ]
+  }
 }
 ```
 
-**Solution:** Split into separate content sections (see Phase 1).
-
----
-
-## Phase 1: Content Separation
-
-### 1.1 Database Schema Updates
-
-**Reference:** [`supabase/MIGRATION_STRATEGY.md` - Directory Structure](../supabase/MIGRATION_STRATEGY.md#directory-structure)
-
-The migration strategy already defines the structure:
-- `migrations/shared/` - Shared extensions and RLS
-- `migrations/current/` - Current MAPS platform migrations
-- `migrations/legacy/` - Deprecated migrations
-
-**Current Table:** `mi_practice_modules` (needs splitting)
-
-**Proposed Tables:**
-
-| Table | Purpose | Content Type |
-|-------|---------|--------------|
-| `practice_content` | Learner-facing content | External |
-| `practice_system_config` | System scoring config | Internal |
-
-**Migration Files to Create:**
-
-1. `supabase/migrations/current/0004a_practice_content.sql` - Learner content table
-2. `supabase/migrations/current/0004b_practice_system_config.sql` - System config table
-
-### 1.2 Pydantic Models
-
-**Reference:** [`supabase/SEED_STRATEGY.md`](../supabase/SEED_STRATEGY.md) for seed structure
-
-**File:** `src/models/practice_models.py` (NEW)
-
-**Models to Create:**
-
-```python
-# Learner-Facing Models (frontend-safe)
-class PracticeContentLearner(BaseModel)
-class PracticeContentSummary(BaseModel)
-class DialogueStructureLearner(BaseModel)
-class DialogueNodeLearner(BaseModel)
-class ChoicePointLearner(BaseModel)
-class PersonaConfigLearner(BaseModel)
-class FeedbackLearner(BaseModel)
-
-# System-Only Models (never exposed to frontend)
-class PracticeSystemConfig(BaseModel)
-class DialogueNodeSystem(BaseModel)
-class ChoicePointSystem(BaseModel)
-class ImpactValues(BaseModel)
+**Proposed JSON Structure (split):**
+```json
+{
+  "external": {
+    "title": "Module 1: Simple Reflections...",
+    "learning_objective": "...",
+    "content_type": "customer_facing",
+    "nodes": [
+      {
+        "id": "node_1",
+        "persona_statement": "...",
+        "choices": [
+          {
+            "id": "cp_1",
+            "option_text": "Response option",
+            "preview_hint": "Open question approach"
+          }
+        ]
+      }
+    ]
+  },
+  "internal": {
+    "technique_mapping": {
+      "cp_1": {
+        "technique": "simple_reflection",
+        "competency_links": ["A6", "B2"],
+        "impacts": {
+          "rapport": 1,
+          "resistance_change": -1
+        }
+      }
+    },
+    "feedback": {
+      "cp_1": {
+        "immediate": "Good reflection...",
+        "learning_note": "Reflections build rapport..."
+      }
+    }
+  }
+}
 ```
 
 ---
 
-## Phase 2: Module Refactoring
+## Phase 1: Import Script Development
 
-### 2.1 Content Rewriting Guidelines
+### 1.1 Create Import Script
 
-**Terminology Mapping:**
+**Reference:** [`mi-learning-platform/scripts/import_modules.py`](C:/builds/mi-learning-platform/scripts/import_modules.py)
 
-| Old Term (MI) | New Term (MaPS) | Example |
-|---------------|-----------------|---------|
-| Patient | Customer / Client | "How can I help you today?" |
-| Client | Customer | Standardize on "customer" |
-| Doctor/Medical | Financial/Support | Use financial context |
-| Treatment/Prescription | Guidance/Support | Use guidance terminology |
-| Change talk | Goal acknowledgment | "I hear that you want to improve..." |
-| Resistance | Hesitation | Frame as natural hesitation |
-| Precontemplation | Not yet ready | Neutral language |
+**File:** `scripts/import_modules.py` (NEW - adapted from mi-learning-platform)
 
-### 2.2 Module Rewrite Tasks
+**Key Functions:**
+```python
+#!/usr/bin/env python
+"""
+Module Data Import Script for MAPS Training Platform
 
-**Reference:** [`supabase/SEED_STRATEGY.md` - Seed Modules](../supabase/SEED_STRATEGY.md#phase-3-mi-practice-modules)
+Imports module content from src/data/mi_modules/*.json into Supabase database.
+Supports content separation (external/internal) for secure delivery.
 
-Current seed modules (4):
-1. Building Rapport (beginner)
-2. Open Questions Practice (beginner)
-3. Reflections Practice (beginner)
-4. Rolling with Resistance (intermediate)
+Usage:
+    python scripts/import_modules.py [--clear-existing]
 
-Additional modules in `src/data/mi_modules/` (13 total) need similar updates.
+Requirements:
+    - SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in .env file
+    - Database schema already created
+"""
 
-**Rewrite Tasks:**
-- [ ] Replace "patient" with "customer" or "client"
-- [ ] Rewrite scenario context to use financial/guidance framing
-- [ ] Remove healthcare-specific references
-- [ ] Align dialogue with MaPS non-directive approach
-- [ ] Classify each module as Customer-Facing, Colleague-Facing, or Shared
+import json
+import os
+import sys
+from pathlib import Path
+from dotenv import load_dotenv
+
+from supabase import create_client
+
+
+def import_module(supabase, module_file: Path) -> dict:
+    """
+    Import a single module from JSON file to Supabase.
+    
+    Args:
+        supabase: Supabase admin client
+        module_file: Path to module JSON file
+    
+    Returns:
+        dict: Import result with status
+    """
+    try:
+        with open(module_file, 'r') as f:
+            data = json.load(f)
+        
+        # Extract external content (safe for frontend)
+        external_content = data.get('external', {})
+        
+        # Extract internal content (system-only)
+        internal_content = data.get('internal', {})
+        
+        # Validate required fields
+        if not external_content.get('title'):
+            return {'status': 'error', 'file': str(module_file), 'error': 'Missing title'}
+        
+        # Prepare database record
+        module_data = {
+            "code": external_content.get('code', module_file.stem),
+            "title": external_content.get('title'),
+            "content_type": external_content.get('content_type', 'shared'),
+            "difficulty_level": external_content.get('difficulty_level', 'beginner'),
+            "estimated_minutes": external_content.get('estimated_minutes', 10),
+            "learning_objective": external_content.get('learning_objective', ''),
+            "scenario_context": external_content.get('scenario_context', ''),
+            "persona_config": json.dumps(external_content.get('persona_config', {})),
+            "dialogue_structure": json.dumps(external_content.get('dialogue_structure', {})),
+            "target_competencies": external_content.get('target_competencies', []),
+            "maps_rubric": json.dumps(internal_content.get('maps_rubric', {})),
+            "is_active": True
+        }
+        
+        # Check if module already exists
+        existing = supabase.table('mi_practice_modules').select('id').eq('code', module_data['code']).execute()
+        
+        if existing.data:
+            # Update existing module
+            result = supabase.table('mi_practice_modules').update(module_data).eq('code', module_data['code']).execute()
+            return {
+                'status': 'updated',
+                'code': module_data['code'],
+                'title': module_data['title']
+            }
+        else:
+            # Insert new module
+            result = supabase.table('mi_practice_modules').insert(module_data).execute()
+            return {
+                'status': 'created',
+                'code': module_data['code'],
+                'title': module_data['title']
+            }
+    
+    except Exception as e:
+        return {
+            'status': 'error',
+            'file': str(module_file),
+            'error': str(e)
+        }
+
+
+def main():
+    """Main import function"""
+    # Validate environment
+    supabase_url = os.environ.get('SUPABASE_URL')
+    supabase_key = os.environ.get('SUPABASE_SERVICE_ROLE_KEY')
+    
+    if not supabase_url or not supabase_key:
+        print("❌ Error: SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be set in .env")
+        return 1
+    
+    # Create Supabase client
+    print("🔌 Connecting to Supabase...")
+    supabase = create_client(supabase_url, supabase_key)
+    
+    # Check connection
+    try:
+        result = supabase.table('mi_practice_modules').select('id').limit(1).execute()
+        print("✅ Connected to Supabase")
+    except Exception as e:
+        print(f"❌ Error connecting to Supabase: {e}")
+        return 1
+    
+    # Import modules
+    modules_dir = Path(__file__).parent.parent / 'src' / 'data' / 'mi_modules'
+    results = []
+    
+    print(f"\n📦 Importing modules from {modules_dir}...\n")
+    
+    # Import all module JSON files
+    for module_file in sorted(modules_dir.glob('module_*.json')):
+        print(f"  → {module_file.name}...", end=' ')
+        result = import_module(supabase, module_file)
+        results.append(result)
+        
+        if result['status'] == 'error':
+            print(f"❌ Error: {result.get('error')}")
+        else:
+            status_icon = '✓' if result['status'] == 'created' else '↻'
+            print(f"{status_icon} {result['status']}: {result.get('title', 'N/A')}")
+    
+    # Summary
+    print("\n" + "="*50)
+    created = sum(1 for r in results if r['status'] == 'created')
+    updated = sum(1 for r in results if r['status'] == 'updated')
+    errors = sum(1 for r in results if r['status'] == 'error')
+    
+    print(f"📊 Import Summary:")
+    print(f"  Created: {created}")
+    print(f"  Updated: {updated}")
+    print(f"  Errors:  {errors}")
+    
+    return 0 if errors == 0 else 1
+
+
+if __name__ == '__main__':
+    sys.exit(main())
+```
+
+### 1.2 Database Schema
+
+**Reference:** [`mi-learning-platform/app/db/migrations/001_init_schema.sql`](C:/builds/mi-learning-platform/app/db/migrations/001_init_schema.sql)
+
+**Current MAPS Schema:** [`supabase/migrations/current/0004_current_mi_practice_tables.sql`](../supabase/migrations/current/0004_current_mi_practice_tables.sql)
+
+The existing schema stores all content in single JSONB fields. For content separation:
+
+| Field | Content Type | Notes |
+|-------|--------------|-------|
+| `dialogue_structure` | External | Only learner-facing content |
+| `maps_rubric` | Internal | System scoring config |
 
 ---
 
-## Phase 3: Core Services Update
+## Phase 2: Module JSON Refactoring
 
-### 3.1 Service Layer Changes
+### 2.1 JSON Structure Update
 
-**File:** `src/services/practice_content_service.py` (NEW - replaces mi_module_service.py)
+**Reference Format:** [`mi-learning-platform/mi_modules/module_1.json`](C:/builds/mi-learning-platform/mi_modules/module_1.json)
+
+**Target Format:** Split JSON with `external` and `internal` sections
+
+### 2.2 Terminology Mapping
+
+| Old Term | New Term |
+|----------|----------|
+| patient | customer / client |
+| doctor/medical | financial / guidance |
+| treatment | support / guidance |
+| change talk | goal acknowledgment |
+| resistance | hesitation |
+| precontemplation | not yet ready |
+
+### 2.3 Module Files to Update
+
+Located in `src/data/mi_modules/`:
+
+| File | Current Title | Target Classification |
+|------|---------------|----------------------|
+| `module_1.json` | Simple Reflections | Customer-Facing |
+| `module_2.json` | Open-Ended Questions | Customer-Facing |
+| `module_3.json` | Complex Reflections | Customer-Facing |
+| `module_4.json` | Affirmations | Customer-Facing |
+| `module_5.json` | Summarizing | Customer-Facing |
+| `module_6.json` | Eliciting Change Talk | Customer-Facing |
+| `module_7.json` | Rolling with Resistance | Customer-Facing |
+| `module_8.json` | Developing Discrepancy | Customer-Facing |
+| `module_9.json` | Colleague Coaching | Colleague-Facing |
+| `module_10.json` | Handling Objections | Customer-Facing |
+| `module_11.json` | Action Planning | Customer-Facing |
+| `module_12.json` | Difficult Conversations | Colleague-Facing |
+
+---
+
+## Phase 3: Service Layer Updates
+
+### 3.1 Content Service
+
+**File:** `src/services/mi_module_service.py` (existing - needs updates)
 
 **Key Methods:**
+```python
+class MIModuleService:
+    async def list_modules(
+        self,
+        content_type: Optional[str] = None,  # 'customer_facing', 'colleague_facing'
+        difficulty: Optional[str] = None,
+        user_id: Optional[str] = None
+    ) -> List[MIPracticeModuleSummary]
+    
+    async def get_module_external(
+        self,
+        module_id: str
+    ) -> Dict[str, Any]  # Returns only external content
+    
+    async def get_module_internal(
+        self,
+        module_id: str,
+        admin_user_id: str
+    ) -> Dict[str, Any]  # Returns full content for scoring
+```
+
+---
+
+## Phase 4: Frontend Integration
+
+### 4.1 API Endpoints
+
+Reference existing endpoints in `src/api/routes/mi_practice.py`
+
+**Update:** Add content type filtering to list endpoints
 
 ```python
-class PracticeContentService:
-    async def list_content(
-        self,
-        content_type: Optional[str] = None,  # 'customer_facing', 'colleague_facing', 'shared'
-        difficulty: Optional[str] = None,
-        user_id: Optional[str] = None,
-    ) -> List[PracticeContentSummary]
-    
-    async def get_content_learner(
-        self,
-        content_id: str,
-        user_id: Optional[str] = None
-    ) -> Optional[PracticeContentLearner]
-    
-    async def get_content_system(
-        self,
-        content_id: str,
-        admin_user_id: str
-    ) -> Optional[PracticeSystemConfig]
+@router.get("/modules")
+async def list_modules(
+    content_type: Optional[str] = Query(None, description="Filter by content type"),
+    difficulty: Optional[str] = Query(None, description="Filter by difficulty"),
+    # ... existing parameters
+):
+    """List modules with optional content type filtering"""
 ```
 
 ---
 
-## Phase 4: Frontend UI Update
+## Phase 5: Verification
 
-### 4.1 Content Type Filtering
+### 5.1 Import Verification
 
-**File:** `static/js/practice-content-browser.js` (NEW)
+```bash
+# Run import script
+python scripts/import_modules.py
 
-**Features:**
-- Filter by content type (Customer-Facing, Colleague-Facing, Shared)
-- Display only learner-facing content
-- Hide all system-only scoring data
+# Verify in Supabase
+SELECT code, title, content_type, difficulty_level FROM mi_practice_modules;
+```
 
----
-
-## Phase 5: Integration & Testing
-
-### 5.1 Verification Queries
-
-**Reference:** [`supabase/MIGRATION_STRATEGY.md` - Verification Queries](../supabase/MIGRATION_STRATEGY.md#verification-queries)
+### 5.2 Content Separation Test
 
 ```sql
--- Check content types
-SELECT code, title, difficulty_level FROM practice_content;
+-- Check that external content is accessible
+SELECT code, title, dialogue_structure 
+FROM mi_practice_modules
+WHERE is_active = TRUE
+LIMIT 1;
 
--- Check competency mapping
-SELECT code, title, target_competencies FROM practice_content;
-
--- Check learning paths
-SELECT code, title, estimated_duration_hours FROM mi_learning_paths;
+-- Internal content should only be accessible via admin endpoints
+-- Not directly exposed in SELECT queries to regular users
 ```
 
-### 5.2 Testing Checklist
+---
 
-- [ ] Database migrations apply successfully
-- [ ] Pydantic models validate correctly
-- [ ] API endpoints return only learner-facing content for regular users
-- [ ] Admin endpoints return full content for authorized users
-- [ ] Frontend displays content filtered by type
-- [ ] All healthcare terminology replaced with MaPS-appropriate language
-- [ ] Scoring system continues to work with new internal models
-- [ ] Progress tracking aligned with MAPS competency framework
+## File Reference Summary
+
+| Source | Purpose |
+|--------|---------|
+| [`mi-learning-platform/scripts/import_modules.py`](C:/builds/mi-learning-platform/scripts/import_modules.py) | Import script reference |
+| [`mi-learning-platform/app/db/migrations/001_init_schema.sql`](C:/builds/mi-learning-platform/app/db/migrations/001_init_schema.sql) | Schema reference |
+| [`mi-learning-platform/mi_modules/module_1.json`](C:/builds/mi-learning-platform/mi_modules/module_1.json) | Module JSON reference |
+| [`supabase/migrations/current/0004_current_mi_practice_tables.sql`](../supabase/migrations/current/0004_current_mi_practice_tables.sql) | Current MAPS schema |
+| [`supabase/SEED_STRATEGY.md`](../supabase/SEED_STRATEGY.md) | Seed data approach |
 
 ---
 
-## Learning Paths Reference
-
-**Reference:** [`supabase/SEED_STRATEGY.md` - Learning Paths](../supabase/SEED_STRATEGY.md#phase-4-learning-paths-optional)
-
-| Path | Modules | Duration | Target |
-|------|---------|----------|--------|
-| MI Fundamentals | 3 | 15 min | beginners |
-| Core Interviewing Skills | 3 | 17 min | intermediate |
-| Complete Beginner Path | 4 | 22 min | beginners |
-
-**Additional MaPS-Aligned Paths:**
-- Facilitative Coaching Foundations
-- Debt Advice Coaching specialization
-- Pensions Coaching specialization
-- Advanced Practitioner path
-- Colleague Support path
-
----
-
-## Tier Alignment Reference
-
-**Reference:** [`supabase/MIGRATION_STRATEGY.md` - Tier Alignment](../supabase/MIGRATION_STRATEGY.md#tier-alignment)
-
-- **Tier 1**: Foundation path focuses on factual information, signposting, and basic rapport
-- **Tier 1-2**: Debt and Pensions paths include coaching for capability improvement
-- **Tier 2-3**: Advanced path covers complex cases and mentoring others
-
----
-
-## Domain Alignment Reference
-
-**Reference:** [`supabase/MIGRATION_STRATEGY.md` - Technical Domains](../supabase/MIGRATION_STRATEGY.md#technical-domains-covered)
-
-| Domain | Description | Paths |
-|--------|-------------|-------|
-| Domain 1 | Knowing your customer | All modules |
-| Domain 2 | Debt | Debt Advice specialization |
-| Domain 5 | Budgeting | Foundation scenarios |
-| Domain 11 | Pensions | Pensions guidance path |
-
----
-
-## Best Practices
-
-1. Reference existing strategy documents for implementation details
-2. Use MaPS terminology - "facilitative coaching" not proprietary model names
-3. Align all content with MaPS competency framework
-4. Keep legacy migrations in `migrations/legacy/` for reference
-5. Use `ON CONFLICT DO NOTHING` in seeds for idempotency
-
----
-
-**Document Version:** 2.0  
+**Document Version:** 2.1  
 **Last Updated:** 2026-02-01  
-**Status:** Awaiting Phase 0 Approval  
-**Related Documents:**
-- [`supabase/MIGRATION_STRATEGY.md`](../supabase/MIGRATION_STRATEGY.md)
-- [`supabase/SEED_STRATEGY.md`](../supabase/SEED_STRATEGY.md)
+**Status:** Phase 0 Complete - Ready for Phase 1
