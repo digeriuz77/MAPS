@@ -1,4 +1,21 @@
 /**
+ * @typedef {Object} VoiceClientOptions
+ * @property {number} [sampleRate=16000] - Audio sample rate (Flux recommended: 16000)
+ * @property {number} [channelCount=1] - Number of audio channels (mono recommended)
+ * @property {number} [chunkSize=80] - Audio chunk size in milliseconds
+ * @property {string} [apiBaseUrl='/api/voice'] - Base URL for voice API endpoints
+ * @property {string|null} [transcriptContainer=null] - CSS selector for transcript display
+ * @property {string|null} [statusIndicator=null] - CSS selector for status display
+ * @property {string|null} [metricsContainer=null] - CSS selector for metrics display
+ * @property {(data: any) => void} [onTranscript] - Callback for transcript updates
+ * @property {(text: string, turn: number) => void} [onSpeechFinal] - Callback for speech finalization
+ * @property {(from: string, to: string) => void} [onStateChange] - Callback for state changes
+ * @property {(metrics: any) => void} [onMetrics] - Callback for metrics updates
+ * @property {(audioData: ArrayBuffer) => void} [onAudio] - Callback for TTS audio data
+ * @property {(error: Error) => void} [onError] - Callback for error handling
+ */
+
+/**
  * Voice Client - WebSocket-based voice interaction for scenarios
  * 
  * Supports:
@@ -13,12 +30,25 @@
  */
 
 class VoiceClient {
+    /**
+     * Create a new VoiceClient instance
+     * @param {VoiceClientOptions} [options={}] - Configuration options
+     */
     constructor(options = {}) {
+        // Audio processing constants
+        this.CONSTANTS = {
+            FLUX_OPTIMAL_CHUNK_MS: 80,
+            FLUX_SAMPLE_RATE: 16000,
+            VOICE_AGENT_SAMPLE_RATE: 24000,
+            MAX_RETRIES: 3,
+            MAX_AUDIO_CHUNK_SIZE: 8192
+        };
+
         this.options = {
             // Audio settings
-            sampleRate: 16000,  // Flux recommended
+            sampleRate: this.CONSTANTS.FLUX_SAMPLE_RATE,
             channelCount: 1,
-            chunkSize: 80,  // ms, optimal for Flux
+            chunkSize: this.CONSTANTS.FLUX_OPTIMAL_CHUNK_MS,
 
             // API settings
             apiBaseUrl: '/api/voice',
@@ -61,6 +91,17 @@ class VoiceClient {
     /**
      * Create a voice session
      */
+    /**
+     * Create a new voice session
+     * @param {string} attemptId - Scenario attempt ID
+     * @param {string} [mode='stt_only'] - Voice mode: 'stt_only' or 'full'
+     * @param {Object} [fluxConfig={}] - Flux STT configuration
+     * @param {number} [fluxConfig.eotThreshold=0.7] - End-of-turn confidence threshold (0.5-0.9)
+     * @param {number|null} [fluxConfig.eagerEotThreshold=null] - Early end-of-turn threshold (0.3-0.9)
+     * @param {number} [fluxConfig.eotTimeoutMs=5000] - Max silence before forced EOT (500-10000ms)
+     * @returns {Promise<Object>} Session creation response
+     * @throws {Error} If session creation fails
+     */
     async createSession(attemptId, mode = 'stt_only', fluxConfig = {}) {
         try {
             const response = await fetch(`${this.options.apiBaseUrl}/sessions`, {
@@ -97,9 +138,19 @@ class VoiceClient {
     /**
      * Connect WebSocket and start audio streaming
      */
+    /**
+     * Connect WebSocket and initialize audio streaming
+     * @returns {Promise<void>}
+     * @throws {Error} If already connected or no session exists
+     */
     async connect() {
         if (!this.sessionId) {
             throw new Error('No session created. Call createSession first.');
+        }
+
+        if (this.websocket?.readyState === WebSocket.OPEN) {
+            console.warn('WebSocket already connected');
+            return;
         }
 
         this._setStatus('connecting');
@@ -143,12 +194,18 @@ class VoiceClient {
     /**
      * Start recording and streaming audio
      */
+    /**
+     * Start recording and streaming audio from microphone
+     * @returns {Promise<void>}
+     * @throws {Error} If WebSocket not connected or already recording
+     */
     async startRecording() {
         if (!this.websocket || this.websocket.readyState !== WebSocket.OPEN) {
             throw new Error('WebSocket not connected');
         }
 
         if (this.isRecording) {
+            console.warn('Already recording');
             return;
         }
 
@@ -189,8 +246,12 @@ class VoiceClient {
     /**
      * Stop recording
      */
+    /**
+     * Stop audio recording
+     */
     stopRecording() {
         if (!this.isRecording) {
+            console.warn('Not currently recording');
             return;
         }
 
@@ -213,6 +274,10 @@ class VoiceClient {
 
     /**
      * End the voice session and get analysis
+     */
+    /**
+     * End the voice session and get final analysis
+     * @returns {Promise<Object|null>} Final session analysis or null if failed
      */
     async endSession() {
         this.stopRecording();
@@ -248,12 +313,17 @@ class VoiceClient {
     /**
      * Get current transcript
      */
+    /**
+     * Get complete transcript as single text string
+     * @returns {string} Full transcript
+     */
     getTranscript() {
         return this.transcripts.map(t => t.text).join(' ');
     }
 
     /**
-     * Get current status
+     * Get current session status
+     * @returns {string} Current status: 'idle', 'connecting', 'listening', 'processing', 'speaking', or 'error'
      */
     getStatus() {
         return this.status;
@@ -261,6 +331,10 @@ class VoiceClient {
 
     // ========== Private Methods ==========
 
+    /**
+     * Initialize audio context and worklet
+     * @returns {Promise<void>}
+     */
     async _initializeAudio() {
         // Create audio context
         this.audioContext = new (window.AudioContext || window.webkitAudioContext)({
@@ -275,6 +349,11 @@ class VoiceClient {
         }
     }
 
+    /**
+     * Set up audio processing pipeline
+     * @param {MediaStreamAudioSourceNode} source - Audio source node from microphone
+     * @returns {Promise<void>}
+     */
     async _setupAudioProcessing() {
         const source = this.audioContext.createMediaStreamSource(this.mediaStream);
 
@@ -305,6 +384,11 @@ class VoiceClient {
         }
     }
 
+    /**
+     * Set up ScriptProcessor as fallback for older browsers
+     * @param {MediaStreamAudioSourceNode} source - Audio source node
+     * @param {number} bufferSize - Audio buffer size
+     */
     _setupScriptProcessor(source, bufferSize) {
         // Round buffer size to power of 2
         bufferSize = Math.pow(2, Math.ceil(Math.log2(bufferSize)));
@@ -326,19 +410,60 @@ class VoiceClient {
         this.audioWorklet = processor;
     }
 
+    /**
+     * Convert float32 audio samples to int16 format
+     * @param {Float32Array} float32Array - Input audio data in float32 format
+     * @returns {ArrayBuffer} Converted audio data in int16 format as ArrayBuffer
+     */
     _float32ToInt16(float32Array) {
         const int16Array = new Int16Array(float32Array.length);
         for (let i = 0; i < float32Array.length; i++) {
-            const s = Math.max(-1, Math.min(1, float32Array[i]));
-            int16Array[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
+            const sample = Math.max(-1, Math.min(1, float32Array[i]));
+            int16Array[i] = sample < 0 ? sample * 0x8000 : sample * 0x7FFF;
         }
         return int16Array.buffer;
     }
 
+    /**
+     * Send audio chunk to server via WebSocket
+     * @param {ArrayBuffer|Uint8Array|Int16Array} audioData - Audio chunk to send
+     * @returns {boolean} True if chunk was sent successfully
+     */
     _sendAudioChunk(audioData) {
+        const valid = this._validateAudioChunk(audioData);
+        if (!valid) {
+            return false;
+        }
+
         if (this.websocket && this.websocket.readyState === WebSocket.OPEN) {
             this.websocket.send(audioData);
+            return true;
         }
+        
+        return false;
+    }
+
+    /**
+     * Validate audio chunk size
+     * @param {ArrayBuffer|Uint8Array|Int16Array} audioData - Audio data to validate
+     * @returns {boolean} True if chunk size is valid
+     */
+    _validateAudioChunk(audioData) {
+        const length = ArrayBuffer.isView(audioData) 
+            ? audioData.length 
+            : audioData.byteLength || audioData.length;
+        
+        if (length > this.CONSTANTS.MAX_AUDIO_CHUNK_SIZE) {
+            console.error('Audio chunk size exceeds maximum limit');
+            this._handleError(new Error('Audio chunk size exceeds maximum limit'));
+            return false;
+        }
+
+        if (length < 128) {
+            console.warn('Audio chunk size below recommended minimum');
+        }
+
+        return true;
     }
 
     _handleWebSocketMessage(event) {
