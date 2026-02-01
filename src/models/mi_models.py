@@ -12,6 +12,13 @@ from enum import Enum
 # ENUMS
 # ============================================
 
+class ContentType(str, Enum):
+    """Content type classification for MI modules"""
+    SHARED = "shared"
+    CUSTOMER_FACING = "customer_facing"
+    COLLEAGUE_FACING = "colleague_facing"
+
+
 class DifficultyLevel(str, Enum):
     BEGINNER = "beginner"
     INTERMEDIATE = "intermediate"
@@ -268,17 +275,28 @@ class FinalScores(BaseModel):
 class MIPracticeModule(BaseModel):
     """Complete MI Practice Module schema"""
     id: Optional[str] = None
-    code: str = Field(..., pattern=r'^mi-[a-z-]+-\d+
+    code: str = Field(..., description="Module code (e.g., shared-simple-reflections-001)")
+    title: str = Field(..., min_length=5, max_length=200)
+
+    # Categorization
+    content_type: ContentType = Field(ContentType.SHARED, description="Content type: shared, customer_facing, or colleague_facing")
+    mi_focus_area: Optional[str] = None
+    difficulty_level: DifficultyLevel = DifficultyLevel.BEGINNER
+    estimated_minutes: int = Field(5, ge=1, le=60)
+
+    # Learning design
+    learning_objective: str = Field(..., min_length=10)
     scenario_context: str = Field(..., min_length=10)
-    
+
     # Configuration
     persona_config: PersonaConfig
     dialogue_structure: DialogueStructure
-    
+
     # MAPS alignment
     target_competencies: List[str] = Field(default_factory=list)
     maps_rubric: MAPSRubric
-    
+    maps_framework_alignment: Optional[Dict[str, Any]] = None
+
     # Metadata
     is_active: bool = True
     created_at: Optional[datetime] = None
@@ -304,12 +322,13 @@ class MIPracticeModuleSummary(BaseModel):
     id: str
     code: str
     title: str
+    content_type: ContentType
     mi_focus_area: Optional[str]
     difficulty_level: str
     estimated_minutes: int
     learning_objective: str
     target_competencies: List[str]
-    
+
     # User-specific fields (populated at runtime)
     user_attempts: int = 0
     best_score: Optional[float] = None
@@ -502,10 +521,10 @@ class EnrollPathResponse(BaseModel):
     message: str
 )
     title: str = Field(..., min_length=5, max_length=200)
-    
+
     # Categorization
-    mi_focus_area: Optional[MIFocusArea] = None
-    module_type: str = Field("both", description="Module type: external, internal, or both")
+    content_type: ContentType = Field(ContentType.SHARED, description="Content type: shared, customer_facing, or colleague_facing")
+    mi_focus_area: Optional[str] = None
     difficulty_level: DifficultyLevel = DifficultyLevel.BEGINNER
     estimated_minutes: int = Field(5, ge=1, le=60)
     
@@ -546,12 +565,13 @@ class MIPracticeModuleSummary(BaseModel):
     id: str
     code: str
     title: str
+    content_type: ContentType
     mi_focus_area: Optional[str]
     difficulty_level: str
     estimated_minutes: int
     learning_objective: str
     target_competencies: List[str]
-    
+
     # User-specific fields (populated at runtime)
     user_attempts: int = 0
     best_score: Optional[float] = None

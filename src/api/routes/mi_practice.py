@@ -20,6 +20,7 @@ from src.models.mi_models import (
     MILearningPath,
     MILearningPathSummary,
     MIUserProgress,
+    ContentType,
     StartAttemptRequest,
     StartAttemptResponse,
     MakeChoiceRequest,
@@ -45,6 +46,7 @@ router = APIRouter(prefix="/api/mi-practice", tags=["mi-practice"])
 
 @router.get("/modules", response_model=List[MIPracticeModuleSummary])
 async def list_modules(
+    content_type: Optional[ContentType] = Query(None, description="Filter by content type: shared, customer_facing, or colleague_facing"),
     focus_area: Optional[str] = Query(None, description="Filter by MI focus area"),
     difficulty: Optional[str] = Query(None, description="Filter by difficulty level"),
     user_id: Optional[str] = Query(None, description="User ID for progress tracking (must match authenticated user)"),
@@ -54,16 +56,22 @@ async def list_modules(
     """
     List available MI practice modules.
 
-    Returns a list of modules with optional filtering by focus area and difficulty.
+    Returns a list of modules with optional filtering by content type, focus area, and difficulty.
     If user_id is provided, it must match the authenticated user's ID.
+
+    Content Types:
+    - shared: Core MI skills applicable to both customer and colleague contexts
+    - customer_facing: MAPS financial scenarios (debt, budgeting, pensions)
+    - colleague_facing: MAPS workplace scenarios (performance, coaching, team dynamics)
     """
     # Security: Ensure user_id matches authenticated user if provided
     if user_id and current_user and user_id != current_user.get('id'):
         raise HTTPException(status_code=403, detail="Cannot access other users' progress")
-    logger.info(f"Listing MI practice modules - focus_area: {focus_area}, difficulty: {difficulty}")
-    
+    logger.info(f"Listing MI practice modules - content_type: {content_type}, focus_area: {focus_area}, difficulty: {difficulty}")
+
     try:
         modules = await module_service.list_modules(
+            content_type=content_type,
             focus_area=focus_area,
             difficulty=difficulty,
             user_id=user_id,
@@ -485,6 +493,26 @@ async def get_difficulty_levels(
     except Exception as e:
         logger.error(f"Error getting difficulty levels: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to get difficulty levels: {str(e)}")
+
+
+@router.get("/content-types")
+async def get_content_types(
+    module_service: MIModuleService = Depends(get_mi_module_service),
+):
+    """
+    Get list of content types with module counts.
+
+    Returns:
+    - shared: Core MI skills applicable to both customer and colleague contexts
+    - customer_facing: MAPS financial scenarios (debt, budgeting, pensions)
+    - colleague_facing: MAPS workplace scenarios (performance, coaching, team dynamics)
+    """
+    try:
+        content_types = await module_service.get_content_types()
+        return {"content_types": content_types}
+    except Exception as e:
+        logger.error(f"Error getting content types: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get content types: {str(e)}")
 
 
 @router.get("/recommendations")

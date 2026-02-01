@@ -15,6 +15,7 @@ from src.models.mi_models import (
     MIPracticeModuleSummary,
     MILearningPath,
     MILearningPathSummary,
+    ContentType,
 )
 
 logger = logging.getLogger(__name__)
@@ -41,6 +42,7 @@ class MIModuleService:
     
     async def list_modules(
         self,
+        content_type: Optional[ContentType] = None,
         focus_area: Optional[str] = None,
         difficulty: Optional[str] = None,
         user_id: Optional[str] = None,
@@ -49,25 +51,28 @@ class MIModuleService:
     ) -> List[MIPracticeModuleSummary]:
         """
         List available MI practice modules with optional filtering.
-        
+
         Args:
+            content_type: Filter by content type (shared, customer_facing, colleague_facing)
             focus_area: Filter by MI focus area (e.g., "Building Rapport")
             difficulty: Filter by difficulty level ("beginner", "intermediate", "advanced")
             user_id: If provided, includes user-specific progress information
             limit: Maximum number of modules to return
             offset: Pagination offset
-            
+
         Returns:
             List of module summaries
         """
         try:
             # Build base query
             query = self.supabase.table('mi_practice_modules').select(
-                'id', 'code', 'title', 'mi_focus_area', 'difficulty_level',
+                'id', 'code', 'title', 'content_type', 'mi_focus_area', 'difficulty_level',
                 'estimated_minutes', 'learning_objective', 'target_competencies'
             ).eq('is_active', True)
-            
+
             # Apply filters
+            if content_type:
+                query = query.eq('content_type', content_type.value)
             if focus_area:
                 query = query.eq('mi_focus_area', focus_area)
             if difficulty:
@@ -85,6 +90,7 @@ class MIModuleService:
                     id=str(module_data['id']),
                     code=module_data['code'],
                     title=module_data['title'],
+                    content_type=ContentType(module_data.get('content_type', 'shared')),
                     mi_focus_area=module_data.get('mi_focus_area'),
                     difficulty_level=module_data['difficulty_level'],
                     estimated_minutes=module_data['estimated_minutes'],
@@ -134,6 +140,7 @@ class MIModuleService:
                 id=str(module_data['id']),
                 code=module_data['code'],
                 title=module_data['title'],
+                content_type=ContentType(module_data.get('content_type', 'shared')),
                 mi_focus_area=module_data.get('mi_focus_area'),
                 difficulty_level=module_data['difficulty_level'],
                 estimated_minutes=module_data['estimated_minutes'],
@@ -143,6 +150,7 @@ class MIModuleService:
                 dialogue_structure=module_data['dialogue_structure'],
                 target_competencies=module_data.get('target_competencies', []),
                 maps_rubric=module_data['maps_rubric'],
+                maps_framework_alignment=module_data.get('maps_framework_alignment'),
                 is_active=module_data['is_active'],
                 created_at=module_data.get('created_at'),
                 updated_at=module_data.get('updated_at'),
@@ -176,6 +184,7 @@ class MIModuleService:
                 id=str(module_data['id']),
                 code=module_data['code'],
                 title=module_data['title'],
+                content_type=ContentType(module_data.get('content_type', 'shared')),
                 mi_focus_area=module_data.get('mi_focus_area'),
                 difficulty_level=module_data['difficulty_level'],
                 estimated_minutes=module_data['estimated_minutes'],
@@ -185,6 +194,7 @@ class MIModuleService:
                 dialogue_structure=module_data['dialogue_structure'],
                 target_competencies=module_data.get('target_competencies', []),
                 maps_rubric=module_data['maps_rubric'],
+                maps_framework_alignment=module_data.get('maps_framework_alignment'),
                 is_active=module_data['is_active'],
                 created_at=module_data.get('created_at'),
                 updated_at=module_data.get('updated_at'),
@@ -408,6 +418,46 @@ class MIModuleService:
             logger.error(f"Error getting focus areas: {e}")
             raise
     
+    async def get_content_types(self) -> List[Dict[str, Any]]:
+        """
+        Get list of content types with module counts.
+
+        Returns:
+            List of content type info with counts
+        """
+        try:
+            result = self.supabase.table('mi_practice_modules').select(
+                'content_type'
+            ).eq('is_active', True).execute()
+
+            if not result.data:
+                return []
+
+            # Count modules per content type
+            content_types = {}
+            for module in result.data:
+                ct = module.get('content_type') or 'shared'
+                if ct not in content_types:
+                    content_types[ct] = 0
+                content_types[ct] += 1
+
+            return [
+                {
+                    'name': ct,
+                    'label': {
+                        'shared': 'Core Skills',
+                        'customer_facing': 'Customer-Facing',
+                        'colleague_facing': 'Colleague-Facing'
+                    }.get(ct, ct),
+                    'module_count': count
+                }
+                for ct, count in sorted(content_types.items())
+            ]
+
+        except Exception as e:
+            logger.error(f"Error getting content types: {e}")
+            raise
+
     async def get_difficulty_levels(self) -> List[Dict[str, Any]]:
         """
         Get list of difficulty levels with module counts.
@@ -482,6 +532,7 @@ class MIModuleService:
                                 id=next_module.id,
                                 code=next_module.code,
                                 title=next_module.title,
+                                content_type=next_module.content_type,
                                 mi_focus_area=next_module.mi_focus_area,
                                 difficulty_level=next_module.difficulty_level,
                                 estimated_minutes=next_module.estimated_minutes,
