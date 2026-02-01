@@ -170,7 +170,7 @@
         "persona_mood": "relieved_clarity_seeking",
         "themes": [
           "Certainty",
-          "Clarity
+          "Clarity"
         ],
         "choice_points": [
           {
@@ -302,7 +302,7 @@
         "persona_mood": "empowered_confident",
         "themes": [
           "Empowerment",
-          "Clarity
+          "Clarity"
         ],
         "choice_points": [],
         "is_endpoint": true,
