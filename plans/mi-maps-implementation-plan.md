@@ -8,7 +8,7 @@
 
 ## Executive Summary
 
-This document provides an implementation plan for integrating structured practice dialogues into the MAPS application, following the approach established in `mi-learning-platform`.
+This document provides a comprehensive implementation plan for integrating structured practice dialogues into the MAPS application, following the approach established in `mi-learning-platform`.
 
 **Reference Approach:**
 - Modules stored as JSON files in `src/data/mi_modules/`
@@ -19,6 +19,21 @@ This document provides an implementation plan for integrating structured practic
 1. Content separation: Learner-facing vs System-only content
 2. MaPS terminology: Replace MI/healthcare language with MaPS-appropriate terms
 3. Module classification: Customer-Facing, Colleague-Facing, Shared
+
+---
+
+## Phase Overview
+
+| Phase | Name | Status | Key Deliverables |
+|-------|------|--------|------------------|
+| 0 | Foundation Assessment | ✅ COMPLETE | Framework alignment, content classification |
+| 1 | Import Script Development | ⏳ PENDING | `scripts/import_modules.py` |
+| 2 | Module JSON Refactoring | ⏳ PENDING | 12 modules with external/internal split |
+| 3 | Service Layer Updates | ⏳ PENDING | `src/services/mi_module_service.py` updates |
+| 4 | API Layer Updates | ⏳ PENDING | `src/api/routes/mi_practice.py` updates |
+| 5 | Frontend Integration | ⏳ PENDING | Content filtering UI |
+| 6 | Testing & Verification | ⏳ PENDING | Test suite, verification queries |
+| 7 | Documentation | ⏳ PENDING | Updated docs and guides |
 
 ---
 
@@ -46,22 +61,7 @@ This document provides an implementation plan for integrating structured practic
   "dialogue_tree": {
     "title": "Module 1: Simple Reflections...",
     "learning_objective": "...",
-    "nodes": [
-      {
-        "id": "node_1",
-        "patient_statement": "...",
-        "practitioner_choices": [
-          {
-            "text": "Response option",              // EXTERNAL
-            "technique": "Simple reflection",       // INTERNAL
-            "next_node_id": "node_2",              // EXTERNAL
-            "feedback": "Feedback text",            // EXTERNAL
-            "rapport_impact": 1,                    // INTERNAL
-            "resistance_impact": -1                 // INTERNAL
-          }
-        ]
-      }
-    ]
+    "nodes": [...]
   }
 }
 ```
@@ -73,220 +73,59 @@ This document provides an implementation plan for integrating structured practic
     "title": "Module 1: Simple Reflections...",
     "learning_objective": "...",
     "content_type": "customer_facing",
-    "nodes": [
-      {
-        "id": "node_1",
-        "persona_statement": "...",
-        "choices": [
-          {
-            "id": "cp_1",
-            "option_text": "Response option",
-            "preview_hint": "Open question approach"
-          }
-        ]
-      }
-    ]
+    "dialogue_structure": {...}
   },
   "internal": {
-    "technique_mapping": {
-      "cp_1": {
-        "technique": "simple_reflection",
-        "competency_links": ["A6", "B2"],
-        "impacts": {
-          "rapport": 1,
-          "resistance_change": -1
-        }
-      }
-    },
-    "feedback": {
-      "cp_1": {
-        "immediate": "Good reflection...",
-        "learning_note": "Reflections build rapport..."
-      }
-    }
+    "maps_rubric": {...},
+    "technique_impacts": {...}
   }
 }
 ```
 
 ---
 
-## Phase 1: Import Script Development
+## Phase 1: Import Script Development ⏳ PENDING
 
 ### 1.1 Create Import Script
 
 **Reference:** [`mi-learning-platform/scripts/import_modules.py`](C:/builds/mi-learning-platform/scripts/import_modules.py)
 
-**File:** `scripts/import_modules.py` (NEW - adapted from mi-learning-platform)
+**File to Create:** `scripts/import_modules.py`
+
+**Purpose:** Import module content from JSON files into Supabase database
 
 **Key Functions:**
-```python
-#!/usr/bin/env python
-"""
-Module Data Import Script for MAPS Training Platform
+- `import_module(supabase, module_file)` - Import single module
+- `main()` - Main entry point for batch import
 
-Imports module content from src/data/mi_modules/*.json into Supabase database.
-Supports content separation (external/internal) for secure delivery.
-
-Usage:
-    python scripts/import_modules.py [--clear-existing]
-
-Requirements:
-    - SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in .env file
-    - Database schema already created
-"""
-
-import json
-import os
-import sys
-from pathlib import Path
-from dotenv import load_dotenv
-
-from supabase import create_client
-
-
-def import_module(supabase, module_file: Path) -> dict:
-    """
-    Import a single module from JSON file to Supabase.
-    
-    Args:
-        supabase: Supabase admin client
-        module_file: Path to module JSON file
-    
-    Returns:
-        dict: Import result with status
-    """
-    try:
-        with open(module_file, 'r') as f:
-            data = json.load(f)
-        
-        # Extract external content (safe for frontend)
-        external_content = data.get('external', {})
-        
-        # Extract internal content (system-only)
-        internal_content = data.get('internal', {})
-        
-        # Validate required fields
-        if not external_content.get('title'):
-            return {'status': 'error', 'file': str(module_file), 'error': 'Missing title'}
-        
-        # Prepare database record
-        module_data = {
-            "code": external_content.get('code', module_file.stem),
-            "title": external_content.get('title'),
-            "content_type": external_content.get('content_type', 'shared'),
-            "difficulty_level": external_content.get('difficulty_level', 'beginner'),
-            "estimated_minutes": external_content.get('estimated_minutes', 10),
-            "learning_objective": external_content.get('learning_objective', ''),
-            "scenario_context": external_content.get('scenario_context', ''),
-            "persona_config": json.dumps(external_content.get('persona_config', {})),
-            "dialogue_structure": json.dumps(external_content.get('dialogue_structure', {})),
-            "target_competencies": external_content.get('target_competencies', []),
-            "maps_rubric": json.dumps(internal_content.get('maps_rubric', {})),
-            "is_active": True
-        }
-        
-        # Check if module already exists
-        existing = supabase.table('mi_practice_modules').select('id').eq('code', module_data['code']).execute()
-        
-        if existing.data:
-            # Update existing module
-            result = supabase.table('mi_practice_modules').update(module_data).eq('code', module_data['code']).execute()
-            return {
-                'status': 'updated',
-                'code': module_data['code'],
-                'title': module_data['title']
-            }
-        else:
-            # Insert new module
-            result = supabase.table('mi_practice_modules').insert(module_data).execute()
-            return {
-                'status': 'created',
-                'code': module_data['code'],
-                'title': module_data['title']
-            }
-    
-    except Exception as e:
-        return {
-            'status': 'error',
-            'file': str(module_file),
-            'error': str(e)
-        }
-
-
-def main():
-    """Main import function"""
-    # Validate environment
-    supabase_url = os.environ.get('SUPABASE_URL')
-    supabase_key = os.environ.get('SUPABASE_SERVICE_ROLE_KEY')
-    
-    if not supabase_url or not supabase_key:
-        print("❌ Error: SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be set in .env")
-        return 1
-    
-    # Create Supabase client
-    print("🔌 Connecting to Supabase...")
-    supabase = create_client(supabase_url, supabase_key)
-    
-    # Check connection
-    try:
-        result = supabase.table('mi_practice_modules').select('id').limit(1).execute()
-        print("✅ Connected to Supabase")
-    except Exception as e:
-        print(f"❌ Error connecting to Supabase: {e}")
-        return 1
-    
-    # Import modules
-    modules_dir = Path(__file__).parent.parent / 'src' / 'data' / 'mi_modules'
-    results = []
-    
-    print(f"\n📦 Importing modules from {modules_dir}...\n")
-    
-    # Import all module JSON files
-    for module_file in sorted(modules_dir.glob('module_*.json')):
-        print(f"  → {module_file.name}...", end=' ')
-        result = import_module(supabase, module_file)
-        results.append(result)
-        
-        if result['status'] == 'error':
-            print(f"❌ Error: {result.get('error')}")
-        else:
-            status_icon = '✓' if result['status'] == 'created' else '↻'
-            print(f"{status_icon} {result['status']}: {result.get('title', 'N/A')}")
-    
-    # Summary
-    print("\n" + "="*50)
-    created = sum(1 for r in results if r['status'] == 'created')
-    updated = sum(1 for r in results if r['status'] == 'updated')
-    errors = sum(1 for r in results if r['status'] == 'error')
-    
-    print(f"📊 Import Summary:")
-    print(f"  Created: {created}")
-    print(f"  Updated: {updated}")
-    print(f"  Errors:  {errors}")
-    
-    return 0 if errors == 0 else 1
-
-
-if __name__ == '__main__':
-    sys.exit(main())
+**Usage:**
+```bash
+python scripts/import_modules.py [--clear-existing]
 ```
 
-### 1.2 Database Schema
+### 1.2 Database Schema Validation
 
-**Reference:** [`mi-learning-platform/app/db/migrations/001_init_schema.sql`](C:/builds/mi-learning-platform/app/db/migrations/001_init_schema.sql)
+**Current Schema:** [`supabase/migrations/current/0004_current_mi_practice_tables.sql`](../supabase/migrations/current/0004_current_mi_practice_tables.sql)
 
-**Current MAPS Schema:** [`supabase/migrations/current/0004_current_mi_practice_tables.sql`](../supabase/migrations/current/0004_current_mi_practice_tables.sql)
+**Required Fields:**
+| Field | Type | Content |
+|-------|------|---------|
+| `code` | VARCHAR | Module identifier |
+| `title` | VARCHAR | Module title |
+| `content_type` | VARCHAR | customer_facing, colleague_facing, shared |
+| `difficulty_level` | VARCHAR | beginner, intermediate, advanced |
+| `dialogue_structure` | JSONB | External content only |
+| `maps_rubric` | JSONB | Internal scoring config |
 
-The existing schema stores all content in single JSONB fields. For content separation:
+### 1.3 Deliverables
 
-| Field | Content Type | Notes |
-|-------|--------------|-------|
-| `dialogue_structure` | External | Only learner-facing content |
-| `maps_rubric` | Internal | System scoring config |
+- [ ] `scripts/import_modules.py` created
+- [ ] Import script tested with sample module
+- [ ] Database schema validated for import
 
 ---
 
-## Phase 2: Module JSON Refactoring
+## Phase 2: Module JSON Refactoring ⏳ PENDING
 
 ### 2.1 JSON Structure Update
 
@@ -294,10 +133,31 @@ The existing schema stores all content in single JSONB fields. For content separ
 
 **Target Format:** Split JSON with `external` and `internal` sections
 
+**Structure:**
+```json
+{
+  "external": {
+    "code": "maps-simple-reflections-001",
+    "title": "Module 1: Simple Reflections - Building Engagement",
+    "content_type": "customer_facing",
+    "difficulty_level": "beginner",
+    "estimated_minutes": 10,
+    "learning_objective": "...",
+    "scenario_context": "...",
+    "persona_config": {...},
+    "dialogue_structure": {...}
+  },
+  "internal": {
+    "maps_rubric": {...},
+    "technique_impacts": {...}
+  }
+}
+```
+
 ### 2.2 Terminology Mapping
 
-| Old Term | New Term |
-|----------|----------|
+| Old Term (MI) | New Term (MaPS) |
+|---------------|-----------------|
 | patient | customer / client |
 | doctor/medical | financial / guidance |
 | treatment | support / guidance |
@@ -309,30 +169,38 @@ The existing schema stores all content in single JSONB fields. For content separ
 
 Located in `src/data/mi_modules/`:
 
-| File | Current Title | Target Classification |
-|------|---------------|----------------------|
-| `module_1.json` | Simple Reflections | Customer-Facing |
-| `module_2.json` | Open-Ended Questions | Customer-Facing |
-| `module_3.json` | Complex Reflections | Customer-Facing |
-| `module_4.json` | Affirmations | Customer-Facing |
-| `module_5.json` | Summarizing | Customer-Facing |
-| `module_6.json` | Eliciting Change Talk | Customer-Facing |
-| `module_7.json` | Rolling with Resistance | Customer-Facing |
-| `module_8.json` | Developing Discrepancy | Customer-Facing |
-| `module_9.json` | Colleague Coaching | Colleague-Facing |
-| `module_10.json` | Handling Objections | Customer-Facing |
-| `module_11.json` | Action Planning | Customer-Facing |
-| `module_12.json` | Difficult Conversations | Colleague-Facing |
+| File | Current Title | Target Classification | Status |
+|------|---------------|----------------------|--------|
+| `module_1.json` | Simple Reflections | Customer-Facing | ⏳ |
+| `module_2.json` | Open-Ended Questions | Customer-Facing | ⏳ |
+| `module_3.json` | Complex Reflections | Customer-Facing | ⏳ |
+| `module_4.json` | Affirmations | Customer-Facing | ⏳ |
+| `module_5.json` | Summarizing | Customer-Facing | ⏳ |
+| `module_6.json` | Eliciting Change Talk | Customer-Facing | ⏳ |
+| `module_7.json` | Rolling with Resistance | Customer-Facing | ⏳ |
+| `module_8.json` | Developing Discrepancy | Customer-Facing | ⏳ |
+| `module_9.json` | Colleague Coaching | Colleague-Facing | ⏳ |
+| `module_10.json` | Handling Objections | Customer-Facing | ⏳ |
+| `module_11.json` | Action Planning | Customer-Facing | ⏳ |
+| `module_12.json` | Difficult Conversations | Colleague-Facing | ⏳ |
+
+### 2.4 Deliverables
+
+- [ ] 12 module JSON files refactored with external/internal split
+- [ ] MaPS terminology applied throughout
+- [ ] Content classification tags added
+- [ ] Import script tested with all modules
 
 ---
 
-## Phase 3: Service Layer Updates
+## Phase 3: Service Layer Updates ⏳ PENDING
 
-### 3.1 Content Service
+### 3.1 MIModuleService Updates
 
-**File:** `src/services/mi_module_service.py` (existing - needs updates)
+**File:** `src/services/mi_module_service.py` (existing)
 
-**Key Methods:**
+**New/Updated Methods:**
+
 ```python
 class MIModuleService:
     async def list_modules(
@@ -341,65 +209,158 @@ class MIModuleService:
         difficulty: Optional[str] = None,
         user_id: Optional[str] = None
     ) -> List[MIPracticeModuleSummary]
+    """List modules with optional content type filtering."""
     
     async def get_module_external(
         self,
         module_id: str
-    ) -> Dict[str, Any]  # Returns only external content
+    ) -> Optional[Dict[str, Any]]
+    """Get module with external content only (safe for frontend)."""
     
     async def get_module_internal(
         self,
         module_id: str,
         admin_user_id: str
-    ) -> Dict[str, Any]  # Returns full content for scoring
+    ) -> Optional[Dict[str, Any]]
+    """Get module with internal content for scoring (admin only)."""
 ```
+
+### 3.2 MIAttemptService Updates
+
+**File:** `src/services/mi_attempt_service.py` (existing)
+
+**Updates Required:**
+- Add content type tracking to attempts
+- Support internal content lookup for scoring
+
+### 3.3 Deliverables
+
+- [ ] `MIModuleService.list_modules()` updated with content_type filter
+- [ ] `MIModuleService.get_module_external()` added
+- [ ] `MIModuleService.get_module_internal()` added (admin only)
+- [ ] `MIAttemptService` updated for content type tracking
 
 ---
 
-## Phase 4: Frontend Integration
+## Phase 4: API Layer Updates ⏳ PENDING
 
-### 4.1 API Endpoints
+### 4.1 MI Practice Routes
 
-Reference existing endpoints in `src/api/routes/mi_practice.py`
+**File:** `src/api/routes/mi_practice.py` (existing)
 
-**Update:** Add content type filtering to list endpoints
+**New Endpoints/Parameters:**
 
 ```python
 @router.get("/modules")
 async def list_modules(
-    content_type: Optional[str] = Query(None, description="Filter by content type"),
-    difficulty: Optional[str] = Query(None, description="Filter by difficulty"),
+    content_type: Optional[str] = Query(
+        None, 
+        description="Filter by content type: customer_facing, colleague_facing, shared"
+    ),
+    difficulty: Optional[str] = Query(None, description="Filter by difficulty level"),
     # ... existing parameters
 ):
-    """List modules with optional content type filtering"""
+    """List modules with optional content type and difficulty filtering."""
 ```
+
+### 4.2 Response Models
+
+**File:** `src/models/mi_models.py` (existing)
+
+**Updates Required:**
+- Add `content_type` field to `MIPracticeModuleSummary`
+- Add `content_type` enum
+
+### 4.3 Deliverables
+
+- [ ] API endpoint updated with content_type filter
+- [ ] Response models updated
+- [ ] API documentation updated
 
 ---
 
-## Phase 5: Verification
+## Phase 5: Frontend Integration ⏳ PENDING
 
-### 5.1 Import Verification
+### 5.1 Module Browser Updates
 
-```bash
-# Run import script
-python scripts/import_modules.py
+**File:** `static/mi-practice.html` (existing)
 
-# Verify in Supabase
-SELECT code, title, content_type, difficulty_level FROM mi_practice_modules;
-```
+**New Features:**
+- Content type filter (Customer-Facing / Colleague-Facing / All)
+- Difficulty filter
+- Classification badges on module cards
 
-### 5.2 Content Separation Test
+### 5.2 Practice Session Updates
+
+**File:** `static/mi-practice-module.html` (existing)
+
+**Updates Required:**
+- Display content classification
+- Update persona context based on classification
+
+### 5.3 Deliverables
+
+- [ ] Content type filter added to module browser
+- [ ] Classification badges displayed
+- [ ] Persona context updated for classification
+
+---
+
+## Phase 6: Testing & Verification ⏳ PENDING
+
+### 6.1 Unit Tests
+
+**File:** `tests/test_mi_services.py` (existing)
+
+**New Tests:**
+- Test content type filtering
+- Test external/internal content separation
+- Test import script
+
+### 6.2 Integration Tests
+
+**Test Scenarios:**
+1. Import all modules successfully
+2. List modules with content type filter
+3. Retrieve module external content
+4. Practice session with content type tracking
+
+### 6.3 Verification Queries
 
 ```sql
--- Check that external content is accessible
-SELECT code, title, dialogue_structure 
-FROM mi_practice_modules
-WHERE is_active = TRUE
-LIMIT 1;
+-- Check content types
+SELECT code, title, content_type, difficulty_level FROM mi_practice_modules;
 
--- Internal content should only be accessible via admin endpoints
--- Not directly exposed in SELECT queries to regular users
+-- Check external content is accessible
+SELECT code, title, dialogue_structure FROM mi_practice_modules WHERE is_active = TRUE;
+
+-- Check learning paths
+SELECT code, title, content_type FROM mi_learning_paths;
 ```
+
+### 6.4 Deliverables
+
+- [ ] Unit tests for content separation
+- [ ] Integration tests for import workflow
+- [ ] Verification queries documented
+- [ ] Test coverage report
+
+---
+
+## Phase 7: Documentation ⏳ PENDING
+
+### 7.1 Documentation Updates
+
+- [ ] Update `MI_PRACTICE_SETUP.md` with new import process
+- [ ] Update `README.md` with content classification info
+- [ ] Update API documentation
+- [ ] Add content authoring guide
+
+### 7.2 User Guides
+
+- [ ] Module creation guide (with external/internal split)
+- [ ] Content classification guide
+- [ ] Import process documentation
 
 ---
 
@@ -415,6 +376,56 @@ LIMIT 1;
 
 ---
 
-**Document Version:** 2.1  
+## Implementation Checklist
+
+### Phase 1: Import Script
+- [ ] Create `scripts/import_modules.py`
+- [ ] Test import with single module
+- [ ] Validate database schema
+
+### Phase 2: Module Refactoring
+- [ ] Refactor `module_1.json` (Customer-Facing)
+- [ ] Refactor `module_2.json` (Customer-Facing)
+- [ ] Refactor `module_3.json` (Customer-Facing)
+- [ ] Refactor `module_4.json` (Customer-Facing)
+- [ ] Refactor `module_5.json` (Customer-Facing)
+- [ ] Refactor `module_6.json` (Customer-Facing)
+- [ ] Refactor `module_7.json` (Customer-Facing)
+- [ ] Refactor `module_8.json` (Customer-Facing)
+- [ ] Refactor `module_9.json` (Colleague-Facing)
+- [ ] Refactor `module_10.json` (Customer-Facing)
+- [ ] Refactor `module_11.json` (Customer-Facing)
+- [ ] Refactor `module_12.json` (Colleague-Facing)
+- [ ] Test import with all modules
+
+### Phase 3: Service Updates
+- [ ] Update `MIModuleService.list_modules()`
+- [ ] Add `get_module_external()`
+- [ ] Add `get_module_internal()`
+- [ ] Update `MIAttemptService`
+
+### Phase 4: API Updates
+- [ ] Update list modules endpoint
+- [ ] Update response models
+- [ ] Update API documentation
+
+### Phase 5: Frontend Updates
+- [ ] Add content type filter
+- [ ] Add classification badges
+- [ ] Update persona context
+
+### Phase 6: Testing
+- [ ] Write unit tests
+- [ ] Write integration tests
+- [ ] Run verification queries
+
+### Phase 7: Documentation
+- [ ] Update setup guide
+- [ ] Update README
+- [ ] Add authoring guide
+
+---
+
+**Document Version:** 3.0  
 **Last Updated:** 2026-02-01  
 **Status:** Phase 0 Complete - Ready for Phase 1
