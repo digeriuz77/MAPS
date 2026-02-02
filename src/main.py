@@ -305,6 +305,70 @@ def create_app() -> FastAPI:
             return FileResponse(mi_practice_path)
         raise HTTPException(status_code=404, detail="MI Practice page not found")
     
+    @app.get("/mi-practice-module")
+    async def mi_practice_module_page():
+        """MI Practice module session page"""
+        page_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "static", "mi-practice-module.html")
+        if os.path.exists(page_path):
+            return FileResponse(page_path)
+        raise HTTPException(status_code=404, detail="MI Practice module page not found")
+    
+    @app.get("/mi-practice-module.html")
+    async def mi_practice_module_html_page():
+        """MI Practice module session page (with .html extension)"""
+        page_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "static", "mi-practice-module.html")
+        if os.path.exists(page_path):
+            return FileResponse(page_path)
+        raise HTTPException(status_code=404, detail="MI Practice module page not found")
+    
+    @app.get("/mi-practice-progress")
+    async def mi_practice_progress_page():
+        """MI Practice progress tracking page"""
+        page_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "static", "mi-practice-progress.html")
+        if os.path.exists(page_path):
+            return FileResponse(page_path)
+        raise HTTPException(status_code=404, detail="MI Practice progress page not found")
+    
+    @app.get("/mi-practice-progress.html")
+    async def mi_practice_progress_html_page():
+        """MI Practice progress tracking page (with .html extension)"""
+        page_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "static", "mi-practice-progress.html")
+        if os.path.exists(page_path):
+            return FileResponse(page_path)
+        raise HTTPException(status_code=404, detail="MI Practice progress page not found")
+    
+    @app.get("/mi-practice-review")
+    async def mi_practice_review_page():
+        """MI Practice session review page"""
+        page_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "static", "mi-practice-review.html")
+        if os.path.exists(page_path):
+            return FileResponse(page_path)
+        raise HTTPException(status_code=404, detail="MI Practice review page not found")
+    
+    @app.get("/mi-practice-review.html")
+    async def mi_practice_review_html_page():
+        """MI Practice session review page (with .html extension)"""
+        page_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "static", "mi-practice-review.html")
+        if os.path.exists(page_path):
+            return FileResponse(page_path)
+        raise HTTPException(status_code=404, detail="MI Practice review page not found")
+    
+    @app.get("/maps-results")
+    async def maps_results_page():
+        """MAPS analysis results page"""
+        page_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "static", "maps-results.html")
+        if os.path.exists(page_path):
+            return FileResponse(page_path)
+        raise HTTPException(status_code=404, detail="MAPS results page not found")
+    
+    @app.get("/maps-results.html")
+    async def maps_results_html_page():
+        """MAPS analysis results page (with .html extension)"""
+        page_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "static", "maps-results.html")
+        if os.path.exists(page_path):
+            return FileResponse(page_path)
+        raise HTTPException(status_code=404, detail="MAPS results page not found")
+    
     return app
 
 app = create_app()
