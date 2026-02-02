@@ -217,17 +217,17 @@
     </footer>
 
     <script>
-        let supabase = null;
+        let appSupabase = null;
 
         // Initialize Supabase on page load
         document.addEventListener('DOMContentLoaded', async function () {
             try {
                 await initializeSupabase();
-                supabase = getSupabaseClient();
+                appSupabase = getSupabaseClient();
                 console.log('✅ Auth page initialized');
 
                 // Check if user is already logged in
-                const { data: { session } } = await supabase.auth.getSession();
+                const { data: { session } } = await appSupabase.auth.getSession();
                 if (session) {
                     console.log('User already logged in, redirecting...');
                     window.location.href = '/welcome';
@@ -257,7 +257,7 @@
             try {
                 showLoading('Creating account...');
 
-                const { data, error } = await supabase.auth.signUp({
+                const { data, error } = await appSupabase.auth.signUp({
                     email: email,
                     password: password,
                     options: {
@@ -312,7 +312,7 @@
             try {
                 showLoading('Logging in...');
 
-                const { data, error } = await supabase.auth.signInWithPassword({
+                const { data, error } = await appSupabase.auth.signInWithPassword({
                     email: email,
                     password: password
                 });
