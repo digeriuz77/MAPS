@@ -26,6 +26,9 @@ langchain-community>=0.0.20,<0.1.0
 # HTTP Client
 aiohttp>=3.9.0,<4.0.0
 
+# Caching
+redis>=5.0.0,<6.0.0
+
 # Data Processing
 numpy>=1.26.0,<2.0.0
 

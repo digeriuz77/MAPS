@@ -3,6 +3,8 @@ MI Progress Service
 
 Service for tracking and aggregating user progress across MI practice modules.
 Handles competency scoring, technique tracking, and learning insights.
+
+Optimized for high concurrency with caching layer.
 """
 
 import logging
@@ -18,6 +20,7 @@ from src.models.mi_models import (
     UserProgressResponse,
 )
 from src.services.mi_scoring_service import MIScoringService
+from src.services.cache_service import get_cache_service, CacheService
 
 logger = logging.getLogger(__name__)
 
@@ -25,19 +28,24 @@ logger = logging.getLogger(__name__)
 class MIProgressService:
     """
     Service for MI user progress tracking.
-    
+
     Handles:
     - Aggregating progress across attempts
     - Competency score tracking with trends
     - Technique practice statistics
     - Learning insight generation
     - Learning path enrollment
+
+    Performance optimizations:
+    - User progress cached (5min TTL)
+    - Cache invalidated after attempt completion
     """
-    
+
     def __init__(self, supabase_client: Client):
         self.supabase = supabase_client
         self.scoring_service = MIScoringService()
-        logger.info("MIProgressService initialized")
+        self.cache = get_cache_service()
+        logger.info("MIProgressService initialized with caching")
     
     # ============================================
     # PROGRESS RETRIEVAL
@@ -221,10 +229,13 @@ class MIProgressService:
             
             # Save updated progress
             await self._save_progress(progress)
-            
+
+            # Invalidate user's cached progress data
+            await self.cache.invalidate_user_progress(attempt.user_id)
+
             logger.info(f"Updated progress for user {attempt.user_id} after attempt {attempt.id}")
             return True
-            
+
         except Exception as e:
             logger.error(f"Error updating progress after attempt: {e}")
             return False
