@@ -53,10 +53,27 @@ def create_app() -> FastAPI:
     logger = logging.getLogger(__name__)
     
     app = FastAPI(
-        title="AI Persona System",
-        description="AI persona management for training and coaching",
-        version="1.0.0",
-        lifespan=lifespan
+        title="MAPS - AI Persona System",
+        description="""
+        AI Persona Management for Training and Coaching
+        
+        ## Features
+        
+        * **MI Practice**: Motivational Interviewing training modules
+        * **Scenario Training**: AI-powered persona simulations
+        * **Voice Interaction**: STT/TTS integration
+        * **MAPS Analysis**: Person-centered coaching analysis
+        * **Real-time Feedback**: Immediate coaching guidance
+        
+        ## Authentication
+        
+        Most endpoints require authentication via Bearer token or Supabase session.
+        """,
+        version="2.0.0",
+        lifespan=lifespan,
+        docs_url="/docs",
+        redoc_url="/redoc",
+        openapi_url="/openapi.json"
     )
     
     # Add CORS middleware
@@ -67,6 +84,26 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+    
+    # Add Rate Limiting middleware
+    try:
+        from src.middleware import RateLimitMiddleware
+        app.add_middleware(RateLimitMiddleware)
+        logger.info("Rate limiting middleware enabled")
+    except Exception as e:
+        logger.warning(f"Rate limiting middleware not enabled: {e}")
+    
+    # Add Auth middleware (must be after CORS, before routes)
+    try:
+        from src.middleware import AuthMiddleware
+        app.add_middleware(
+            AuthMiddleware,
+            supabase_url=settings.SUPABASE_URL,
+            supabase_anon_key=settings.SUPABASE_ANON_KEY
+        )
+        logger.info("Auth middleware enabled with JWT validation")
+    except Exception as e:
+        logger.warning(f"Auth middleware not enabled: {e}")
     
     # ANALYSIS SYSTEM ROUTES (consolidated - includes former maps_analysis)
     from src.api.routes.analysis import router as analysis_router

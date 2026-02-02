@@ -1,5 +1,6 @@
 """
 Service for LLM interactions with multiple providers
+Includes circuit breaker pattern for resilience
 """
 import asyncio
 import logging
@@ -11,6 +12,12 @@ import numpy as np
 from difflib import SequenceMatcher
 import time
 from src.services.metrics_service import metrics
+from src.services.circuit_breaker import (
+    circuit_registry,
+    CircuitBreakerOpenError,
+    get_openai_breaker,
+    get_anthropic_breaker
+)
 
 from src.config.settings import get_settings
 from src.models.schemas import Message
@@ -20,7 +27,7 @@ from src.core.constants import APIConstants
 logger = logging.getLogger(__name__)
 
 class LLMService:
-    """Service for LLM interactions"""
+    """Service for LLM interactions with circuit breaker protection"""
     
     def __init__(self):
         self.settings = get_settings()
@@ -38,6 +45,15 @@ class LLMService:
         self.recent_responses = {}  # session_id -> list of recent responses
         self.max_recent_responses = 10  # Track last 10 responses
         self.similarity_threshold = 0.7  # Reject responses with >70% similarity
+        
+        # Initialize circuit breakers
+        self._circuit_initialized = False
+    
+    async def _initialize_circuits(self):
+        """Initialize circuit breakers on first use"""
+        if not self._circuit_initialized:
+            await circuit_registry.initialize()
+            self._circuit_initialized = True
         
     async def generate_response(
         self,
@@ -160,7 +176,17 @@ class LLMService:
         presence_penalty: float = 0.0,
         response_format: Optional[Dict[str, Any]] = None,
     ) -> str:
-        """Generate response using OpenAI API"""
+        """Generate response using OpenAI API with circuit breaker protection"""
+        
+        # Initialize circuits on first use
+        await self._initialize_circuits()
+        
+        # Check circuit breaker
+        breaker = await get_openai_breaker()
+        if not await breaker.can_execute():
+            error_msg = "OpenAI circuit breaker is OPEN - service temporarily unavailable"
+            logger.error(error_msg)
+            raise LLMServiceError(error_msg, "openai")
 
         for attempt in range(self.max_retries):
             try:
@@ -202,12 +228,17 @@ class LLMService:
                         metrics.record_llm_call("openai", model, True, latency_ms)
                     except Exception:
                         pass
+                    
+                    # Record success for circuit breaker
+                    await breaker.record_success()
 
                     return response.choices[0].message.content.strip()
 
             except asyncio.TimeoutError:
                 error_msg = f"OpenAI API call timed out after {self.timeout_seconds} seconds"
                 logger.error(error_msg)
+                # Record failure for circuit breaker
+                await breaker.record_failure()
                 raise LLMServiceError(error_msg, "openai")
                 
             except Exception as e:
@@ -218,6 +249,8 @@ class LLMService:
                 except Exception:
                     pass
                 logger.warning(f"OpenAI API attempt {attempt + 1} failed: {e}")
+                # Record failure for circuit breaker
+                await breaker.record_failure(e)
                 if attempt < self.max_retries - 1:
                     await asyncio.sleep(self.retry_delay * (attempt + 1))
                 else:
@@ -293,10 +326,20 @@ class LLMService:
         frequency_penalty: float = 0.0,
         presence_penalty: float = 0.0
     ) -> str:
-        """Generate response using Anthropic API"""
+        """Generate response using Anthropic API with circuit breaker protection"""
         
         if not self.anthropic_client:
             raise ValueError("Anthropic API key not configured")
+        
+        # Initialize circuits on first use
+        await self._initialize_circuits()
+        
+        # Check circuit breaker
+        breaker = await get_anthropic_breaker()
+        if not await breaker.can_execute():
+            error_msg = "Anthropic circuit breaker is OPEN - service temporarily unavailable"
+            logger.error(error_msg)
+            raise LLMServiceError(error_msg, "anthropic")
         
         # Convert messages format for Anthropic
         system = None
@@ -329,11 +372,16 @@ class LLMService:
                     except Exception:
                         pass
                     
+                    # Record success for circuit breaker
+                    await breaker.record_success()
+                    
                     return response.content[0].text.strip()
             
             except asyncio.TimeoutError:
                 error_msg = f"Anthropic API call timed out after {self.timeout_seconds} seconds"
                 logger.error(error_msg)
+                # Record failure for circuit breaker
+                await breaker.record_failure()
                 raise LLMServiceError(error_msg, "anthropic")
                 
             except Exception as e:
@@ -343,6 +391,8 @@ class LLMService:
                 except Exception:
                     pass
                 logger.warning(f"Anthropic API attempt {attempt + 1} failed: {e}")
+                # Record failure for circuit breaker
+                await breaker.record_failure(e)
                 if attempt < self.max_retries - 1:
                     await asyncio.sleep(self.retry_delay * (attempt + 1))
                 else:
