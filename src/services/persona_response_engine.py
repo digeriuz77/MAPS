@@ -214,54 +214,129 @@ Respond as {name}:"""
         """
         Update persona state based on manager's approach.
         
-        The persona's trust and openness evolve based on how the manager
-        communicates - this is what makes the training effective.
+        This is the core state machine that makes the training simulation realistic.
+        The persona's trust and openness evolve based on how the manager communicates,
+        creating a dynamic, responsive training environment.
+        
+        State transition rules:
+        - Trust increases when manager uses MI-adherent techniques (reflections, open questions)
+        - Trust decreases when manager uses directive/problem-solving approaches
+        - Openness generally tracks with trust (high trust = high openness)
+        - Resistance can be triggered by specific keywords or maintained from previous state
+        - Resistance naturally decreases when trust reaches high levels (>= 7)
+        
+        Args:
+            manager_message: The manager's most recent input
+            persona_response: The persona's generated response (checked for resistance markers)
+            current_state: Current PersonaState (trust_level, openness_level, resistance_active)
+            triggers: Configuration dict with keys:
+                - trust_increase: List of keywords that build trust
+                - trust_decrease: List of keywords that erode trust
+                - resistance_increase: List of keywords that trigger resistance
+                - resistance_indicators: Phrases in persona response showing resistance
+        
+        Returns:
+            PersonaState: New state with updated trust, openness, and resistance
         """
-        # Get configurable resistance indicators from triggers, with defaults
+        # ============================================================================
+        # STEP 1: Extract resistance indicators from configuration
+        # These are phrases that, if present in the persona's response, indicate
+        # they are showing resistance. This provides feedback to the system about
+        # whether the manager's approach is working.
+        # ============================================================================
         resistance_indicators = triggers.get("resistance_indicators", [
-            "i don't know",
-            "that's not my fault",
-            "they told me",
-            "the problem is",
+            "i don't know",           # Classic deflection
+            "that's not my fault",    # Blame shifting
+            "they told me",           # Externalizing responsibility
+            "the problem is",         # Problem-focused vs solution-focused
         ])
         
+        # Normalize manager message for case-insensitive matching
         manager_lower = manager_message.lower()
         
+        # ============================================================================
+        # STEP 2: Initialize state change variables
+        # trust_delta and openness_delta track how much the state should change.
+        # These accumulate based on multiple keyword matches in the message.
+        # ============================================================================
         trust_delta = 0
         openness_delta = 0
-        resistance_triggered = current_state.resistance_active
+        resistance_triggered = current_state.resistance_active  # Carry over previous state
         
-        # Trust increase triggers
+        # ============================================================================
+        # STEP 3: Check for trust-building triggers (MI-adherent techniques)
+        # Examples: reflective listening, open questions, affirmations
+        # Each match adds +1 to trust and openness
+        # ============================================================================
         for trigger in triggers.get("trust_increase", []):
             if trigger.lower() in manager_lower:
                 trust_delta += 1
                 openness_delta += 1
+                logger.debug(f"Trust increase trigger matched: '{trigger}'")
         
-        # Trust decrease triggers
+        # ============================================================================
+        # STEP 4: Check for trust-eroding triggers (MI non-adherent techniques)
+        # Examples: directive advice, closed questions, confrontation
+        # Each match subtracts -2 from trust and openness (double impact of positive)
+        # Also triggers resistance flag
+        # ============================================================================
         for trigger in triggers.get("trust_decrease", []):
             if trigger.lower() in manager_lower:
-                trust_delta -= 2
+                trust_delta -= 2    # Double penalty for negative approaches
                 openness_delta -= 2
                 resistance_triggered = True
+                logger.debug(f"Trust decrease trigger matched: '{trigger}'")
         
-        # Additional resistance triggers
+        # ============================================================================
+        # STEP 5: Check for explicit resistance triggers
+        # These are keywords that specifically trigger resistance patterns
+        # regardless of trust changes
+        # ============================================================================
         for trigger in triggers.get("resistance_increase", []):
             if trigger.lower() in manager_lower:
                 resistance_triggered = True
+                logger.debug(f"Resistance trigger matched: '{trigger}'")
         
-        # Check for specific patterns that indicate resistance
+        # ============================================================================
+        # STEP 6: Analyze persona response for resistance indicators
+        # If the persona's generated response contains phrases like "I don't know"
+        # or blame-shifting language, mark resistance as active. This creates
+        # feedback loop where the LLM-generated content affects state.
+        # ============================================================================
         for indicator in resistance_indicators:
             if indicator in persona_response.lower():
                 resistance_triggered = True
-                break
+                logger.debug(f"Resistance indicator found in response: '{indicator}'")
+                break  # One indicator is enough to mark resistance
         
-        # Calculate new state (clamped to 1-10)
+        # ============================================================================
+        # STEP 7: Calculate new state values with bounds checking
+        # Trust and openness are clamped to range [1, 10] to prevent extreme values
+        # This ensures the persona remains within realistic behavioral bounds
+        # ============================================================================
         new_trust = max(1, min(10, current_state.trust_level + trust_delta))
         new_openness = max(1, min(10, current_state.openness_level + openness_delta))
         
-        # Resistance tends to decrease naturally when trust increases
+        # ============================================================================
+        # STEP 8: Natural resistance decay at high trust levels
+        # When trust reaches >= 7, resistance naturally decreases even without
+        # explicit triggers. This simulates the "warming up" effect in real
+        # coaching relationships where sustained good behavior builds rapport.
+        # ============================================================================
         if new_trust >= 7 and current_state.resistance_active:
             resistance_triggered = False
+            logger.debug("Resistance naturally decreased due to high trust level")
+        
+        # ============================================================================
+        # STEP 9: Return updated state
+        # The new state will be used for the next persona response generation,
+        # creating a dynamic conversation that evolves based on manager behavior
+        # ============================================================================
+        logger.info(
+            f"State update: trust={current_state.trust_level}->{new_trust}, "
+            f"openness={current_state.openness_level}->{new_openness}, "
+            f"resistance={resistance_triggered}"
+        )
         
         return PersonaState(
             trust_level=new_trust,

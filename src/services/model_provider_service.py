@@ -150,13 +150,61 @@ class MultiModelProviderService:
         enable_failover: bool = True
     ) -> ProviderResponse:
         """
-        Generate response with automatic model selection and failover
+        Generate LLM response with automatic model selection and failover chain.
+        
+        This is the main entry point for multi-model LLM generation. It implements
+        a resilient architecture with:
+        
+        1. **Use Case-Based Model Selection**: Automatically selects the optimal
+           model based on the use case (persona_response, mi_analysis, etc.)
+        
+        2. **Failover Chain**: If the primary model fails, automatically tries
+           backup models in priority order until one succeeds
+        
+        3. **Graceful Degradation**: Returns a friendly error message if all
+           models in the chain fail
+        
+        Failover Chain Example (persona_response):
+            Primary: gemini-2.5-flash-lite-001 (fast, cost-effective)
+            Secondary: gemini-2.5-flash (balanced)
+            Tertiary: claude-3-sonnet (high quality fallback)
+        
+        Args:
+            prompt: The user prompt to send to the LLM
+            system_prompt: Optional system prompt for context/behavior
+            model: Specific model to use (if None, auto-selected by use_case)
+            use_case: Category determining model selection and failover chain:
+                - "persona_response": Authentic character responses
+                - "mi_analysis": Motivational interviewing analysis
+                - "memory_formation": Conversation memory processing
+                - "fast_feedback": Quick real-time feedback
+                - "high_quality": Complex reasoning tasks
+            temperature: Sampling temperature (0.0-2.0, None uses config default)
+            max_tokens: Maximum response tokens (None uses config default)
+            enable_failover: Whether to try backup models on failure (default: True)
+            
+        Returns:
+            ProviderResponse: Contains response content, provider info, timing,
+                            and success/error status
+                            
+        Raises:
+            No exceptions raised - failures are captured in ProviderResponse
         """
-        # Determine model to use
+        # ============================================================================
+        # STEP 1: Model Selection
+        # If no specific model requested, select based on use case.
+        # This optimizes for both cost and performance based on the task requirements.
+        # ============================================================================
         if model is None:
             model = self.get_recommended_model(use_case)
+            logger.debug(f"Auto-selected model '{model}' for use_case '{use_case}'")
         
-        # Try primary model first
+        # ============================================================================
+        # STEP 2: Primary Model Attempt
+        # Try the selected (or specified) model first. This will be the optimal
+        # choice based on cost/performance for this use case.
+        # ============================================================================
+        logger.info(f"Attempting generation with primary model: {model}")
         response = await self._try_model(
             model=model,
             prompt=prompt,
@@ -165,17 +213,32 @@ class MultiModelProviderService:
             max_tokens=max_tokens
         )
         
+        # If primary succeeds, return immediately - no failover needed
         if response.success:
+            logger.debug(f"Primary model {model} succeeded")
             return response
         
-        # If failover enabled, try backup models
+        # ============================================================================
+        # STEP 3: Failover Chain Execution
+        # If primary failed and failover is enabled, iterate through the failover
+        # chain for this use case. Each use case has a prioritized list of
+        # alternative models optimized for that specific task type.
+        # ============================================================================
         if enable_failover:
+            # Get failover chain for this use case, default to gpt-4o-mini if unknown
             failover_models = self.failover_chains.get(use_case, ["gpt-4o-mini"])
+            logger.warning(
+                f"Primary model {model} failed, initiating failover chain "
+                f"({len(failover_models)} backups available)"
+            )
             
+            # Try each backup model in order
             for backup_model in failover_models:
-                if backup_model != model:  # Don't retry same model
+                # Skip if this is the same as the failed primary (avoid retrying same model)
+                if backup_model != model:
                     logger.warning(f"Trying failover model: {backup_model}")
                     
+                    # Attempt generation with backup model
                     response = await self._try_model(
                         model=backup_model,
                         prompt=prompt,
@@ -184,11 +247,24 @@ class MultiModelProviderService:
                         max_tokens=max_tokens
                     )
                     
+                    # If backup succeeds, log and return immediately
                     if response.success:
                         logger.info(f"Failover successful with {backup_model}")
                         return response
+                    else:
+                        logger.warning(f"Failover model {backup_model} also failed")
         
-        # All models failed
+        # ============================================================================
+        # STEP 4: Exhausted Failover - Graceful Degradation
+        # All models in the chain have failed. Return a user-friendly error message
+        # wrapped in a ProviderResponse so calling code can handle it gracefully.
+        # This ensures the application remains functional even during provider outages.
+        # ============================================================================
+        logger.error(
+            f"All models failed for use_case '{use_case}'. "
+            f"Primary: {model}, Failover chain exhausted."
+        )
+        
         return ProviderResponse(
             content="I apologize, but I'm experiencing technical difficulties right now.",
             provider=ModelProvider.OPENAI,

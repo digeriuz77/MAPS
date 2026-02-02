@@ -99,30 +99,58 @@ class MAPSAnalysisService:
         context: Optional[Dict[str, Any]] = None
     ) -> MAPSAnalysisResult:
         """
-        Analyze a conversation from Supabase by conversation_id
+        Analyze a conversation from Supabase by conversation_id using MAPS framework.
+        
+        This is the main entry point for conversation analysis. It orchestrates a
+        multi-stage pipeline that:
+        1. Fetches conversation data from the database
+        2. Analyzes behavioral evolution throughout the conversation
+        3. Identifies high-impact moments (both positive and negative)
+        4. Generates comprehensive coaching feedback using LLM
+        5. Structures the result into a standardized format
+        
+        The MAPS framework focuses on:
+        - M: Motivational Interviewing adherence
+        - A: Authentic partnership building
+        - P: Person-centered approach
+        - S: Strengths-based coaching
         
         Args:
-            conversation_id: UUID of the conversation to analyze
-            context: Optional additional context
+            conversation_id: UUID of the conversation to analyze (from Supabase)
+            context: Optional additional context for analysis (e.g., learning objectives)
             
         Returns:
-            MAPSAnalysisResult with comprehensive analysis
+            MAPSAnalysisResult: Structured analysis with scores, patterns, and recommendations
             
         Raises:
             RuntimeError: If LLM service or Supabase client unavailable
-            ValueError: If conversation not found
-            Exception: If analysis fails
+            ValueError: If conversation not found or empty
+            Exception: If analysis fails during LLM processing
+            
+        Example:
+            >>> service = MAPSAnalysisService(llm_service, supabase_client)
+            >>> result = await service.analyze_conversation_by_id("uuid-here")
+            >>> print(result.overall_quality_score)
+            >>> print(result.strengths_and_suggestions.strengths)
         """
         logger.info(f"Starting MAPS analysis for conversation_id: {conversation_id}")
         
-        # Validate dependencies
+        # ============================================================================
+        # STAGE 1: Dependency Validation
+        # Ensure required services are available before proceeding with any database
+        # or LLM operations. This fails fast to provide clear error messages.
+        # ============================================================================
         if not self.llm_service:
             raise RuntimeError("LLM service is required for MAPS analysis")
         
         if not self.supabase_client:
             raise RuntimeError("Supabase client is required to fetch conversation")
         
-        # Fetch conversation messages and persona name
+        # ============================================================================
+        # STAGE 2: Data Retrieval
+        # Fetch conversation messages from Supabase and resolve the persona name.
+        # The persona name is important for contextualizing feedback (e.g., "With Mary...")
+        # ============================================================================
         messages, persona_name = await self._fetch_conversation_with_persona(conversation_id)
         
         if not messages:
@@ -130,43 +158,83 @@ class MAPSAnalysisService:
         
         logger.info(f"Fetched {len(messages)} messages. Persona: {persona_name}")
         
-        # Analyze persona behavioral evolution (no trust numbers)
+        # ============================================================================
+        # STAGE 3: Behavioral Evolution Analysis
+        # Analyze how the persona's behavior changed throughout the conversation.
+        # This tracks the trajectory from resistance to collaboration without exposing
+        # internal trust scores to the user.
+        # ============================================================================
         behavioral_analysis = self._analyze_persona_behavior_evolution(messages, persona_name)
         
-        # Calculate trust progression metrics
+        # ============================================================================
+        # STAGE 4: Trust Progression Calculation
+        # Calculate trust metrics including initial/final trust levels and significant
+        # changes. These are used internally for analysis but not exposed directly.
+        # ============================================================================
         trust_metrics = self._calculate_trust_metrics(messages)
         
-        # Find high-impact moments (trust jumps with manager action classification)
+        # ============================================================================
+        # STAGE 5: High-Impact Moment Identification
+        # Find moments where the manager's actions had significant positive impact
+        # (trust jumps >= 0.08 threshold). These are highlighted as successes.
+        # ============================================================================
         high_impact_moments = await self._find_high_impact_moments(messages, threshold=0.08)
         
-        # Find trust-decreasing moments (problematic manager actions)
+        # ============================================================================
+        # STAGE 6: Problematic Moment Identification
+        # Find moments where the manager's actions decreased trust
+        # (trust drops >= 0.05 threshold). These are flagged for improvement.
+        # ============================================================================
         trust_decreasing_moments = await self._find_trust_decreasing_moments(messages, threshold=0.05)
         
-        # Analyze technique gaps (unused MI techniques)
+        # ============================================================================
+        # STAGE 7: Technique Gap Analysis
+        # Identify which MI techniques were NOT used during high-impact moments.
+        # This highlights missed opportunities for the manager to improve.
+        # ============================================================================
         technique_gaps = self._analyze_technique_gaps(high_impact_moments)
         
-        # Build formatted transcript
+        # ============================================================================
+        # STAGE 8: Transcript Formatting
+        # Build a human-readable transcript from the raw message data.
+        # This will be included in the prompt sent to the LLM for analysis.
+        # ============================================================================
         transcript = self._build_transcript(messages, persona_name)
         
         logger.info(f"Built transcript (length: {len(transcript)} chars)")
         logger.info(f"Speakers: {self.user_label} and {persona_name}")
         if trust_metrics:
-            logger.info(f"Trust progression: {trust_metrics['initial_trust']:.2f} → {trust_metrics['final_trust']:.2f} (change: {trust_metrics['trust_change']:+.2f})")
+            logger.info(
+                f"Trust progression: {trust_metrics['initial_trust']:.2f} → "
+                f"{trust_metrics['final_trust']:.2f} (change: {trust_metrics['trust_change']:+.2f})"
+            )
         
-        # Build analysis prompt with all analysis components
+        # ============================================================================
+        # STAGE 9: Prompt Construction
+        # Build a comprehensive prompt that includes all analyzed components.
+        # This rich context helps the LLM generate nuanced, specific feedback.
+        # ============================================================================
         analysis_prompt = self._build_behavior_aware_prompt(
-            transcript, context, self.user_label, persona_name, behavioral_analysis, 
+            transcript, context, self.user_label, persona_name, behavioral_analysis,
             trust_metrics, high_impact_moments, trust_decreasing_moments, technique_gaps
         )
         
-        # Get AI analysis
+        # ============================================================================
+        # STAGE 10: LLM Analysis
+        # Send the constructed prompt to the LLM service for analysis.
+        # The LLM generates the core coaching feedback based on all the context.
+        # ============================================================================
         logger.info("Requesting AI analysis from LLM service...")
         analysis_data = await self._get_ai_analysis(analysis_prompt, conversation_id)
         
-        # Structure result with defensive normalization
+        # ============================================================================
+        # STAGE 11: Result Structuring
+        # Transform the LLM's raw response into a structured MAPSAnalysisResult.
+        # This includes defensive normalization to handle any parsing edge cases.
+        # ============================================================================
         result = self._structure_analysis_result(analysis_data, conversation_id)
         
-        logger.info("MAPS analysis completed.")
+        logger.info("MAPS analysis completed successfully.")
         return result
     
     async def analyze_transcript(
