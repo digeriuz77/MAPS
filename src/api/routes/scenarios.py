@@ -106,11 +106,11 @@ class GetAnalysisResponse(BaseModel):
 async def list_scenarios(
     skill_category: Optional[str] = Query(None, description="Filter by MI skill category"),
     difficulty: Optional[str] = Query(None, description="Filter by difficulty level"),
-    show_inactive: bool = Query(False, description="Include inactive scenarios"),
-    current_user_id: str = Depends(get_current_user)
+    show_inactive: bool = Query(False, description="Include inactive scenarios")
 ):
     """
     List available scenarios with optional filters.
+    This endpoint is public - no authentication required.
     """
     try:
         supabase = get_supabase_client()

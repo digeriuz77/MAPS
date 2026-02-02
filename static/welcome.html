@@ -6,9 +6,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Welcome - 1-1 Practice Platform</title>
 
-    <!-- Auth Blocker - MUST be first to hide page until auth verified -->
-    <script src="/static/js/auth-blocker.js"></script>
-
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="/static/css/teal-theme.css">
     <style>
@@ -101,54 +98,12 @@
         <button class="btn-teal-secondary" onclick="location.href='/persona-select'">Next</button>
     </footer>
 
-    <!-- Supabase SDK -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <!-- Auth utilities -->
-    <script src="/static/js/supabaseClient.js"></script>
-    <script src="/static/js/authGuard.js"></script>
+    <!-- Navigation script -->
     <script src="/static/js/navigation.js"></script>
 
     <script>
-        // Initialize auth on page load - BLOCKS until verified
-        (async function () {
-            try {
-                await initializeSupabase();
-                const session = await requireAuth(); // Will redirect if not authenticated
-                console.log('✅ Welcome page protected by auth');
-
-                // Get user role and adjust content
-                const role = await getUserRole(session.user.id);
-                console.log('User role:', role);
-
-                // Hide FULL-only features for CONTROL users
-                if (role === 'CONTROL') {
-                    // Hide FULL-only navigation items (Analysis and Reflection)
-                    const analysisNav = document.getElementById('nav-analysis');
-                    const reflectionNav = document.getElementById('nav-reflection');
-
-                    if (analysisNav) analysisNav.style.display = 'none';
-                    if (reflectionNav) reflectionNav.style.display = 'none';
-                    // Note: Feedback and MI Practice are available to all users, so we don't hide them
-
-                    // Hide list items 4 and 5 (Analysis and Reflection)
-                    const feedbackItem = document.getElementById('feedback-item');
-                    const reflectionItem = document.getElementById('reflection-item');
-
-                    if (feedbackItem) feedbackItem.style.display = 'none';
-                    if (reflectionItem) reflectionItem.style.display = 'none';
-
-                    console.log('✅ CONTROL view: Hidden analysis and reflection features (feedback and MI Practice still available)');
-                } else {
-                    console.log('✅ FULL access: All features visible');
-                }
-
-                // Auth passed - show page
-                window.authCheckComplete();
-            } catch (error) {
-                console.error('Auth initialization failed:', error);
-                // Auth failed - redirect already happened in requireAuth()
-            }
-        })();
+        // Page is ready - no auth required
+        console.log('✅ Welcome page loaded');
     </script>
 </body>
 

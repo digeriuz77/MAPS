@@ -220,9 +220,9 @@ def create_app() -> FastAPI:
 
     @app.get("/")
     async def root():
-        # Redirect to auth page as the default entry point
+        # Redirect to welcome page as the default entry point
         from fastapi.responses import RedirectResponse
-        return RedirectResponse(url="/auth", status_code=307)
+        return RedirectResponse(url="/welcome", status_code=307)
     
     @app.get("/auth")
     async def auth_page():
@@ -288,6 +288,22 @@ def create_app() -> FastAPI:
         if os.path.exists(locked_path):
             return FileResponse(locked_path)
         raise HTTPException(status_code=404, detail="Thank you page not found")
+    
+    @app.get("/mi-practice")
+    async def mi_practice_page():
+        """MI Practice learning modules page"""
+        mi_practice_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "static", "mi-practice.html")
+        if os.path.exists(mi_practice_path):
+            return FileResponse(mi_practice_path)
+        raise HTTPException(status_code=404, detail="MI Practice page not found")
+    
+    @app.get("/mi-practice.html")
+    async def mi_practice_html_page():
+        """MI Practice learning modules page (with .html extension)"""
+        mi_practice_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "static", "mi-practice.html")
+        if os.path.exists(mi_practice_path):
+            return FileResponse(mi_practice_path)
+        raise HTTPException(status_code=404, detail="MI Practice page not found")
     
     return app
 

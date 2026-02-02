@@ -50,24 +50,20 @@ async def list_modules(
     content_type: Optional[ContentType] = Query(None, description="Filter by content type: shared, customer_facing, or colleague_facing"),
     focus_area: Optional[str] = Query(None, description="Filter by MI focus area"),
     difficulty: Optional[str] = Query(None, description="Filter by difficulty level"),
-    user_id: Optional[str] = Query(None, description="User ID for progress tracking (must match authenticated user)"),
+    user_id: Optional[str] = Query(None, description="User ID for progress tracking"),
     module_service: MIModuleService = Depends(get_mi_module_service),
-    current_user: dict = Depends(get_current_user),
 ):
     """
     List available MI practice modules.
+    This endpoint is public - no authentication required.
 
     Returns a list of modules with optional filtering by content type, focus area, and difficulty.
-    If user_id is provided, it must match the authenticated user's ID.
 
     Content Types:
     - shared: Core MI skills applicable to both customer and colleague contexts
     - customer_facing: MAPS financial scenarios (debt, budgeting, pensions)
     - colleague_facing: MAPS workplace scenarios (performance, coaching, team dynamics)
     """
-    # Security: Ensure user_id matches authenticated user if provided
-    if user_id and current_user and user_id != current_user.user_id:
-        raise HTTPException(status_code=403, detail="Cannot access other users' progress")
     logger.info(f"Listing MI practice modules - content_type: {content_type}, focus_area: {focus_area}, difficulty: {difficulty}")
 
     try:
@@ -86,19 +82,15 @@ async def list_modules(
 @router.get("/modules/{module_id}", response_model=MIPracticeModule)
 async def get_module(
     module_id: str,
-    user_id: Optional[str] = Query(None, description="User ID for attempt history (must match authenticated user)"),
+    user_id: Optional[str] = Query(None, description="User ID for attempt history"),
     module_service: MIModuleService = Depends(get_mi_module_service),
-    current_user: dict = Depends(get_current_user),
 ):
     """
     Get detailed information about a specific MI practice module.
+    This endpoint is public - no authentication required.
 
     Includes full module configuration, dialogue structure, and MAPS rubric.
-    If user_id is provided for attempt history, it must match the authenticated user.
     """
-    # Security: Ensure user_id matches authenticated user if provided
-    if user_id and current_user and user_id != current_user.user_id:
-        raise HTTPException(status_code=403, detail="Cannot access other users' attempt history")
     logger.info(f"Getting module details for: {module_id}")
     
     try:

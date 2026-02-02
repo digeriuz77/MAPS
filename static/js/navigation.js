@@ -1,6 +1,6 @@
 /**
- * Unified Navigation Loader and Role-Based Navigation Component
- * Dynamically loads navigation and updates based on user's role
+ * Unified Navigation Loader Component
+ * Dynamically loads navigation component into pages
  */
 
 /**
@@ -49,94 +49,19 @@ async function loadNavigation() {
                 document.body.appendChild(newScript);
             });
 
-            // Update navigation for user role
-            await updateNavigationForRole();
+            console.log('✅ Navigation loaded successfully');
         }
     } catch (error) {
         console.error('Failed to load navigation:', error);
     }
 }
 
-/**
- * Update navigation bar based on user role
- * Hides Analysis and Reflection links for CONTROL users
- * Adds Logout button for authenticated users
- */
-async function updateNavigationForRole() {
-    try {
-        const role = await getCachedUserRole();
-        const navBar = document.querySelector('.unified-nav, .nav-bar');
-
-        if (!navBar) {
-            console.warn('Navigation bar not found');
-            return;
-        }
-
-        // Role-based filtering removed - all users have access to all features
-        console.log('Role access check skipped - all features enabled');
-
-        // Add logout button if not already present
-        const existingLogout = navBar.querySelector('.logout-btn');
-        const navActions = navBar.querySelector('.nav-actions');
-
-        if (!existingLogout && navActions) {
-            const logoutBtn = document.createElement('button');
-            logoutBtn.className = 'logout-btn';
-            logoutBtn.innerHTML = '<i class="fas fa-sign-out-alt"></i>';
-            logoutBtn.title = 'Logout';
-            logoutBtn.style.cssText = `
-                background: transparent;
-                border: 2px solid #EF4444;
-                color: #EF4444;
-                width: 40px;
-                height: 40px;
-                border-radius: 50%;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                cursor: pointer;
-                transition: all 0.3s ease;
-                margin-left: 0.5rem;
-            `;
-            logoutBtn.onclick = async (e) => {
-                e.preventDefault();
-                await logout();
-            };
-            navActions.appendChild(logoutBtn);
-        }
-
-        console.log('✅ Navigation updated for role:', role);
-    } catch (error) {
-        console.error('Failed to update navigation:', error);
-    }
-}
-
-/**
- * Initialize role-based navigation
- * Should be called when page loads
- */
-async function initRoleBasedNavigation() {
-    try {
-        await initializeSupabase();
-        const session = await requireAuth();
-
-        if (session) {
-            await updateNavigationForRole();
-        }
-    } catch (error) {
-        console.error('Navigation initialization failed:', error);
-        // requireAuth will handle redirect if not authenticated
-    }
-}
-
-// Auto-initialize if navigation bar exists
+// Auto-initialize navigation on DOMContentLoaded
 document.addEventListener('DOMContentLoaded', async function () {
-    const navBar = document.querySelector('.nav-bar');
-    if (navBar && typeof initializeSupabase === 'function') {
-        await initRoleBasedNavigation();
+    const container = document.getElementById('navigation-container');
+    if (container) {
+        await loadNavigation();
     }
 });
 
-window.updateNavigationForRole = updateNavigationForRole;
-window.initRoleBasedNavigation = initRoleBasedNavigation;
 window.loadNavigation = loadNavigation;

@@ -1,18 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Thank You - 1-1 Practice Platform</title>
-    <!-- Auth Blocker -->
-    <script src="/static/js/auth-blocker.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="/static/css/teal-theme.css">
     <style>
         body {
-            padding-top: 70px; /* Space for fixed nav */
+            padding-top: 70px;
+            /* Space for fixed nav */
         }
-        
+
         .nav-bar {
             position: fixed;
             top: 0;
@@ -26,19 +26,20 @@
             justify-content: center;
             gap: 30px;
         }
-        
+
         .nav-bar a {
             color: white;
             text-decoration: none;
             font-weight: 500;
             transition: opacity 0.2s;
         }
-        
+
         .nav-bar a:hover {
             opacity: 0.8;
         }
     </style>
 </head>
+
 <body class="teal-theme">
     <!-- Navigation Bar -->
     <nav class="nav-bar">
@@ -53,7 +54,7 @@
             <i class="fas fa-check-circle success-icon"></i>
             <h1>Thank You!</h1>
             <p class="thankyou-message">
-                Thank you so much for taking the time to practice on the platform today. 
+                Thank you so much for taking the time to practice on the platform today.
                 Please feel free to come back and practice any time.
             </p>
             <button class="btn-teal-primary" onclick="location.href='/auth'">
@@ -61,23 +62,23 @@
             </button>
         </div>
     </div>
-    
+
     <footer class="vhl-footer">
         <button class="btn-teal-secondary" onclick="location.href='/feedback'">Previous</button>
         <span class="copyright">©VHL 2025</span>
         <span></span> <!-- Empty for alignment -->
     </footer>
-    
+
     <!-- Supabase SDK -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Auth utilities -->
     <script src="/static/js/supabaseClient.js"></script>
     <script src="/static/js/authGuard.js"></script>
     <script src="/static/js/navigation.js"></script>
-    
+
     <script>
         // Initialize auth - BLOCKS until verified
-        (async function() {
+        (async function () {
             try {
                 await initializeSupabase();
                 await requireAuth();
@@ -89,4 +90,5 @@
         })();
     </script>
 </body>
+
 </html>
