@@ -12,6 +12,7 @@ from src.dependencies import (
     get_mi_module_service,
     get_mi_attempt_service,
     get_mi_progress_service,
+    get_current_user,
 )
 from src.models.mi_models import (
     MIPracticeModule,
@@ -65,7 +66,7 @@ async def list_modules(
     - colleague_facing: MAPS workplace scenarios (performance, coaching, team dynamics)
     """
     # Security: Ensure user_id matches authenticated user if provided
-    if user_id and current_user and user_id != current_user.get('id'):
+    if user_id and current_user and user_id != current_user.user_id:
         raise HTTPException(status_code=403, detail="Cannot access other users' progress")
     logger.info(f"Listing MI practice modules - content_type: {content_type}, focus_area: {focus_area}, difficulty: {difficulty}")
 
@@ -96,7 +97,7 @@ async def get_module(
     If user_id is provided for attempt history, it must match the authenticated user.
     """
     # Security: Ensure user_id matches authenticated user if provided
-    if user_id and current_user and user_id != current_user.get('id'):
+    if user_id and current_user and user_id != current_user.user_id:
         raise HTTPException(status_code=403, detail="Cannot access other users' attempt history")
     logger.info(f"Getting module details for: {module_id}")
     
@@ -248,7 +249,7 @@ async def get_user_progress(
     and technique practice history. The user_id must match the authenticated user.
     """
     # Security: Ensure user_id matches authenticated user
-    if current_user and user_id != current_user.get('id'):
+    if current_user and user_id != current_user.user_id:
         raise HTTPException(status_code=403, detail="Cannot access other users' progress")
     logger.info(f"Getting progress for user: {user_id}")
     
@@ -277,7 +278,7 @@ async def get_competency_breakdown(
     The user_id must match the authenticated user.
     """
     # Security: Ensure user_id matches authenticated user
-    if current_user and user_id != current_user.get('id'):
+    if current_user and user_id != current_user.user_id:
         raise HTTPException(status_code=403, detail="Cannot access other users' competency data")
     logger.info(f"Getting competency breakdown for user: {user_id}")
     
@@ -314,13 +315,25 @@ async def review_attempt(
         # Build path review from choices
         path_review = []
         for choice in attempt.choices_made:
-            path_review.append({
-                'node_id': choice.get('node_id'),
-                'choice_point_id': choice.get('choice_point_id'),
-                'techniques_used': choice.get('techniques_used', []),
-                'rapport_impact': choice.get('rapport_impact', 0),
-                'resistance_impact': choice.get('resistance_impact', 0),
-            })
+            # Handle both ChoiceMade objects and dicts
+            if hasattr(choice, 'node_id'):
+                # ChoiceMade object
+                path_review.append({
+                    'node_id': choice.node_id,
+                    'choice_point_id': choice.choice_point_id,
+                    'techniques_used': choice.techniques_used,
+                    'rapport_impact': choice.rapport_impact,
+                    'resistance_impact': choice.resistance_impact,
+                })
+            else:
+                # Dict format
+                path_review.append({
+                    'node_id': choice.get('node_id'),
+                    'choice_point_id': choice.get('choice_point_id'),
+                    'techniques_used': choice.get('techniques_used', []),
+                    'rapport_impact': choice.get('rapport_impact', 0),
+                    'resistance_impact': choice.get('resistance_impact', 0),
+                })
         
         return {
             "attempt_id": attempt_id,

@@ -200,9 +200,15 @@ class MIScoringService:
         negative_signals = 0
         
         for idx, choice in enumerate(choices):
-            techniques = choice.get('techniques_used', [])
-            rapport_impact = choice.get('rapport_impact', 0)
-            resistance_impact = choice.get('resistance_impact', 0)
+            # Handle both dict and ChoiceMade object formats
+            if hasattr(choice, 'techniques_used'):
+                techniques = choice.techniques_used
+                rapport_impact = choice.rapport_impact
+                resistance_impact = choice.resistance_impact
+            else:
+                techniques = choice.get('techniques_used', [])
+                rapport_impact = choice.get('rapport_impact', 0)
+                resistance_impact = choice.get('resistance_impact', 0)
             
             # Score based on dimension-specific criteria
             if dimension_id == 'engagement':
@@ -437,7 +443,12 @@ class MIScoringService:
         counts = {}
         
         for choice in choices:
-            for technique in choice.get('techniques_used', []):
+            # Handle both dict and ChoiceMade object formats
+            if hasattr(choice, 'techniques_used'):
+                techniques = choice.techniques_used
+            else:
+                techniques = choice.get('techniques_used', [])
+            for technique in techniques:
                 counts[technique] = counts.get(technique, 0) + 1
         
         return counts
@@ -451,8 +462,15 @@ class MIScoringService:
         moments = []
         
         for idx, choice in enumerate(choices):
-            techniques = choice.get('techniques_used', [])
-            rapport = choice.get('rapport_impact', 0)
+            # Handle both dict and ChoiceMade object formats
+            if hasattr(choice, 'techniques_used'):
+                techniques = choice.techniques_used
+                rapport = choice.rapport_impact
+                tone_shift = choice.tone_shift
+            else:
+                techniques = choice.get('techniques_used', [])
+                rapport = choice.get('rapport_impact', 0)
+                tone_shift = choice.get('tone_shift', 0)
             
             # Best moments
             if rapport >= 2 and 'reflection' in str(techniques):
@@ -473,7 +491,6 @@ class MIScoringService:
                 })
             
             # Breakthrough moments (significant tone shift)
-            tone_shift = choice.get('tone_shift', 0)
             if tone_shift > 0.2:
                 moments.append({
                     'turn': idx + 1,
