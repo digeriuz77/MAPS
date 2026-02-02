@@ -39,7 +39,7 @@ async function requireAuth() {
 async function getUserRole(userId) {
     try {
         const supabase = window.getSupabaseClient();
-        
+
         const { data, error } = await supabase
             .from('profiles')
             .select('role')
@@ -58,10 +58,10 @@ async function getUserRole(userId) {
 
         const role = data.role;
         console.log(`✅ User role: ${role}`);
-        
+
         // Store role in localStorage for quick access
         localStorage.setItem('userRole', role);
-        
+
         return role;
     } catch (error) {
         console.error('Error getting user role:', error);
@@ -74,29 +74,16 @@ async function getUserRole(userId) {
  * Redirects CONTROL users to /thank-you-locked
  * @returns {Promise<Object>} Session data if user has FULL access
  */
+/**
+ * Require FULL access role - DEPRECATED
+ * Now acts as a simple auth check since role restrictions are removed
+ * @returns {Promise<Object>} Session data
+ */
 async function requireFullAccess() {
-    try {
-        const session = await requireAuth();
-        const role = await getUserRole(session.user.id);
-
-        if (role !== 'FULL') {
-            console.log('❌ CONTROL user attempting to access FULL-only feature');
-            // Immediate redirect - don't wait
-            window.location.replace('/thank-you-locked');
-            throw new Error('Insufficient permissions');
-        }
-
-        console.log('✅ User has FULL access');
-        return session;
-    } catch (error) {
-        console.error('Full access check failed:', error);
-        // If it's an auth error, requireAuth already redirected
-        // If it's a permission error, redirect to locked page
-        if (error.message === 'Insufficient permissions') {
-            window.location.replace('/thank-you-locked');
-        }
-        throw error;
-    }
+    // Simply check for authentication, ignore specific role
+    const session = await requireAuth();
+    console.log('✅ User authenticated (Full access check skipped)');
+    return session;
 }
 
 /**
@@ -106,7 +93,7 @@ async function requireFullAccess() {
  */
 async function getCachedUserRole() {
     const cachedRole = localStorage.getItem('userRole');
-    
+
     if (cachedRole) {
         return cachedRole;
     }
@@ -134,7 +121,7 @@ async function logout() {
         localStorage.clear();
 
         console.log('✅ User logged out');
-        
+
         // Redirect to auth page
         window.location.href = '/auth';
     } catch (error) {
@@ -150,18 +137,8 @@ async function logout() {
  * @returns {Promise<boolean>} True if accessible
  */
 async function canAccessRoute(route) {
-    const fullOnlyRoutes = ['/analysis', '/reflection'];
-    
-    if (!fullOnlyRoutes.includes(route)) {
-        return true; // Public or accessible by all authenticated users
-    }
-
-    try {
-        const role = await getCachedUserRole();
-        return role === 'FULL';
-    } catch (error) {
-        return false;
-    }
+    // Role-based access control removed - all routes accessible
+    return true;
 }
 
 /**

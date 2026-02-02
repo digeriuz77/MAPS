@@ -72,20 +72,8 @@ async function updateNavigationForRole() {
             return;
         }
 
-        // Hide FULL-only links for CONTROL users
-        if (role === 'CONTROL') {
-            const analysisLink = navBar.querySelector('a[href="/analysis"]');
-            const reflectionLink = navBar.querySelector('a[href="/reflection"]');
-            const progressLink = navBar.querySelector('a[href="/mi-practice-progress.html"]');
-
-            if (analysisLink) {
-                analysisLink.style.display = 'none';
-            }
-            if (reflectionLink) {
-                reflectionLink.style.display = 'none';
-            }
-            // Note: MI Practice progress is available to all authenticated users
-        }
+        // Role-based filtering removed - all users have access to all features
+        console.log('Role access check skipped - all features enabled');
 
         // Add logout button if not already present
         const existingLogout = navBar.querySelector('.logout-btn');

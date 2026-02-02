@@ -130,7 +130,7 @@ def create_app() -> FastAPI:
     
     # SCENARIO-BASED TRAINING ROUTES
     from src.api.routes.scenarios import router as scenarios_router
-    app.include_router(scenarios_router, prefix="/api", tags=["scenarios"])
+    app.include_router(scenarios_router, tags=["scenarios"])
     
     # VOICE ROUTES (STT/TTS for scenarios)
     try:

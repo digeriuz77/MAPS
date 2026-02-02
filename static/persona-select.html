@@ -191,14 +191,25 @@
 </head>
 
 <body>
-    <!-- Navigation Bar -->
-    <nav class="nav-bar">
-        <a href="/welcome"><i class="fas fa-sign-in-alt"></i> Welcome</a>
-        <a href="/persona-select" class="active"><i class="fas fa-users"></i> Personas</a>
-        <a href="/analysis"><i class="fas fa-chart-line"></i> Analysis</a>
-        <a href="/reflection"><i class="fas fa-lightbulb"></i> Reflection</a>
-        <a href="/feedback"><i class="fas fa-comment-dots"></i> Feedback</a>
-    </nav>
+    <!-- Dynamic Navigation Container -->
+    <div id="navigation-container"></div>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Wait for navigation script to load if needed
+            if (window.loadNavigation) {
+                await window.loadNavigation();
+            } else {
+                // Poll for it briefly if script is async
+                const interval = setInterval(() => {
+                    if (window.loadNavigation) {
+                        clearInterval(interval);
+                        window.loadNavigation();
+                    }
+                }, 50);
+                setTimeout(() => clearInterval(interval), 1000);
+            }
+        });
+    </script>
 
     <div class="container">
         <h1>Who would you like to talk with?</h1>
