@@ -11,7 +11,7 @@ This is the heart of the scenario-based architecture. It orchestrates:
 import logging
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 
 from src.services.persona_response_engine import (
     PersonaResponseEngine, 
