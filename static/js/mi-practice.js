@@ -125,22 +125,20 @@
 
     async function initLandingPage() {
         try {
-            // Get current user
-            const supabase = window.getSupabaseClient();
-            const { data: { user } } = await supabase.auth.getUser();
-            state.currentUser = user;
+            // No authentication required - user is anonymous
+            state.currentUser = { id: 'anonymous' };
 
             // Load all data in parallel
             await Promise.all([
-                loadHeroStats(),
                 loadLearningPaths(),
                 loadModules(),
-                loadProgressOverview()
             ]);
 
             // Setup filters
             setupFilters();
             setupModuleTypeTabs();
+
+            console.log('✅ MI Practice landing page initialized');
         } catch (error) {
             console.error('Failed to initialize landing page:', error);
             showError('Failed to load content. Please refresh the page.');
