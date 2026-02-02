@@ -21,9 +21,13 @@ class AuthenticatedUser:
         self.email = email
         self.role = role
 
+    def is_admin(self) -> bool:
+        """Check if user has ADMIN role"""
+        return self.role == "ADMIN"
+
     def is_full_access(self) -> bool:
-        """Check if user has FULL role"""
-        return self.role == "FULL"
+        """Check if user has FULL role (or higher)"""
+        return self.role in ("FULL", "ADMIN")
 
     def is_control_only(self) -> bool:
         """Check if user has CONTROL role (limited access)"""
@@ -108,6 +112,9 @@ async def get_current_user(
 
         role = profile_response.data[0].get('role', 'CONTROL')
 
+        # Normalize role to uppercase for consistent comparisons
+        role = role.upper() if role else 'CONTROL'
+
         logger.info(f"Authenticated user: {email} (role: {role})")
 
         return AuthenticatedUser(user_id=user_id, email=email, role=role)
@@ -126,16 +133,35 @@ async def require_full_access(
     current_user: AuthenticatedUser = Depends(get_current_user)
 ) -> AuthenticatedUser:
     """
-    Dependency to require FULL role access
+    Dependency to require FULL role access (or ADMIN)
 
     Raises:
-        HTTPException 403: If user doesn't have FULL role
+        HTTPException 403: If user doesn't have FULL or ADMIN role
     """
     if not current_user.is_full_access():
         logger.warning(f"Access denied for user {current_user.email} with role {current_user.role}")
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail=f"Access denied - FULL role required (you have {current_user.role})"
+        )
+
+    return current_user
+
+
+async def require_admin_access(
+    current_user: AuthenticatedUser = Depends(get_current_user)
+) -> AuthenticatedUser:
+    """
+    Dependency to require ADMIN role access
+
+    Raises:
+        HTTPException 403: If user doesn't have ADMIN role
+    """
+    if not current_user.is_admin():
+        logger.warning(f"Admin access denied for user {current_user.email} with role {current_user.role}")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"Access denied - ADMIN role required (you have {current_user.role})"
         )
 
     return current_user
