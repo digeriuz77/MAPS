@@ -25,18 +25,29 @@ class AuthMiddleware(BaseHTTPMiddleware):
         "/health",
         "/metrics",
         "/thank-you-locked",  # CONTROL users redirected here
-    }
-    
-    # Protected page routes (require authentication)
-    PROTECTED_ROUTES = {
         "/welcome",
-        "/persona-select", 
+        "/persona-select",
         "/chat",
+        "/mi-practice",
+        "/mi-practice.html",
+        "/mi-practice-module",
+        "/mi-practice-module.html",
+        "/mi-practice-progress",
+        "/mi-practice-progress.html",
+        "/mi-practice-review",
+        "/mi-practice-review.html",
+        "/maps-results",
+        "/maps-results.html",
         "/analysis",
         "/reflection",
         "/feedback",
-        "/thank-you",  # FULL access users after feedback completion
-        "/auth-test",
+        "/thank-you",
+    }
+    
+    # Protected page routes (require authentication)
+    # Note: Most routes are now public to allow anonymous access
+    PROTECTED_ROUTES = {
+        "/auth-test",  # Test route only
     }
     
     async def dispatch(self, request: Request, call_next):

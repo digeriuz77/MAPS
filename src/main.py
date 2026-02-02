@@ -1,6 +1,7 @@
 """
 AI Persona System - Main Application Entry Point
 """
+import asyncio
 import logging
 from contextlib import asynccontextmanager
 
