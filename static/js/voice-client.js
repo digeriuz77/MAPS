@@ -38,14 +38,16 @@ class VoiceClient {
         // Audio processing constants
         this.CONSTANTS = {
             FLUX_OPTIMAL_CHUNK_MS: 80,
-            FLUX_SAMPLE_RATE: 16000,
-            VOICE_AGENT_SAMPLE_RATE: 24000,
+            FLUX_SAMPLE_RATE: 16000,       // Flux STT requires 16kHz
+            VOICE_AGENT_SAMPLE_RATE: 24000, // Voice Agent requires 24kHz
             MAX_RETRIES: 3,
-            MAX_AUDIO_CHUNK_SIZE: 8192
+            MAX_RECONNECT_DELAY: 5000,
+            MAX_AUDIO_CHUNK_SIZE: 8192,
+            PING_INTERVAL: 30000           // 30 seconds keepalive
         };
 
         this.options = {
-            // Audio settings
+            // Audio settings - will be set dynamically based on mode
             sampleRate: this.CONSTANTS.FLUX_SAMPLE_RATE,
             channelCount: 1,
             chunkSize: this.CONSTANTS.FLUX_OPTIMAL_CHUNK_MS,
@@ -71,13 +73,20 @@ class VoiceClient {
 
         // State
         this.sessionId = null;
+        this.mode = 'stt_only';          // Track current mode for sample rate
         this.websocket = null;
         this.audioContext = null;
         this.mediaStream = null;
         this.mediaRecorder = null;
         this.audioWorklet = null;
         this.isRecording = false;
-        this.status = 'idle';  // idle, connecting, listening, processing, speaking, error
+        this.status = 'idle';            // idle, connecting, listening, processing, speaking, error
+
+        // Reconnection state
+        this._reconnectAttempts = 0;
+        this._intentionalClose = false;
+        this._reconnectTimeout = null;
+        this._pingInterval = null;
 
         // Transcript
         this.transcripts = [];
@@ -86,6 +95,29 @@ class VoiceClient {
         // Audio playback for TTS
         this.audioQueue = [];
         this.isPlaying = false;
+    }
+
+    /**
+     * Check microphone permission status before requesting
+     * @returns {Promise<string>} Permission state: 'granted', 'denied', or 'prompt'
+     */
+    async checkMicrophonePermission() {
+        try {
+            // Check if permissions API is supported
+            if (navigator.permissions && navigator.permissions.query) {
+                const result = await navigator.permissions.query({ name: 'microphone' });
+                return result.state;
+            }
+            // Fallback: try to get user media and see if it succeeds
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            stream.getTracks().forEach(track => track.stop());
+            return 'granted';
+        } catch (error) {
+            if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+                return 'denied';
+            }
+            return 'prompt';
+        }
     }
 
     /**
@@ -103,6 +135,23 @@ class VoiceClient {
      * @throws {Error} If session creation fails
      */
     async createSession(attemptId, mode = 'stt_only', fluxConfig = {}) {
+        // Validate mode
+        if (!['stt_only', 'full', 'tts_only'].includes(mode)) {
+            throw new Error(`Invalid voice mode: ${mode}. Must be 'stt_only', 'full', or 'tts_only'`);
+        }
+
+        // Store mode for sample rate configuration
+        this.mode = mode;
+
+        // Configure sample rate based on mode
+        // Flux STT requires 16kHz, Voice Agent requires 24kHz
+        const sampleRate = mode === 'full'
+            ? this.CONSTANTS.VOICE_AGENT_SAMPLE_RATE
+            : this.CONSTANTS.FLUX_SAMPLE_RATE;
+
+        this.options.sampleRate = sampleRate;
+        console.log(`Voice session configured: mode=${mode}, sampleRate=${sampleRate}Hz`);
+
         try {
             const response = await fetch(`${this.options.apiBaseUrl}/sessions`, {
                 method: 'POST',
@@ -168,6 +217,10 @@ class VoiceClient {
 
             this.websocket.onopen = () => {
                 console.log('WebSocket connected');
+                this._intentionalClose = false;
+                this._reconnectAttempts = 0;
+                // Start ping/pong keepalive
+                this._startPingInterval();
             };
 
             this.websocket.onmessage = (event) => {
@@ -176,13 +229,37 @@ class VoiceClient {
 
             this.websocket.onerror = (error) => {
                 console.error('WebSocket error:', error);
-                this._handleError(error);
+                this._handleError(new Error('WebSocket connection error'));
             };
 
-            this.websocket.onclose = () => {
-                console.log('WebSocket closed');
-                this._setStatus('idle');
+            this.websocket.onclose = (event) => {
+                console.log(`WebSocket closed: code=${event.code}, reason=${event.reason}`);
+                this._stopPingInterval();
+
+                // Attempt reconnection if not intentionally closed and under max retries
+                if (!this._intentionalClose && this._reconnectAttempts < this.CONSTANTS.MAX_RETRIES) {
+                    this._scheduleReconnect();
+                } else {
+                    this._setStatus('idle');
+                }
             };
+
+            // Wait for connection to open
+            await new Promise((resolve, reject) => {
+                const timeout = setTimeout(() => {
+                    reject(new Error('WebSocket connection timeout'));
+                }, 10000); // 10 second timeout
+
+                this.websocket.addEventListener('open', () => {
+                    clearTimeout(timeout);
+                    resolve();
+                }, { once: true });
+
+                this.websocket.addEventListener('error', (error) => {
+                    clearTimeout(timeout);
+                    reject(error);
+                }, { once: true });
+            });
 
         } catch (error) {
             console.error('Error connecting:', error);
@@ -439,7 +516,7 @@ class VoiceClient {
             this.websocket.send(audioData);
             return true;
         }
-        
+
         return false;
     }
 
@@ -449,10 +526,10 @@ class VoiceClient {
      * @returns {boolean} True if chunk size is valid
      */
     _validateAudioChunk(audioData) {
-        const length = ArrayBuffer.isView(audioData) 
-            ? audioData.length 
+        const length = ArrayBuffer.isView(audioData)
+            ? audioData.length
             : audioData.byteLength || audioData.length;
-        
+
         if (length > this.CONSTANTS.MAX_AUDIO_CHUNK_SIZE) {
             console.error('Audio chunk size exceeds maximum limit');
             this._handleError(new Error('Audio chunk size exceeds maximum limit'));
@@ -674,6 +751,68 @@ class VoiceClient {
         if (this.options.onError) {
             this.options.onError(error);
         }
+    }
+
+    /**
+     * Schedule a WebSocket reconnection attempt with exponential backoff
+     * @private
+     */
+    _scheduleReconnect() {
+        this._reconnectAttempts++;
+        const delay = Math.min(
+            1000 * Math.pow(2, this._reconnectAttempts - 1),
+            this.CONSTANTS.MAX_RECONNECT_DELAY
+        );
+
+        console.log(`Scheduling reconnect attempt ${this._reconnectAttempts} in ${delay}ms`);
+        this._setStatus('connecting');
+
+        this._reconnectTimeout = setTimeout(async () => {
+            try {
+                await this.connect();
+                console.log('Reconnection successful');
+                this._reconnectAttempts = 0;
+            } catch (error) {
+                console.error('Reconnection failed:', error);
+                // Will trigger another reconnect if under max retries
+            }
+        }, delay);
+    }
+
+    /**
+     * Start ping/pong keepalive interval
+     * @private
+     */
+    _startPingInterval() {
+        this._stopPingInterval();
+        this._pingInterval = setInterval(() => {
+            if (this.websocket?.readyState === WebSocket.OPEN) {
+                this.websocket.send(JSON.stringify({ type: 'ping' }));
+            }
+        }, this.CONSTANTS.PING_INTERVAL);
+    }
+
+    /**
+     * Stop ping/pong keepalive interval
+     * @private
+     */
+    _stopPingInterval() {
+        if (this._pingInterval) {
+            clearInterval(this._pingInterval);
+            this._pingInterval = null;
+        }
+    }
+
+    /**
+     * Clear all pending timers and intervals
+     * @private
+     */
+    _clearTimers() {
+        if (this._reconnectTimeout) {
+            clearTimeout(this._reconnectTimeout);
+            this._reconnectTimeout = null;
+        }
+        this._stopPingInterval();
     }
 }
 

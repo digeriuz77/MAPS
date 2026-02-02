@@ -683,6 +683,14 @@
                         onSpeechFinal: async (text) => {
                             if (!text || !currentConversationId) return;
                             await sendVoiceText(text);
+                        },
+                        onError: (error) => {
+                            console.error('Voice client error:', error);
+                            voiceStatus.textContent = 'Error: ' + error.message;
+                            voiceStatus.className = 'voice-status voice-status-error';
+                            voiceStartBtn.disabled = false;
+                            voiceStopBtn.disabled = true;
+                            alert('Voice error: ' + error.message);
                         }
                     });
                 }
@@ -701,16 +709,37 @@
         voiceStartBtn?.addEventListener('click', async () => {
             if (!voiceClient || !currentConversationId) return;
             const selectedMode = voiceModeSelector.querySelector('input[name="voiceMode"]:checked')?.value || 'stt_only';
+
             try {
                 voiceStartBtn.disabled = true;
+                voiceStatus.textContent = 'Checking microphone...';
+                voiceStatus.className = 'voice-status voice-status-connecting';
+
+                // Check microphone permission first
+                const permission = await voiceClient.checkMicrophonePermission();
+                if (permission === 'denied') {
+                    throw new Error('Microphone access denied. Please enable microphone permissions in your browser settings.');
+                }
+
+                voiceStatus.textContent = 'Creating session...';
                 await voiceClient.createSession(currentConversationId, selectedMode);
+
+                voiceStatus.textContent = 'Connecting...';
                 await voiceClient.connect();
+
+                voiceStatus.textContent = 'Starting recording...';
                 await voiceClient.startRecording();
+
                 voiceStopBtn.disabled = false;
             } catch (error) {
                 console.error('Failed to start voice:', error);
+                voiceStatus.textContent = `Error: ${error.message}`;
+                voiceStatus.className = 'voice-status voice-status-error';
                 voiceStartBtn.disabled = false;
                 voiceStopBtn.disabled = true;
+
+                // Show error to user via toast or alert
+                showNotification('Voice Error: ' + error.message, 'error');
             }
         });
 

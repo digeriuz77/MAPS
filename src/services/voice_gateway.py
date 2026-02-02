@@ -126,20 +126,110 @@ class VoiceGateway:
     - Turn-taking patterns
     """
     
+    # Session timeout configuration
+    SESSION_TIMEOUT_SECONDS = 300  # 5 minutes of inactivity
+    SESSION_MAX_AGE_SECONDS = 3600  # 1 hour absolute maximum
+    CLEANUP_INTERVAL_SECONDS = 60  # Check for expired sessions every minute
+    
     def __init__(self, api_key: Optional[str] = None):
         self.api_key = api_key or os.getenv("DEEPGRAM_API_KEY")
         if not self.api_key:
-            raise ValueError("DEEPGRAM_API_KEY environment variable is not set")
+            logger.warning("DEEPGRAM_API_KEY not set - voice features will be disabled")
+            self.client = None
+        else:
+            self.client = DeepgramClient(api_key=self.api_key)
         
-        self.client = DeepgramClient(api_key=self.api_key)
         self.sessions: Dict[str, VoiceSessionState] = {}
         self.connections: Dict[str, Any] = {}
         self.callbacks: Dict[str, Dict[str, Callable]] = {}
+        self._cleanup_task = None
+        self._shutdown = False
         
         # Hesitation words to detect
         self.hesitation_words = {"um", "uh", "er", "ah", "like", "you know", "actually", "basically"}
         
         logger.info("VoiceGateway initialized")
+    
+    async def start_cleanup_task(self):
+        """Start the background session cleanup task"""
+        if self._cleanup_task is None:
+            self._cleanup_task = asyncio.create_task(self._cleanup_loop())
+            logger.info("Session cleanup task started")
+    
+    async def _cleanup_loop(self):
+        """Background loop to periodically clean up expired sessions"""
+        while not self._shutdown:
+            try:
+                await asyncio.sleep(self.CLEANUP_INTERVAL_SECONDS)
+                await self._cleanup_expired_sessions()
+            except asyncio.CancelledError:
+                break
+            except Exception as e:
+                logger.error(f"Error in cleanup loop: {e}")
+    
+    async def _cleanup_expired_sessions(self):
+        """Remove expired sessions based on timeout and max age"""
+        now = time.time()
+        expired_sessions = []
+        
+        for session_id, state in self.sessions.items():
+            # Check absolute max age
+            session_age = now - (state.session_start_ms / 1000)
+            if session_age > self.SESSION_MAX_AGE_SECONDS:
+                expired_sessions.append(session_id)
+                logger.info(f"Session {session_id} expired (max age: {session_age:.0f}s)")
+                continue
+            
+            # Check inactivity timeout
+            if state.last_activity_at:
+                last_activity = datetime.fromisoformat(state.last_activity_at).timestamp()
+                inactive_time = now - last_activity
+                if inactive_time > self.SESSION_TIMEOUT_SECONDS:
+                    expired_sessions.append(session_id)
+                    logger.info(f"Session {session_id} expired (inactive: {inactive_time:.0f}s)")
+        
+        # Close expired sessions
+        for session_id in expired_sessions:
+            await self.close_session(session_id)
+    
+    async def close_session(self, session_id: str) -> bool:
+        """Close a voice session and clean up resources"""
+        logger.info(f"Closing voice session: {session_id}")
+        
+        # Close connection if exists
+        connection = self.connections.pop(session_id, None)
+        if connection:
+            try:
+                connection.__exit__(None, None, None)
+            except Exception as e:
+                logger.warning(f"Error closing connection for {session_id}: {e}")
+        
+        # Remove session and callbacks
+        self.sessions.pop(session_id, None)
+        self.callbacks.pop(session_id, None)
+        
+        logger.info(f"Voice session {session_id} closed")
+        return True
+    
+    async def shutdown(self):
+        """Graceful shutdown - close all sessions"""
+        logger.info("VoiceGateway shutdown initiated")
+        self._shutdown = True
+        
+        # Stop cleanup task
+        if self._cleanup_task:
+            self._cleanup_task.cancel()
+            try:
+                await self._cleanup_task
+            except asyncio.CancelledError:
+                pass
+        
+        # Close all sessions
+        session_ids = list(self.sessions.keys())
+        for session_id in session_ids:
+            await self.close_session(session_id)
+        
+        logger.info("VoiceGateway shutdown complete")
     
     def _create_agent_settings(
         self,
@@ -263,6 +353,11 @@ class VoiceGateway:
         Returns:
             bool: True if connection successful
         """
+        # Check if Deepgram client is available
+        if not self.client:
+            logger.error("Deepgram client not initialized - check DEEPGRAM_API_KEY")
+            return False
+        
         state = self.sessions.get(session_id)
         if not state:
             logger.error(f"Session {session_id} not found")
@@ -287,23 +382,21 @@ class VoiceGateway:
                 persona_greeting=persona_greeting,
             )
             
-            # Connect to Voice Agent
+            # Connect to Voice Agent using context manager properly
             connection = self.client.agent.v1.connect()
             self.connections[session_id] = connection
             
             # Set up event handlers
             self._setup_event_handlers(session_id, connection)
             
-            # Enter context and send settings
-            connection.__enter__()
+            # Use context manager properly with async support
+            # Note: Deepgram SDK's connect() returns a context manager
+            # We store the connection but use it in a task
             connection.send_settings(settings)
             
-            # Start listening in background thread
-            listener_thread = threading.Thread(
-                target=connection.start_listening,
-                daemon=True
-            )
-            listener_thread.start()
+            # Start listening using asyncio task instead of thread
+            # This ensures proper async event loop handling
+            asyncio.create_task(self._listen_loop(session_id, connection))
             
             self._update_state(session_id, "connected")
             logger.info(f"Voice session {session_id} connected to Deepgram")
@@ -314,6 +407,20 @@ class VoiceGateway:
             state.error = str(e)
             self._update_state(session_id, "error")
             return False
+    
+    async def _listen_loop(self, session_id: str, connection):
+        """Async listen loop for Voice Agent connection"""
+        try:
+            logger.debug(f"Starting listen loop for session {session_id}")
+            await connection.start_listening()
+        except asyncio.CancelledError:
+            logger.debug(f"Listen loop cancelled for session {session_id}")
+        except Exception as e:
+            logger.error(f"Listen loop error for session {session_id}: {e}")
+            state = self.sessions.get(session_id)
+            if state:
+                state.error = str(e)
+                self._update_state(session_id, "error")
     
     def _setup_event_handlers(self, session_id: str, connection):
         """Set up event handlers for a Voice Agent connection"""

@@ -135,8 +135,18 @@ def create_app() -> FastAPI:
     # VOICE ROUTES (STT/TTS for scenarios)
     try:
         from src.api.routes.voice import router as voice_router
+        from src.services.voice_gateway import get_voice_gateway
+        
         app.include_router(voice_router, prefix="/api", tags=["voice"])
-        logger.info("Voice routes loaded successfully")
+        
+        # Initialize voice gateway cleanup task
+        voice_gateway = get_voice_gateway()
+        if voice_gateway.client:
+            asyncio.create_task(voice_gateway.start_cleanup_task())
+            logger.info("Voice gateway initialized with cleanup task")
+        else:
+            logger.warning("Voice gateway initialized without Deepgram (missing API key)")
+            
     except ImportError as e:
         logger.warning(f"Voice routes not available (missing dependencies): {e}")
     except Exception as e:
