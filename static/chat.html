@@ -24,36 +24,6 @@
             padding-top: 70px;
         }
 
-        /* Navigation Bar */
-        .nav-bar {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            background: linear-gradient(135deg, #7C3AED 0%, #1E3A8A 100%);
-            padding: 15px 30px;
-            box-shadow: 0 2px 8px rgba(30, 58, 138, 0.2);
-            z-index: 1000;
-            display: flex;
-            justify-content: center;
-            gap: 30px;
-        }
-
-        .nav-bar a {
-            color: white;
-            text-decoration: none;
-            font-weight: 500;
-            transition: opacity 0.2s;
-        }
-
-        .nav-bar a:hover {
-            opacity: 0.8;
-        }
-
-        .nav-bar a.active {
-            border-bottom: 2px solid white;
-        }
-
         .container {
             max-width: 900px;
             margin: 0 auto;
@@ -293,14 +263,8 @@
 </head>
 
 <body>
-    <!-- Navigation Bar -->
-    <nav class="nav-bar">
-        <a href="/welcome"><i class="fas fa-sign-in-alt"></i> Welcome</a>
-        <a href="/persona-select" class="active"><i class="fas fa-users"></i> Personas</a>
-        <a href="/analysis"><i class="fas fa-chart-line"></i> Analysis</a>
-        <a href="/reflection"><i class="fas fa-lightbulb"></i> Reflection</a>
-        <a href="/feedback"><i class="fas fa-comment-dots"></i> Feedback</a>
-    </nav>
+    <!-- Navigation will be loaded by navigation.js -->
+    <div id="navigation-container"></div>
 
     <div class="container">
         <h1 id="chatTitle">Chat</h1>
@@ -793,29 +757,22 @@ Conversation ID: ${currentConversationId}
         }
     </script>
 
-    <!-- Supabase SDK -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <!-- Auth utilities -->
-    <script src="/static/js/supabaseClient.js"></script>
-    <script src="/static/js/authGuard.js"></script>
+    <!-- Navigation script -->
     <script src="/static/js/navigation.js"></script>
 
     <script>
-        // Initialize auth - BLOCKS until verified
+        // Initialize page - no auth required
         (async function () {
             try {
-                await initializeSupabase();
-                await requireAuth();
-                console.log('✅ Chat page protected by auth');
-                window.authCheckComplete();
+                console.log('✅ Chat page loaded');
 
-                // Now that auth is complete, execute pending persona load
+                // Execute pending persona load
                 if (pendingPersonaLoad) {
                     await pendingPersonaLoad();
                     pendingPersonaLoad = null; // Clean up
                 }
             } catch (error) {
-                console.error('Auth failed:', error);
+                console.error('Page initialization failed:', error);
             }
         })();
     </script>
