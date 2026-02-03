@@ -6,6 +6,8 @@ Deepgram's Voice Agent API. It supports:
 - Full voice agent mode (STT + TTS + LLM)
 - Optional TTS/STT to augment text-based interaction
 - Voice-driven scenarios with speech analysis
+
+NOTE: Deepgram SDK v3 compatibility pending - imports may need updating
 """
 
 import asyncio
@@ -17,22 +19,36 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any, Callable, Dict, List, Optional
 
-from deepgram import DeepgramClient
-from deepgram.core.events import EventType
-from deepgram.extensions.types.sockets import (
-    AgentV1Agent,
-    AgentV1AudioConfig,
-    AgentV1AudioInput,
-    AgentV1AudioOutput,
-    AgentV1DeepgramSpeakProvider,
-    AgentV1Listen,
-    AgentV1ListenProvider,
-    AgentV1OpenAiThinkProvider,
-    AgentV1SettingsMessage,
-    AgentV1SocketClientResponse,
-    AgentV1SpeakProviderConfig,
-    AgentV1Think,
-)
+try:
+    from deepgram import DeepgramClient
+    from deepgram.clients.listen.v1 import WebSocketClient
+    from deepgram.clients import DeepgramClientError
+    DEEPGRAM_AVAILABLE = True
+except ImportError:
+    DEEPGRAM_AVAILABLE = False
+    DeepgramClient = None
+    WebSocketClient = None
+
+# Stub types for Deepgram Voice Agent when SDK is not available or incompatible
+if not DEEPGRAM_AVAILABLE:
+    class EventType:
+        OPEN = "open"
+        MESSAGE = "message"
+        ERROR = "error"
+        CLOSE = "close"
+
+    class AgentV1Agent: pass
+    class AgentV1AudioConfig: pass
+    class AgentV1AudioInput: pass
+    class AgentV1AudioOutput: pass
+    class AgentV1DeepgramSpeakProvider: pass
+    class AgentV1Listen: pass
+    class AgentV1ListenProvider: pass
+    class AgentV1OpenAiThinkProvider: pass
+    class AgentV1SettingsMessage: pass
+    class AgentV1SocketClientResponse: pass
+    class AgentV1SpeakProviderConfig: pass
+    class AgentV1Think: pass
 
 logger = logging.getLogger(__name__)
 
@@ -113,31 +129,38 @@ class VoiceSessionState:
 class VoiceGateway:
     """
     Gateway service for Deepgram Voice Agent integration.
-    
+
     Supports three modes:
     1. Full Voice Agent: Complete bidirectional voice with LLM thinking
     2. STT Only: Speech-to-text augmentation for text scenarios
     3. TTS Only: Text-to-speech for persona responses
-    
+
     For voice-driven scenarios, provides detailed speech analysis including:
     - Pause duration and frequency
     - Hesitation markers
     - Speaking rate
     - Turn-taking patterns
     """
-    
+
     # Session timeout configuration
     SESSION_TIMEOUT_SECONDS = 300  # 5 minutes of inactivity
     SESSION_MAX_AGE_SECONDS = 3600  # 1 hour absolute maximum
     CLEANUP_INTERVAL_SECONDS = 60  # Check for expired sessions every minute
-    
+
     def __init__(self, api_key: Optional[str] = None):
         self.api_key = api_key or os.getenv("DEEPGRAM_API_KEY")
-        if not self.api_key:
+        if not DEEPGRAM_AVAILABLE:
+            logger.warning("Deepgram SDK not available - voice features will be disabled")
+            self.client = None
+        elif not self.api_key:
             logger.warning("DEEPGRAM_API_KEY not set - voice features will be disabled")
             self.client = None
         else:
-            self.client = DeepgramClient(api_key=self.api_key)
+            try:
+                self.client = DeepgramClient(api_key=self.api_key)
+            except Exception as e:
+                logger.warning(f"Deepgram client initialization failed: {e}")
+                self.client = None
         
         self.sessions: Dict[str, VoiceSessionState] = {}
         self.connections: Dict[str, Any] = {}
@@ -424,29 +447,31 @@ class VoiceGateway:
     
     def _setup_event_handlers(self, session_id: str, connection):
         """Set up event handlers for a Voice Agent connection"""
-        
+
         def on_open(event):
             logger.info(f"Voice session {session_id} connection opened")
             self._update_state(session_id, "listening")
-        
-        def on_message(message: AgentV1SocketClientResponse):
+
+        def on_message(message):
             self._handle_message(session_id, message)
-        
+
         def on_error(error):
             logger.error(f"Voice session {session_id} error: {error}")
             state = self.sessions.get(session_id)
             if state:
                 state.error = str(error)
                 self._update_state(session_id, "error")
-        
+
         def on_close(event):
             logger.info(f"Voice session {session_id} connection closed")
             self._update_state(session_id, "closed")
-        
-        connection.on(EventType.OPEN, on_open)
-        connection.on(EventType.MESSAGE, on_message)
-        connection.on(EventType.ERROR, on_error)
-        connection.on(EventType.CLOSE, on_close)
+
+        if DEEPGRAM_AVAILABLE:
+            from deepgram.clients.listen import EventType
+            connection.on(EventType.OPEN, on_open)
+            connection.on(EventType.MESSAGE, on_message)
+            connection.on(EventType.ERROR, on_error)
+            connection.on(EventType.CLOSE, on_close)
     
     def _handle_message(self, session_id: str, message: AgentV1SocketClientResponse):
         """Handle incoming messages from Voice Agent"""
