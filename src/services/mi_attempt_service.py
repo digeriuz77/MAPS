@@ -3,6 +3,10 @@ MI Attempt Service
 
 Service for managing MI practice attempts including starting attempts,
 processing choices, and managing attempt state.
+
+Optimized for high concurrency with:
+- Dialogue structure caching (avoid refetching on every choice)
+- Efficient database updates
 """
 
 import logging
@@ -20,6 +24,7 @@ from src.models.mi_models import (
     StartAttemptResponse,
     MakeChoiceResponse,
 )
+from src.services.cache_service import get_cache_service, CacheService
 
 logger = logging.getLogger(__name__)
 
@@ -27,17 +32,22 @@ logger = logging.getLogger(__name__)
 class MIAttemptService:
     """
     Service for MI Practice Attempt operations.
-    
+
     Handles:
     - Starting new attempts
     - Processing choices
     - Managing attempt state (rapport, resistance, tone spectrum)
     - Completing attempts
+
+    Performance optimizations:
+    - Dialogue structure cached on first access (1hr TTL)
+    - Avoids redundant module fetches on each choice
     """
-    
+
     def __init__(self, supabase_client: Client):
         self.supabase = supabase_client
-        logger.info("MIAttemptService initialized")
+        self.cache = get_cache_service()
+        logger.info("MIAttemptService initialized with caching")
     
     # ============================================
     # ATTEMPT LIFECYCLE
@@ -178,6 +188,41 @@ class MIAttemptService:
             logger.error(f"Error getting attempt {attempt_id}: {e}")
             raise
     
+    async def _get_cached_dialogue_structure(self, module_id: str) -> Optional[Dict[str, Any]]:
+        """
+        Get dialogue structure with caching.
+
+        OPTIMIZED: Caches dialogue structure (50-100KB) to avoid
+        redundant fetches on every choice (could be 30+ per conversation).
+
+        Args:
+            module_id: Module UUID
+
+        Returns:
+            Dialogue structure dict or None if not found
+        """
+        # Try cache first
+        cached = await self.cache.get_dialogue_structure(module_id)
+        if cached is not None:
+            logger.debug(f"Cache HIT for dialogue structure module={module_id}")
+            return cached
+
+        # Fetch from database - only get dialogue_structure column
+        result = self.supabase.table('mi_practice_modules').select(
+            'dialogue_structure'
+        ).eq('id', module_id).execute()
+
+        if not result.data:
+            return None
+
+        dialogue_structure = result.data[0].get('dialogue_structure', {})
+
+        # Cache for future calls
+        await self.cache.set_dialogue_structure(module_id, dialogue_structure)
+        logger.debug(f"Cached dialogue structure for module={module_id}")
+
+        return dialogue_structure
+
     async def make_choice(
         self,
         attempt_id: str,
@@ -185,11 +230,14 @@ class MIAttemptService:
     ) -> Optional[MakeChoiceResponse]:
         """
         Process a choice in an active attempt.
-        
+
+        OPTIMIZED: Uses cached dialogue structure instead of
+        fetching entire module on every choice.
+
         Args:
             attempt_id: The attempt UUID
             choice_point_id: The ID of the chosen option
-            
+
         Returns:
             MakeChoiceResponse with updated state or None if invalid
         """
@@ -199,19 +247,17 @@ class MIAttemptService:
             if not attempt:
                 logger.warning(f"Attempt not found: {attempt_id}")
                 return None
-            
+
             if attempt.completion_status:
                 logger.warning(f"Attempt already completed: {attempt_id}")
                 return None
-            
-            # Get module
-            module_result = self.supabase.table('mi_practice_modules').select('*').eq('id', attempt.module_id).execute()
-            if not module_result.data:
-                logger.error(f"Module not found for attempt: {attempt_id}")
+
+            # OPTIMIZED: Get cached dialogue structure instead of full module
+            dialogue_structure = await self._get_cached_dialogue_structure(attempt.module_id)
+            if not dialogue_structure:
+                logger.error(f"Dialogue structure not found for module: {attempt.module_id}")
                 return None
-            
-            module_data = module_result.data[0]
-            dialogue_structure = module_data.get('dialogue_structure', {})
+
             nodes = dialogue_structure.get('nodes', {})
             
             # Get current node

@@ -1,6 +1,7 @@
 """
 AI Persona System - Main Application Entry Point
 """
+import asyncio
 import logging
 from contextlib import asynccontextmanager
 
@@ -31,21 +32,54 @@ async def lifespan(app: FastAPI):
     """Application lifespan management"""
     app_state = get_app_state()
     settings = get_settings()
-    
+
     # Initialize logging
     logging.basicConfig(level=settings.LOG_LEVEL)
     logger = logging.getLogger(__name__)
     logger.info("Starting AI Persona System")
     logger.info("Database-driven services already initialized at module level")
 
+    # Warm up caches on startup to avoid cold cache latency
+    await _warm_up_caches(logger)
+
     app_state.is_initialized = True
     logger.info("AI Persona System started successfully")
-    
+
     yield
-    
+
     # Cleanup
     app_state.is_initialized = False
     logger.info("AI Persona System shutdown complete")
+
+
+async def _warm_up_caches(logger):
+    """
+    Pre-populate caches on startup to eliminate cold cache latency.
+
+    This ensures the first users don't experience slow responses
+    while caches are being populated.
+    """
+    try:
+        from src.dependencies import get_mi_module_service
+
+        logger.info("Warming up caches...")
+        module_service = get_mi_module_service()
+
+        # Warm module list cache (most frequently accessed)
+        await module_service.list_modules(limit=50)
+
+        # Warm metadata caches (used on every page load)
+        await module_service.get_focus_areas()
+        await module_service.get_content_types()
+        await module_service.get_difficulty_levels()
+
+        # Warm learning paths cache
+        await module_service.list_learning_paths()
+
+        logger.info("✅ Cache warm-up complete")
+    except Exception as e:
+        # Non-fatal - app works without warm cache, just slower initially
+        logger.warning(f"Cache warm-up failed (non-fatal): {e}")
 
 def create_app() -> FastAPI:
     """Create and configure FastAPI application"""

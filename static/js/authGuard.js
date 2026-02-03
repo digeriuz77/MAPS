@@ -142,35 +142,45 @@ async function canAccessRoute(route) {
 }
 
 /**
- * Make authenticated API request
- * Automatically includes the Bearer token from current session
+ * Make API request with optional authentication
+ * Automatically includes the Bearer token if a session exists
+ * Falls back to unauthenticated request if no session (for anonymous users)
  * @param {string} url - API endpoint URL
  * @param {Object} options - Fetch options (method, headers, body, etc.)
  * @returns {Promise<Response>} Fetch response
  */
 async function authenticatedFetch(url, options = {}) {
     try {
-        // Ensure Supabase is initialized before making authenticated requests
-        const supabase = await window.initializeSupabase();
-        const { data: { session }, error } = await supabase.auth.getSession();
-
-        if (error || !session) {
-            throw new Error('No valid session for API request');
-        }
-
-        // Merge headers with authorization token
+        // Default headers
         const headers = {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${session.access_token}`,
             ...options.headers
         };
+
+        // Try to get session if Supabase is available
+        try {
+            if (window.initializeSupabase) {
+                const supabase = await window.initializeSupabase();
+                const { data: { session } } = await supabase.auth.getSession();
+
+                if (session && session.access_token) {
+                    headers['Authorization'] = `Bearer ${session.access_token}`;
+                    console.log('✅ Using authenticated request');
+                } else {
+                    console.log('ℹ️ No session, using anonymous request');
+                }
+            }
+        } catch (authError) {
+            // Supabase not available or session error - continue without auth
+            console.log('ℹ️ Auth not available, using anonymous request');
+        }
 
         return fetch(url, {
             ...options,
             headers
         });
     } catch (error) {
-        console.error('❌ Authenticated fetch failed:', error);
+        console.error('❌ API fetch failed:', error);
         throw error;
     }
 }

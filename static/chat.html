@@ -316,6 +316,9 @@
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="/static/js/supabaseClient.js"></script>
+    <script src="/static/js/authGuard.js"></script>
     <script src="/static/js/voice-client.js"></script>
     <script>
         const messageInput = document.getElementById('messageInput');
@@ -744,6 +747,34 @@ Conversation ID: ${currentConversationId}
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
+        }
+
+        function showNotification(message, type = 'info') {
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 80px;
+                right: 20px;
+                padding: 15px 20px;
+                border-radius: 8px;
+                color: white;
+                font-weight: 500;
+                z-index: 1000;
+                max-width: 300px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+                animation: slideIn 0.3s ease;
+            `;
+            notification.style.background = type === 'error' ? '#ef4444' :
+                                           type === 'success' ? '#22c55e' : '#3b82f6';
+            notification.textContent = message;
+            document.body.appendChild(notification);
+
+            // Auto-remove after 5 seconds
+            setTimeout(() => {
+                notification.style.animation = 'fadeOut 0.3s ease';
+                setTimeout(() => notification.remove(), 300);
+            }, 5000);
         }
 
         function goBack() {
