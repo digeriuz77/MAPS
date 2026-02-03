@@ -9,7 +9,7 @@ This is the heart of the scenario-based architecture. It orchestrates:
 """
 
 import logging
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
 from datetime import datetime
 from typing import Dict, Any, Optional, List
 
@@ -125,10 +125,13 @@ class ScenarioPipeline:
             persona_state_change=state_change,
             rubric=scenario.get("maps_rubric", {})
         )
-        
+
+        # Convert analysis to dict for feedback generation
+        analysis_dict = asdict(analysis)
+
         # STEP 3: Generate real-time feedback (template - deterministic)
-        feedback = self.feedback_gen.generate_realtime_tip(
-            analysis=analysis,
+        feedback_result = self.feedback_gen.generate_realtime_tip(
+            analysis=analysis_dict,
             learning_objective=scenario.get("learning_objective", ""),
             turn_count=attempt.get("turn_count", 0) + 1
         )
@@ -159,12 +162,12 @@ class ScenarioPipeline:
             )
         
         logger.info(f"Turn complete - Complete: {completion_result.is_complete}, Reason: {completion_result.reason}")
-        
+
         return TurnResult(
             persona_message=persona_response.message,
             persona_state=persona_response.updated_state.to_dict(),
-            analysis=analysis.to_dict(),
-            realtime_feedback=feedback,
+            analysis=analysis_dict,
+            realtime_feedback=feedback_result.tip,
             is_complete=completion_result.is_complete,
             completion_reason=completion_result.reason if completion_result.is_complete else None,
             turn_number=attempt.get("turn_count", 0) + 1
@@ -201,7 +204,7 @@ class ScenarioPipeline:
             "manager_message": manager_input,
             "persona_response": persona_response.message,
             "persona_state": persona_response.updated_state.to_dict(),
-            "analysis": analysis.to_dict(),
+            "analysis": asdict(analysis),
             "timestamp": datetime.utcnow().isoformat()
         }
         
