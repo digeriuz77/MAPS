@@ -275,7 +275,7 @@ class MIProgressService:
     
     async def _update_technique_practice(
         self,
-        progress: MIProgress,
+        progress: MIUserProgress,
         technique: str,
         count: int
     ):

@@ -109,7 +109,7 @@ async def start_attempt(
 
     try:
         # Use user_id from request or default
-        user_id = request.user_id or "anonymous"
+        user_id = request.user_id or "a126e8ec-00ff-4914-8fd2-eb6e2864d3f0"
 
         response = await attempt_service.start_attempt(module_id, user_id)
         if not response:

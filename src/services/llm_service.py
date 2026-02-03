@@ -560,3 +560,62 @@ Respond as {persona_name} based on your established identity and the conversatio
         self.recent_responses[session_id].append(response)
         if len(self.recent_responses[session_id]) > self.max_recent_responses:
             self.recent_responses[session_id].pop(0)
+
+    async def complete(
+        self,
+        prompt: str,
+        system_prompt: Optional[str] = None,
+        temperature: Optional[float] = None,
+        max_tokens: Optional[int] = None,
+        use_case: Optional[str] = None,
+        **kwargs
+    ) -> 'LLMResponse':
+        """Simple completion interface for persona responses"""
+        response_text = await self.generate_response(
+            prompt=prompt,
+            system_prompt=system_prompt,
+            temperature=temperature,
+            max_tokens=max_tokens,
+            session_id=use_case
+        )
+        return LLMResponse(content=response_text)
+
+    async def structured_completion(
+        self,
+        prompt: str,
+        system_prompt: Optional[str] = None,
+        temperature: Optional[float] = None,
+        max_tokens: Optional[int] = None,
+        use_case: Optional[str] = None,
+        response_format: Optional[str] = None,
+        **kwargs
+    ) -> 'LLMResponse':
+        """Structured completion interface for analysis responses"""
+        response_format_dict = {"type": "json_object"} if response_format == "json" else None
+        response_text = await self.generate_response(
+            prompt=prompt,
+            system_prompt=system_prompt,
+            temperature=temperature,
+            max_tokens=max_tokens,
+            session_id=use_case,
+            response_format=response_format_dict
+        )
+        return LLMResponse(content=response_text)
+
+
+class LLMResponse:
+    """Simple response wrapper for LLM completions"""
+    def __init__(self, content: str):
+        self.content = content
+
+
+# Singleton instance
+_llm_service: Optional[LLMService] = None
+
+
+def get_llm_service() -> LLMService:
+    """Get or create the singleton LLMService"""
+    global _llm_service
+    if _llm_service is None:
+        _llm_service = LLMService()
+    return _llm_service

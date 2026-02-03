@@ -22,8 +22,8 @@ from src.services.scenario_pipeline import get_scenario_pipeline
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/scenarios", tags=["scenarios"])
 
-# Anonymous user ID for all requests
-ANONYMOUS_USER_ID = "anonymous-user"
+# Anonymous user ID for all requests (using existing valid user from database)
+ANONYMOUS_USER_ID = "a126e8ec-00ff-4914-8fd2-eb6e2864d3f0"
 
 
 # ========== Request/Response Models ==========
