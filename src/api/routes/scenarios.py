@@ -16,6 +16,7 @@ from datetime import datetime
 import logging
 
 from src.dependencies import get_supabase_client, get_current_user
+from src.auth.auth_dependencies import AuthenticatedUser
 from src.services.scenario_pipeline import get_scenario_pipeline
 
 logger = logging.getLogger(__name__)
@@ -156,7 +157,7 @@ async def list_scenarios(
 @router.get("/{scenario_id}", response_model=ScenarioDetail)
 async def get_scenario(
     scenario_id: str,
-    current_user_id: str = Depends(get_current_user)
+    current_user: AuthenticatedUser = Depends(get_current_user)
 ):
     """
     Get full scenario details including persona configuration.
@@ -195,7 +196,7 @@ async def get_scenario(
 async def start_scenario(
     scenario_id: str,
     request: StartScenarioRequest = None,
-    current_user_id: str = Depends(get_current_user)
+    current_user: AuthenticatedUser = Depends(get_current_user)
 ):
     """
     Start a new attempt at a scenario.
@@ -203,22 +204,23 @@ async def start_scenario(
     # Handle case where no body is provided
     if request is None:
         request = StartScenarioRequest()
-    
+
     try:
         supabase = get_supabase_client()
-        
+        user_id = current_user.user_id  # Extract user_id from AuthenticatedUser
+
         # Get scenario
         scenario_result = supabase.table('scenarios').select('*').eq('id', scenario_id).maybe_single().execute()
-        
+
         if not scenario_result.data:
             raise HTTPException(status_code=404, detail="Scenario not found")
-        
+
         scenario = scenario_result.data
         persona_config = scenario['persona_config']
-        
+
         # Create attempt record
         attempt_data = {
-            'user_id': current_user_id,
+            'user_id': user_id,
             'scenario_id': scenario_id,
             'turn_count': 0,
             'transcript': [],
@@ -243,7 +245,7 @@ async def start_scenario(
         
         attempt = attempt_result.data[0]
         
-        logger.info(f"Started scenario attempt: user={current_user_id}, scenario={scenario_id}, attempt={attempt['id']}")
+        logger.info(f"Started scenario attempt: user={user_id}, scenario={scenario_id}, attempt={attempt['id']}")
         
         # Generate initial greeting from persona
         pipeline = get_scenario_pipeline()
@@ -271,7 +273,7 @@ async def start_scenario(
 async def process_turn(
     attempt_id: str,
     request: ProcessTurnRequest,
-    current_user_id: str = Depends(get_current_user)
+    current_user: AuthenticatedUser = Depends(get_current_user)
 ):
     """
     Process one turn in a scenario attempt.
@@ -279,17 +281,18 @@ async def process_turn(
     """
     try:
         supabase = get_supabase_client()
-        
+        user_id = current_user.user_id
+
         # Get attempt
         attempt_result = supabase.table('scenario_attempts').select('*').eq('id', attempt_id).maybe_single().execute()
-        
+
         if not attempt_result.data:
             raise HTTPException(status_code=404, detail="Attempt not found")
-        
+
         attempt = attempt_result.data
-        
+
         # Verify ownership
-        if attempt['user_id'] != current_user_id:
+        if attempt['user_id'] != user_id:
             raise HTTPException(status_code=403, detail="Not authorized for this attempt")
         
         # Check if already complete
@@ -373,24 +376,25 @@ async def process_turn(
 @router.get("/attempts/{attempt_id}/analysis", response_model=GetAnalysisResponse)
 async def get_full_analysis(
     attempt_id: str,
-    current_user_id: str = Depends(get_current_user)
+    current_user: AuthenticatedUser = Depends(get_current_user)
 ):
     """
     Get complete analysis after scenario ends.
     """
     try:
         supabase = get_supabase_client()
-        
+        user_id = current_user.user_id
+
         # Get attempt
         attempt_result = supabase.table('scenario_attempts').select('*').eq('id', attempt_id).maybe_single().execute()
-        
+
         if not attempt_result.data:
             raise HTTPException(status_code=404, detail="Attempt not found")
-        
+
         attempt = attempt_result.data
-        
+
         # Verify ownership
-        if attempt['user_id'] != current_user_id:
+        if attempt['user_id'] != user_id:
             raise HTTPException(status_code=403, detail="Not authorized")
         
         # Get scenario
@@ -448,24 +452,25 @@ async def get_full_analysis(
 @router.post("/attempts/{attempt_id}/abandon")
 async def abandon_scenario(
     attempt_id: str,
-    current_user_id: str = Depends(get_current_user)
+    current_user: AuthenticatedUser = Depends(get_current_user)
 ):
     """
     Mark a scenario attempt as abandoned.
     """
     try:
         supabase = get_supabase_client()
-        
+        user_id = current_user.user_id
+
         # Get attempt
         attempt_result = supabase.table('scenario_attempts').select('*').eq('id', attempt_id).maybe_single().execute()
-        
+
         if not attempt_result.data:
             raise HTTPException(status_code=404, detail="Attempt not found")
-        
+
         attempt = attempt_result.data
-        
+
         # Verify ownership
-        if attempt['user_id'] != current_user_id:
+        if attempt['user_id'] != user_id:
             raise HTTPException(status_code=403, detail="Not authorized")
         
         # Check if already complete
