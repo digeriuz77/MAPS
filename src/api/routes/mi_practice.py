@@ -1,9 +1,12 @@
 """
 MI Practice Module API Routes
 Endpoints for Motivational Interviewing practice modules
+
+NOTE: Auth removed - all endpoints are public
 """
 import logging
 from typing import List, Optional
+from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 
@@ -12,7 +15,6 @@ from src.dependencies import (
     get_mi_module_service,
     get_mi_attempt_service,
     get_mi_progress_service,
-    get_current_user,
 )
 from src.models.mi_models import (
     MIPracticeModule,
@@ -55,14 +57,6 @@ async def list_modules(
 ):
     """
     List available MI practice modules.
-    This endpoint is public - no authentication required.
-
-    Returns a list of modules with optional filtering by content type, focus area, and difficulty.
-
-    Content Types:
-    - shared: Core MI skills applicable to both customer and colleague contexts
-    - customer_facing: MAPS financial scenarios (debt, budgeting, pensions)
-    - colleague_facing: MAPS workplace scenarios (performance, coaching, team dynamics)
     """
     logger.info(f"Listing MI practice modules - content_type: {content_type}, focus_area: {focus_area}, difficulty: {difficulty}")
 
@@ -87,12 +81,9 @@ async def get_module(
 ):
     """
     Get detailed information about a specific MI practice module.
-    This endpoint is public - no authentication required.
-
-    Includes full module configuration, dialogue structure, and MAPS rubric.
     """
     logger.info(f"Getting module details for: {module_id}")
-    
+
     try:
         module = await module_service.get_module(module_id, user_id)
         if not module:
@@ -113,16 +104,13 @@ async def start_attempt(
 ):
     """
     Start a new practice attempt for a module.
-    
-    Creates a new attempt record and returns the initial dialogue state
-    with available choice points.
     """
     logger.info(f"Starting attempt for module: {module_id}")
-    
+
     try:
         # Use user_id from request or default
         user_id = request.user_id or "anonymous"
-        
+
         response = await attempt_service.start_attempt(module_id, user_id)
         if not response:
             raise HTTPException(status_code=404, detail=f"Module not found or could not start attempt: {module_id}")
@@ -146,12 +134,9 @@ async def make_choice(
 ):
     """
     Make a choice in an active practice attempt.
-    
-    Processes the choice, updates attempt state (rapport, resistance, tone spectrum),
-    and returns feedback with the next dialogue state.
     """
     logger.info(f"Processing choice for attempt: {attempt_id}, choice: {request.choice_point_id}")
-    
+
     try:
         response = await attempt_service.make_choice(attempt_id, request.choice_point_id)
         if not response:
@@ -171,11 +156,9 @@ async def get_attempt_state(
 ):
     """
     Get the current state of an active attempt.
-    
-    Returns current dialogue node, available choices, and state metrics.
     """
     logger.info(f"Getting state for attempt: {attempt_id}")
-    
+
     try:
         state = await attempt_service.get_attempt_state(attempt_id)
         if not state:
@@ -196,21 +179,18 @@ async def complete_attempt(
 ):
     """
     Complete a practice attempt.
-    
-    Finalizes the attempt, calculates final scores, generates insights,
-    and updates user progress.
     """
     logger.info(f"Completing attempt: {attempt_id}")
-    
+
     try:
         # Complete the attempt
         attempt = await attempt_service.complete_attempt(attempt_id)
         if not attempt:
             raise HTTPException(status_code=404, detail=f"Attempt not found: {attempt_id}")
-        
+
         # Update user progress
         await progress_service.update_progress_after_attempt(attempt)
-        
+
         return {
             "success": True,
             "attempt_id": attempt_id,
@@ -230,21 +210,14 @@ async def complete_attempt(
 
 @router.get("/progress", response_model=UserProgressResponse)
 async def get_user_progress(
-    user_id: str = Query(..., description="User ID to get progress for (must match authenticated user)"),
+    user_id: str = Query(..., description="User ID to get progress for"),
     progress_service: MIProgressService = Depends(get_mi_progress_service),
-    current_user: dict = Depends(get_current_user),
 ):
     """
     Get overall MI practice progress for a user.
-
-    Returns aggregated statistics including modules completed, competency scores,
-    and technique practice history. The user_id must match the authenticated user.
     """
-    # Security: Ensure user_id matches authenticated user
-    if current_user and user_id != current_user.user_id:
-        raise HTTPException(status_code=403, detail="Cannot access other users' progress")
     logger.info(f"Getting progress for user: {user_id}")
-    
+
     try:
         progress = await progress_service.get_progress_response(user_id)
         if not progress:
@@ -259,21 +232,14 @@ async def get_user_progress(
 
 @router.get("/progress/competencies")
 async def get_competency_breakdown(
-    user_id: str = Query(..., description="User ID to get competencies for (must match authenticated user)"),
+    user_id: str = Query(..., description="User ID to get competencies for"),
     progress_service: MIProgressService = Depends(get_mi_progress_service),
-    current_user: dict = Depends(get_current_user),
 ):
     """
     Get detailed competency breakdown for a user.
-
-    Returns MAPS competency scores with trends and detailed analysis.
-    The user_id must match the authenticated user.
     """
-    # Security: Ensure user_id matches authenticated user
-    if current_user and user_id != current_user.user_id:
-        raise HTTPException(status_code=403, detail="Cannot access other users' competency data")
     logger.info(f"Getting competency breakdown for user: {user_id}")
-    
+
     try:
         breakdown = await progress_service.get_competency_breakdown(user_id)
         return breakdown
@@ -289,21 +255,19 @@ async def review_attempt(
 ):
     """
     Review a completed practice attempt.
-    
-    Returns full attempt history with feedback, key moments, and learning notes.
     """
     logger.info(f"Reviewing attempt: {attempt_id}")
-    
+
     try:
         attempt = await attempt_service.get_attempt(attempt_id)
         if not attempt:
             raise HTTPException(status_code=404, detail=f"Attempt not found: {attempt_id}")
-        
+
         # Get module info
         from src.dependencies import get_mi_module_service
         module_service = get_mi_module_service()
         module = await module_service.get_module(attempt.module_id)
-        
+
         # Build path review from choices
         path_review = []
         for choice in attempt.choices_made:
@@ -326,7 +290,7 @@ async def review_attempt(
                     'rapport_impact': choice.get('rapport_impact', 0),
                     'resistance_impact': choice.get('resistance_impact', 0),
                 })
-        
+
         return {
             "attempt_id": attempt_id,
             "module": {
@@ -360,11 +324,9 @@ async def get_learning_insights(
 ):
     """
     Get personalized learning insights for a user.
-    
-    Returns AI-generated insights based on practice patterns and progress.
     """
     logger.info(f"Getting insights for user: {user_id}")
-    
+
     try:
         insights = await progress_service.generate_learning_insights(user_id, limit)
         return {"insights": insights}
@@ -384,11 +346,9 @@ async def list_learning_paths(
 ):
     """
     List available MI learning paths.
-    
-    Returns curated learning paths with module sequences.
     """
     logger.info("Listing learning paths")
-    
+
     try:
         paths = await module_service.list_learning_paths(user_id=user_id)
         return paths
@@ -406,30 +366,28 @@ async def enroll_in_path(
 ):
     """
     Enroll a user in a learning path.
-    
-    Sets the learning path as active for the user and returns the first module.
     """
     logger.info(f"Enrolling in path: {path_id}")
-    
+
     try:
         # Get user_id from request
         user_id = request.user_id if hasattr(request, 'user_id') else None
         if not user_id:
             raise HTTPException(status_code=400, detail="user_id is required")
-        
+
         # Enroll user
         success = await progress_service.enroll_in_path(user_id, path_id)
         if not success:
             raise HTTPException(status_code=400, detail=f"Failed to enroll in path: {path_id}")
-        
+
         # Get path details
         path = await module_service.get_learning_path(path_id)
         if not path:
             raise HTTPException(status_code=404, detail=f"Learning path not found: {path_id}")
-        
+
         # Get first module
         current_module_id = path.module_sequence[0] if path.module_sequence else None
-        
+
         return EnrollPathResponse(
             success=True,
             path_id=path_id,
@@ -451,11 +409,9 @@ async def get_active_path_progress(
 ):
     """
     Get progress in the currently active learning path.
-    
-    Returns path details, current position, and next recommended module.
     """
     logger.info(f"Getting active path progress for user: {user_id}")
-    
+
     try:
         progress = await progress_service.get_active_path_progress(user_id)
         if not progress:
@@ -506,11 +462,6 @@ async def get_content_types(
 ):
     """
     Get list of content types with module counts.
-
-    Returns:
-    - shared: Core MI skills applicable to both customer and colleague contexts
-    - customer_facing: MAPS financial scenarios (debt, budgeting, pensions)
-    - colleague_facing: MAPS workplace scenarios (performance, coaching, team dynamics)
     """
     try:
         content_types = await module_service.get_content_types()
@@ -547,18 +498,16 @@ async def mi_practice_health_check(
 ):
     """
     Health check for MI practice module system.
-    
-    Returns status of database tables and service availability.
     """
     logger.info("MI practice health check")
-    
+
     try:
         # Try to get module count
         from src.dependencies import get_supabase_client
         supabase = get_supabase_client()
         result = supabase.table('mi_practice_modules').select('id', count='exact').eq('is_active', True).execute()
         module_count = result.count if hasattr(result, 'count') else 0
-        
+
         return {
             "status": "healthy",
             "module_count": module_count,
@@ -573,7 +522,3 @@ async def mi_practice_health_check(
             "service": "mi-practice",
             "timestamp": datetime.utcnow().isoformat(),
         }
-
-
-# Import datetime for health check
-from datetime import datetime
