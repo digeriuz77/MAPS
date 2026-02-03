@@ -21,7 +21,14 @@ from pydantic import BaseModel, Field
 from src.config.settings import get_settings
 from src.dependencies import get_current_user, get_supabase_client
 from src.services.voice_gateway import VoiceGateway, get_voice_gateway
-from src.services.flux_stt_service import FluxSTTService, get_flux_stt_service
+
+# Try to import FluxSTTService, but don't fail if unavailable
+try:
+    from src.services.flux_stt_service import FluxSTTService, get_flux_stt_service
+    FLUX_AVAILABLE = True
+except ImportError:
+    FLUX_AVAILABLE = False
+    get_flux_stt_service = None
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/voice", tags=["voice"])
@@ -167,7 +174,11 @@ async def create_voice_session(
             
         elif request.mode == "stt_only":
             # Flux STT mode
+            if not FLUX_AVAILABLE or get_flux_stt_service is None:
+                raise HTTPException(status_code=503, detail="Flux STT service not available")
             flux_service = get_flux_stt_service()
+            if flux_service is None:
+                raise HTTPException(status_code=503, detail="Flux STT service not available")
             await flux_service.create_session(
                 session_id=session_id,
                 attempt_id=request.attempt_id,
@@ -252,12 +263,18 @@ async def get_session_status(
                 transcript_count = len(state.transcript)
                 current_transcript = state.transcript[-1].text if state.transcript else None
         elif mode == "stt_only":
-            flux_service = get_flux_stt_service()
-            state = flux_service.get_session_state(session_id)
-            if state:
-                status = state.status
-                transcript_count = len(state.transcript_entries)
-                current_transcript = state.current_transcript
+            if not FLUX_AVAILABLE or get_flux_stt_service is None:
+                status = session_data.get('status', 'unavailable')
+            else:
+                flux_service = get_flux_stt_service()
+                if flux_service is None:
+                    status = session_data.get('status', 'unavailable')
+                else:
+                    state = flux_service.get_session_state(session_id)
+                            if state:
+                        status = state.status
+                        transcript_count = len(state.transcript_entries)
+                        current_transcript = state.current_transcript
         
         # Fall back to database status if session is closed
         if status == "unknown":
@@ -313,12 +330,14 @@ async def get_session_transcript(
             transcript = gateway.get_session_transcript(session_id)
             full_text = " ".join(t.get("text", "") for t in transcript)
         elif mode == "stt_only":
-            flux_service = get_flux_stt_service()
-            full_text = flux_service.get_full_transcript(session_id)
-            state = flux_service.get_session_state(session_id)
-            if state:
-                transcript = [e.to_dict() for e in state.transcript_entries]
-                word_count = state.word_count
+            if FLUX_AVAILABLE and get_flux_stt_service is not None:
+                flux_service = get_flux_stt_service()
+                if flux_service is not None:
+                    full_text = flux_service.get_full_transcript(session_id)
+                    state = flux_service.get_session_state(session_id)
+                    if state:
+                        transcript = [e.to_dict() for e in state.transcript_entries]
+                        word_count = state.word_count
         
         # Fall back to database transcript
         if not transcript:
@@ -376,8 +395,10 @@ async def end_voice_session(
             gateway = get_voice_gateway()
             analysis = await gateway.close_session(session_id)
         elif mode == "stt_only":
-            flux_service = get_flux_stt_service()
-            analysis = await flux_service.close_session(session_id)
+            if FLUX_AVAILABLE and get_flux_stt_service is not None:
+                flux_service = get_flux_stt_service()
+                if flux_service is not None:
+                    analysis = await flux_service.close_session(session_id)
         
         if not analysis:
             # Session already closed, return stored data
@@ -516,17 +537,27 @@ async def voice_websocket(
                 return
                 
         elif mode == "stt_only":
+            if not FLUX_AVAILABLE or get_flux_stt_service is None:
+                await websocket.send_json({"type": "error", "message": "Flux STT service not available"})
+                await websocket.close()
+                return
+
             flux_service = get_flux_stt_service()
+            if flux_service is None:
+                await websocket.send_json({"type": "error", "message": "Flux STT service not available"})
+                await websocket.close()
+                return
+
             # Update callbacks
             flux_service.callbacks[session_id] = {
                 "on_transcript": lambda d: asyncio.create_task(on_transcript(d)),
                 "on_speech_final": lambda t, n: asyncio.create_task(on_speech_final(t, n)),
                 "on_state_change": lambda o, n: asyncio.create_task(on_state_change(o, n)),
             }
-            
+
             # Connect to Flux
             connected = await flux_service.connect_session(session_id)
-            
+
             if not connected:
                 await websocket.send_json({"type": "error", "message": "Failed to connect to Flux STT"})
                 await websocket.close()

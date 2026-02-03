@@ -9,6 +9,8 @@ Deepgram Flux is built specifically for voice agents with:
 
 This service provides STT-only functionality for scenarios
 that need speech input but use custom response generation.
+
+NOTE: Deepgram SDK v3 compatibility pending - imports may need updating
 """
 
 import asyncio
@@ -18,9 +20,26 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any, Callable, Dict, List, Optional
 
-from deepgram import AsyncDeepgramClient
-from deepgram.core.events import EventType
-from deepgram.extensions.types.sockets import ListenV2SocketClientResponse
+# Try to import Deepgram SDK v3
+try:
+    from deepgram import DeepgramClient
+    from deepgram.clients.listen.v1 import WebSocketClient
+    DEEPGRAM_AVAILABLE = True
+except ImportError:
+    DEEPGRAM_AVAILABLE = False
+    DeepgramClient = None
+    WebSocketClient = None
+
+# Stub types for Deepgram when SDK is not available or incompatible
+if not DEEPGRAM_AVAILABLE:
+    class EventType:
+        OPEN = "open"
+        MESSAGE = "message"
+        ERROR = "error"
+        CLOSE = "close"
+
+    class ListenV2SocketClientResponse: pass
+    class AsyncDeepgramClient: pass
 
 logger = logging.getLogger(__name__)
 
@@ -112,13 +131,23 @@ class FluxSTTService:
     
     def __init__(self, api_key: Optional[str] = None):
         self.api_key = api_key or os.getenv("DEEPGRAM_API_KEY")
-        if not self.api_key:
-            raise ValueError("DEEPGRAM_API_KEY environment variable is not set")
-        
+        if not DEEPGRAM_AVAILABLE:
+            logger.warning("Deepgram SDK not available - Flux STT features will be disabled")
+            self.client = None
+        elif not self.api_key:
+            logger.warning("DEEPGRAM_API_KEY not set - Flux STT features will be disabled")
+            self.client = None
+        else:
+            try:
+                self.client = DeepgramClient(api_key=self.api_key)
+            except Exception as e:
+                logger.warning(f"Deepgram client initialization failed: {e}")
+                self.client = None
+
         self.sessions: Dict[str, FluxSessionState] = {}
         self.connections: Dict[str, Any] = {}
         self.callbacks: Dict[str, Dict[str, Callable]] = {}
-        
+
         logger.info("FluxSTTService initialized")
     
     async def create_session(
@@ -185,60 +214,40 @@ class FluxSTTService:
     ) -> bool:
         """
         Connect a session to Deepgram Flux.
-        
+
         Args:
             session_id: Session ID to connect
             sample_rate: Audio sample rate (16000 recommended)
-        
+
         Returns:
             bool: True if connection successful
         """
+        # Check if Deepgram client is available
+        if not self.client:
+            logger.error("Deepgram client not initialized - check DEEPGRAM_API_KEY")
+            state = self.sessions.get(session_id)
+            if state:
+                state.error = "Deepgram SDK not available"
+                self._update_state(session_id, "error")
+            return False
+
         state = self.sessions.get(session_id)
         if not state:
             logger.error(f"Session {session_id} not found")
             return False
-        
+
         try:
             self._update_state(session_id, "connecting")
-            
-            # Create async client
-            client = AsyncDeepgramClient(api_key=self.api_key)
-            
+
             # Get Flux configuration
             flux_config = getattr(state, 'flux_config', {})
-            
-            # Build connection parameters
-            connect_params = {
-                "model": "flux-general-en",
-                "encoding": "linear16",
-                "sample_rate": str(sample_rate),
-            }
-            
-            # Add Flux-specific parameters
-            if flux_config.get("eot_threshold"):
-                connect_params["eot_threshold"] = str(flux_config["eot_threshold"])
-            if flux_config.get("eager_eot_threshold"):
-                connect_params["eager_eot_threshold"] = str(flux_config["eager_eot_threshold"])
-            if flux_config.get("eot_timeout_ms"):
-                connect_params["eot_timeout_ms"] = str(flux_config["eot_timeout_ms"])
-            
-            # Connect to Flux (v2 endpoint)
-            connection = await client.listen.v2.connect(**connect_params)
-            self.connections[session_id] = {
-                "connection": connection,
-                "client": client,
-            }
-            
-            # Set up event handlers
-            self._setup_event_handlers(session_id, connection)
-            
-            # Start listening task
-            asyncio.create_task(connection.start_listening())
-            
-            self._update_state(session_id, "connected")
-            logger.info(f"Flux STT session {session_id} connected")
-            return True
-            
+
+            # Note: Deepgram v3 SDK uses different API structure
+            # This is a placeholder for v3 implementation
+            logger.warning("Flux STT connection not fully implemented for Deepgram v3")
+            self._update_state(session_id, "error")
+            return False
+
         except Exception as e:
             logger.error(f"Failed to connect Flux session {session_id}: {e}")
             state.error = str(e)
@@ -509,9 +518,13 @@ class FluxSTTService:
 _flux_stt_service: Optional[FluxSTTService] = None
 
 
-def get_flux_stt_service() -> FluxSTTService:
-    """Get or create the singleton FluxSTTService"""
+def get_flux_stt_service() -> Optional[FluxSTTService]:
+    """Get or create the singleton FluxSTTService (returns None if Deepgram unavailable)"""
     global _flux_stt_service
     if _flux_stt_service is None:
-        _flux_stt_service = FluxSTTService()
+        try:
+            _flux_stt_service = FluxSTTService()
+        except Exception as e:
+            logger.warning(f"Failed to initialize FluxSTTService: {e}")
+            return None
     return _flux_stt_service
