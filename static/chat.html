@@ -446,6 +446,8 @@
 
         async function startConversation(personaId) {
             try {
+                console.log('🚀 startConversation called with personaId:', personaId);
+
                 // Clear any previous conversation from sessionStorage when starting new
                 sessionStorage.removeItem('currentConversation');
                 console.log('🧹 Cleared previous conversation data');
@@ -455,12 +457,24 @@
                 messagesContainer.innerHTML = '';
 
                 // Start new conversation with API (STAGED SYSTEM)
-                const response = await window.authenticatedFetch(`/api/scenarios/${personaId}/start`, {
+                const apiUrl = `/api/scenarios/${personaId}/start`;
+                console.log('📡 Calling API:', apiUrl);
+
+                const response = await window.authenticatedFetch(apiUrl, {
                     method: 'POST',
                     body: JSON.stringify({ feedback_frequency: 'key_moments' })
                 });
 
+                console.log('📥 API response status:', response.status, response.statusText);
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('❌ API error response:', errorText);
+                    throw new Error(`API returned ${response.status}: ${errorText}`);
+                }
+
                 const data = await response.json();
+                console.log('✅ API response data:', data);
 
                 // Use conversation_id (UUID) as the identifier for all operations
                 currentAttemptId = data.attempt_id;
@@ -796,14 +810,37 @@ Conversation ID: ${currentConversationId}
         (async function () {
             try {
                 console.log('✅ Chat page loaded');
+                console.log('URL params:', window.location.search);
+
+                // Check if authenticatedFetch is available
+                if (!window.authenticatedFetch) {
+                    console.error('❌ authenticatedFetch not available!');
+                    alert('Error: authenticatedFetch not loaded. Check if authGuard.js loaded correctly.');
+                    return;
+                }
+                console.log('✅ authenticatedFetch is available');
 
                 // Execute pending persona load
                 if (pendingPersonaLoad) {
+                    console.log('🔄 Executing pendingPersonaLoad...');
                     await pendingPersonaLoad();
                     pendingPersonaLoad = null; // Clean up
+                    console.log('✅ pendingPersonaLoad completed');
+                } else {
+                    console.warn('⚠️ No pendingPersonaLoad function - persona may not load');
+                    // Check URL for persona param
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const personaId = urlParams.get('persona');
+                    if (personaId) {
+                        console.log('🔄 Found persona in URL, starting conversation:', personaId);
+                        await startConversation(personaId);
+                    } else {
+                        console.warn('⚠️ No persona ID in URL. Navigate from persona-select page.');
+                    }
                 }
             } catch (error) {
-                console.error('Page initialization failed:', error);
+                console.error('❌ Page initialization failed:', error);
+                alert('Chat initialization failed: ' + error.message);
             }
         })();
     </script>
