@@ -290,7 +290,7 @@ class MIAttemptService:
                 attempt.tone_spectrum_position + choice_point.get('tone_shift', 0.0)
             ))
             
-            # Record the choice
+            # Record the choice - convert ChoiceMade objects to dicts for JSON serialization
             choice_record = {
                 'node_id': current_node_id,
                 'choice_point_id': choice_point_id,
@@ -301,8 +301,10 @@ class MIAttemptService:
                 'techniques_used': choice_point.get('technique_tags', []),
                 'competencies_demonstrated': choice_point.get('competency_links', []),
             }
-            
-            choices_made = attempt.choices_made + [choice_record]
+
+            # Convert existing ChoiceMade objects to dicts and append new choice
+            existing_choices = [c.model_dump() if hasattr(c, 'model_dump') else c for c in attempt.choices_made]
+            choices_made = existing_choices + [choice_record]
             
             # Get next node
             next_node_id = choice_point.get('next_node_id')
@@ -491,7 +493,8 @@ class MIAttemptService:
         - Resistance triggered count
         - Rapport built status
         """
-        choices = attempt.choices_made
+        # Convert ChoiceMade objects to dicts for iteration
+        choices = [c.model_dump() if hasattr(c, 'model_dump') else c for c in attempt.choices_made]
         
         if not choices:
             return FinalScores(
@@ -560,11 +563,12 @@ class MIAttemptService:
     ) -> List[Dict[str, Any]]:
         """
         Generate learning insights from an attempt.
-        
+
         Analyzes choices and scores to generate personalized insights.
         """
         insights = []
-        choices = attempt.choices_made
+        # Convert ChoiceMade objects to dicts for iteration
+        choices = [c.model_dump() if hasattr(c, 'model_dump') else c for c in attempt.choices_made]
         
         if not choices:
             return insights
