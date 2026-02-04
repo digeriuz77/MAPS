@@ -363,7 +363,7 @@ class MIPracticeAttempt(BaseModel):
 class MILearningPath(BaseModel):
     """MI Learning Path schema"""
     id: Optional[str] = None
-    code: str = Field(..., pattern=r'^path-[a-z-]+-\d+$')
+    code: str = Field(..., pattern=r'^path-[a-z0-9-]+$')
     title: str = Field(..., min_length=5, max_length=200)
     description: Optional[str] = None
     
