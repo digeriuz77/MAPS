@@ -331,11 +331,22 @@ class MIAttemptService:
                 update_data['completed_at'] = datetime.utcnow().isoformat()
             
             self.supabase.table('mi_practice_attempts').update(update_data).eq('id', attempt_id).execute()
-            
+
+            # Fetch module metadata for the response
+            module_result = self.supabase.table('mi_practice_modules').select(
+                'title, mi_focus_area'
+            ).eq('id', attempt.module_id).execute()
+
+            module_title = 'Practice Session'
+            module_focus = ''
+            if module_result.data:
+                module_title = module_result.data[0].get('title', 'Practice Session')
+                module_focus = module_result.data[0].get('mi_focus_area', '')
+
             # Build response
             feedback = choice_point.get('feedback', {})
             next_choice_points = []
-            
+
             if not is_complete:
                 for cp in next_node.get('choice_points', []):
                     next_choice_points.append({
@@ -343,9 +354,9 @@ class MIAttemptService:
                         'option_text': cp['option_text'],
                         'preview_hint': cp.get('preview_hint'),
                     })
-            
+
             logger.info(f"Processed choice {choice_point_id} for attempt {attempt_id}")
-            
+
             return MakeChoiceResponse(
                 attempt_id=attempt_id,
                 turn_number=len(choices_made),
@@ -359,13 +370,22 @@ class MIAttemptService:
                     'learning_note': feedback.get('learning_note', ''),
                 },
                 new_state={
-                    'node_id': next_node_id,
-                    'persona_text': next_node.get('persona_text', ''),
-                    'persona_mood': next_node.get('persona_mood', 'neutral'),
-                    'themes': next_node.get('themes', []),
-                    'rapport_score': new_rapport,
-                    'resistance_level': new_resistance,
-                    'tone_position': new_tone,
+                    'current': {
+                        'id': next_node_id,
+                        'module_title': module_title,
+                        'mi_focus_area': module_focus,
+                        'persona_text': next_node.get('persona_text', ''),
+                        'persona_mood': next_node.get('persona_mood', 'neutral'),
+                        'themes': next_node.get('themes', []),
+                        'is_endpoint': next_node.get('is_endpoint', False),
+                    },
+                    'choice_points': next_choice_points,
+                    'state': {
+                        'rapport_score': new_rapport,
+                        'resistance_level': new_resistance,
+                        'tone_position': new_tone,
+                        'turns_taken': len(choices_made),
+                    },
                 },
                 next_choice_points=next_choice_points,
                 is_complete=is_complete,
@@ -692,8 +712,10 @@ class MIAttemptService:
             
             return {
                 'attempt_id': attempt_id,
-                'current_node': {
+                'current': {
                     'id': current_node_id,
+                    'module_title': module_data.get('title', 'Practice Session'),
+                    'mi_focus_area': module_data.get('mi_focus_area', ''),
                     'persona_text': current_node.get('persona_text', ''),
                     'persona_mood': current_node.get('persona_mood', ''),
                     'themes': current_node.get('themes', []),
