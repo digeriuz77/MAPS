@@ -42,18 +42,20 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/mi-practice", tags=["mi-practice"])
 
-# Anonymous user ID for all requests (using existing valid user from database)
-ANONYMOUS_USER_ID = "a126e8ec-00ff-4914-8fd2-eb6e2864d3f0"
+# Default user ID for all requests (using existing gstanyard@gmail.com user)
+# TODO: Replace with proper authentication when ready
+GSTANYARD_USER_ID = "a126e8ec-00ff-4914-8fd2-eb6e2864d3f0"
 
 
 def _normalize_user_id(user_id: Optional[str]) -> str:
     """
-    Normalize user_id by converting "anonymous" string to actual UUID.
+    Normalize user_id by converting "anonymous" string to actual user UUID.
 
-    The frontend sends "anonymous" but the database requires a valid UUID.
+    The frontend may send "anonymous" but the database requires a valid UUID.
+    Uses the gstanyard user as the default user for now.
     """
     if not user_id or user_id == "anonymous":
-        return ANONYMOUS_USER_ID
+        return GSTANYARD_USER_ID
     return user_id
 
 
@@ -122,7 +124,7 @@ async def start_attempt(
     logger.info(f"Starting attempt for module: {module_id}")
 
     try:
-        # Normalize user_id - convert "anonymous" to actual UUID
+        # Normalize user_id - convert "anonymous" to actual user UUID
         user_id = _normalize_user_id(request.user_id)
         logger.debug(f"Normalized user_id: {user_id}")
 
@@ -232,7 +234,7 @@ async def get_user_progress(
     Get overall MI practice progress for a user.
     """
     # Use default anonymous user_id since app is public
-    user_id = user_id if user_id else ANONYMOUS_USER_ID
+    user_id = user_id if user_id else GSTANYARD_USER_ID
     logger.info(f"Getting progress for user: {user_id}")
 
     try:
@@ -256,7 +258,7 @@ async def get_competency_breakdown(
     Get detailed competency breakdown for a user.
     """
     # Use default anonymous user_id since app is public
-    user_id = user_id if user_id else ANONYMOUS_USER_ID
+    user_id = user_id if user_id else GSTANYARD_USER_ID
     logger.info(f"Getting competency breakdown for user: {user_id}")
 
     try:
@@ -345,7 +347,7 @@ async def get_learning_insights(
     Get personalized learning insights for a user.
     """
     # Use default anonymous user_id since app is public
-    user_id = user_id if user_id else ANONYMOUS_USER_ID
+    user_id = user_id if user_id else GSTANYARD_USER_ID
     logger.info(f"Getting insights for user: {user_id}")
 
     try:
@@ -391,9 +393,9 @@ async def enroll_in_path(
     logger.info(f"Enrolling in path: {path_id}")
 
     try:
-        # Use anonymous user_id since app is public
-        user_id = ANONYMOUS_USER_ID
-        logger.info(f"DEBUG: Using anonymous user_id: {user_id}")
+        # Use gstanyard user_id since app is currently public
+        user_id = GSTANYARD_USER_ID
+        logger.info(f"DEBUG: Using gstanyard user_id: {user_id}")
         logger.info(f"DEBUG: request = {request}")
 
         # Enroll user
@@ -432,7 +434,7 @@ async def get_active_path_progress(
     Get progress in the currently active learning path.
     """
     # Use default anonymous user_id since app is public
-    user_id = user_id if user_id else ANONYMOUS_USER_ID
+    user_id = user_id if user_id else GSTANYARD_USER_ID
     logger.info(f"Getting active path progress for user: {user_id}")
 
     try:
@@ -504,7 +506,7 @@ async def get_recommended_modules(
     Get module recommendations for a user based on their progress.
     """
     # Use default anonymous user_id since app is public
-    user_id = user_id if user_id else ANONYMOUS_USER_ID
+    user_id = user_id if user_id else GSTANYARD_USER_ID
     try:
         recommendations = await module_service.get_recommended_modules(user_id, limit)
         return {"recommendations": recommendations}
