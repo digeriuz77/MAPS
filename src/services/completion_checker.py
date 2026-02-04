@@ -81,7 +81,8 @@ class CompletionChecker:
             )
         
         # Check 2: Required skills demonstrated
-        required_skills = criteria.get("required_skills", [])
+        # Support both "required_skills" and "required_techniques" for backwards compatibility
+        required_skills = criteria.get("required_skills", criteria.get("required_techniques", []))
         skills_demonstrated = attempt.get("skills_demonstrated", [])
         
         missing_skills = [skill for skill in required_skills if skill not in skills_demonstrated]
@@ -107,29 +108,58 @@ class CompletionChecker:
         
         # Check 4: State goals
         state_goals = criteria.get("state_goals", {})
-        
+        current_state = attempt.get("current_persona_state", {})
+        initial_state = attempt.get("initial_persona_state", {})
+        current_trust = current_state.get("trust_level", 4)
+
+        # Check min_trust threshold (direct field or in state_goals)
+        min_trust = criteria.get("min_trust", state_goals.get("min_trust"))
+        if min_trust is not None:
+            if current_trust < min_trust:
+                return CompletionResult(
+                    is_complete=False,
+                    reason=f"Trust level ({current_trust}) hasn't reached minimum ({min_trust})",
+                    success=False
+                )
+
         # Check trust maintenance
         if state_goals.get("trust_maintained"):
-            initial_state = attempt.get("initial_persona_state", {})
-            current_state = attempt.get("current_persona_state", {})
-            
             initial_trust = initial_state.get("trust_level", 4)
-            current_trust = current_state.get("trust_level", initial_trust)
-            
+
             if current_trust < initial_trust - 1:  # Allow small variance
                 return CompletionResult(
                     is_complete=False,
                     reason="Trust level decreased - try to maintain rapport",
                     success=False
                 )
-        
+
+        # Check trust increased
+        if state_goals.get("trust_increased"):
+            initial_trust = initial_state.get("trust_level", 4)
+            if current_trust <= initial_trust:
+                return CompletionResult(
+                    is_complete=False,
+                    reason="Trust hasn't increased yet - continue building rapport",
+                    success=False
+                )
+
         # Check resistance not increased
         if state_goals.get("resistance_not_increased"):
-            current_state = attempt.get("current_persona_state", {})
             if current_state.get("resistance_active"):
                 return CompletionResult(
                     is_complete=False,
                     reason="Resistance was triggered - try a different approach",
+                    success=False
+                )
+
+        # Check resistance decreased
+        if state_goals.get("resistance_decreased"):
+            initial_resistance = initial_state.get("resistance_active", True)
+            current_resistance = current_state.get("resistance_active", True)
+            if initial_resistance and current_resistance:
+                return CompletionResult(
+                    is_complete=False,
+                    reason="Resistance is still active - try to build more rapport",
                     success=False
                 )
         
