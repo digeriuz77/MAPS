@@ -271,7 +271,7 @@ async def get_session_status(
                     status = session_data.get('status', 'unavailable')
                 else:
                     state = flux_service.get_session_state(session_id)
-                            if state:
+                    if state:
                         status = state.status
                         transcript_count = len(state.transcript_entries)
                         current_transcript = state.current_transcript
