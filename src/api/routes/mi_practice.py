@@ -46,6 +46,17 @@ router = APIRouter(prefix="/api/mi-practice", tags=["mi-practice"])
 ANONYMOUS_USER_ID = "a126e8ec-00ff-4914-8fd2-eb6e2864d3f0"
 
 
+def _normalize_user_id(user_id: Optional[str]) -> str:
+    """
+    Normalize user_id by converting "anonymous" string to actual UUID.
+
+    The frontend sends "anonymous" but the database requires a valid UUID.
+    """
+    if not user_id or user_id == "anonymous":
+        return ANONYMOUS_USER_ID
+    return user_id
+
+
 # ============================================
 # MODULE MANAGEMENT ENDPOINTS
 # ============================================
@@ -111,9 +122,9 @@ async def start_attempt(
     logger.info(f"Starting attempt for module: {module_id}")
 
     try:
-        # Always use anonymous user ID - app is public, no real auth
-        # Note: Frontend may send "anonymous" string which is not a valid UUID
-        user_id = ANONYMOUS_USER_ID
+        # Normalize user_id - convert "anonymous" to actual UUID
+        user_id = _normalize_user_id(request.user_id)
+        logger.debug(f"Normalized user_id: {user_id}")
 
         response = await attempt_service.start_attempt(module_id, user_id)
         if not response:
@@ -370,7 +381,7 @@ async def list_learning_paths(
 @router.post("/learning-paths/{path_id}/enroll", response_model=EnrollPathResponse)
 async def enroll_in_path(
     path_id: str,
-    request: EnrollPathRequest,
+    request: EnrollPathRequest = None,  # Optional for backward compatibility
     progress_service: MIProgressService = Depends(get_mi_progress_service),
     module_service: MIModuleService = Depends(get_mi_module_service),
 ):
@@ -380,8 +391,10 @@ async def enroll_in_path(
     logger.info(f"Enrolling in path: {path_id}")
 
     try:
-        # Use default anonymous user_id since app is public
+        # Use anonymous user_id since app is public
         user_id = ANONYMOUS_USER_ID
+        logger.info(f"DEBUG: Using anonymous user_id: {user_id}")
+        logger.info(f"DEBUG: request = {request}")
 
         # Enroll user
         success = await progress_service.enroll_in_path(user_id, path_id)

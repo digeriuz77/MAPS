@@ -56,15 +56,14 @@
             if (filters.focusArea) params.append('focus_area', filters.focusArea);
             if (filters.difficulty) params.append('difficulty', filters.difficulty);
             if (filters.contentType && filters.contentType !== 'all') params.append('content_type', filters.contentType);
-            if (state.currentUser?.id) params.append('user_id', state.currentUser.id);
+            // user_id is optional - backend handles anonymous mode
 
             return this.request(`/modules?${params}`);
         },
 
         async getModule(moduleId) {
-            const userId = state.currentUser?.id;
-            const query = userId ? `?user_id=${userId}` : '';
-            return this.request(`/modules/${moduleId}${query}`);
+            // user_id is optional - backend handles anonymous mode
+            return this.request(`/modules/${moduleId}`);
         },
 
         // Attempts
@@ -72,8 +71,8 @@
             return this.request(`/modules/${moduleId}/start`, {
                 method: 'POST',
                 body: JSON.stringify({
-                    module_id: moduleId,
-                    user_id: state.currentUser?.id
+                    module_id: moduleId
+                    // user_id is handled by backend (anonymous mode)
                 })
             });
         },
@@ -96,19 +95,22 @@
         },
 
         // Progress
-        async getUserProgress(userId) {
-            return this.request(`/progress?user_id=${userId}`);
+        async getUserProgress(userId = null) {
+            // userId is optional - backend handles anonymous mode
+            const query = userId ? `?user_id=${userId}` : '';
+            return this.request(`/progress${query}`);
         },
 
-        async getCompetencyBreakdown(userId) {
-            return this.request(`/progress/competencies?user_id=${userId}`);
+        async getCompetencyBreakdown(userId = null) {
+            // userId is optional - backend handles anonymous mode
+            const query = userId ? `?user_id=${userId}` : '';
+            return this.request(`/progress/competencies${query}`);
         },
 
         // Learning Paths
         async listLearningPaths() {
-            const userId = state.currentUser?.id;
-            const query = userId ? `?user_id=${userId}` : '';
-            return this.request(`/learning-paths${query}`);
+            // user_id is optional - backend handles anonymous mode
+            return this.request(`/learning-paths`);
         },
 
         async enrollInPath(pathId) {
@@ -126,7 +128,8 @@
     async function initLandingPage() {
         try {
             // No authentication required - user is anonymous
-            state.currentUser = { id: 'anonymous' };
+            // Backend handles anonymous user ID normalization
+            state.currentUser = null;
 
             // Load all data in parallel
             await Promise.all([
@@ -146,10 +149,10 @@
     }
 
     async function loadHeroStats() {
-        if (!state.currentUser) return;
+        // Progress is available even without auth - backend handles anonymous mode
 
         try {
-            const progress = await MIAPI.getUserProgress(state.currentUser.id);
+            const progress = await MIAPI.getUserProgress();
 
             document.getElementById('stat-modules-completed').textContent = progress.modules_completed || 0;
             document.getElementById('stat-practice-minutes').textContent = progress.total_practice_minutes || 0;
@@ -298,10 +301,11 @@
 
     async function loadProgressOverview() {
         const container = document.getElementById('progress-container');
-        if (!container || !state.currentUser) return;
+        if (!container) return;
 
         try {
-            const progress = await MIAPI.getUserProgress(state.currentUser.id);
+            // Progress is available even without auth - backend handles anonymous mode
+            const progress = await MIAPI.getUserProgress();
             state.userProgress = progress;
 
             // Create a summary card

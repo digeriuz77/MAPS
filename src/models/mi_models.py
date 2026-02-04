@@ -502,7 +502,8 @@ class UserProgressResponse(BaseModel):
 
 class EnrollPathRequest(BaseModel):
     """Request to enroll in a learning path"""
-    path_id: str
+    path_id: str  # Required in request body for backward compatibility
+    user_id: str  # Required - but backend will normalize "anonymous" to actual UUID
 
 
 class EnrollPathResponse(BaseModel):
