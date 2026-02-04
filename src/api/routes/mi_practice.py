@@ -111,8 +111,9 @@ async def start_attempt(
     logger.info(f"Starting attempt for module: {module_id}")
 
     try:
-        # Use user_id from request or default to anonymous user
-        user_id = request.user_id if request.user_id else ANONYMOUS_USER_ID
+        # Always use anonymous user ID - app is public, no real auth
+        # Note: Frontend may send "anonymous" string which is not a valid UUID
+        user_id = ANONYMOUS_USER_ID
 
         response = await attempt_service.start_attempt(module_id, user_id)
         if not response:
