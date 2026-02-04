@@ -54,30 +54,83 @@ class FeedbackGenerator:
         has_unsolicited_advice = behaviors.get('unsolicited_advice', False)
         has_fixing = behaviors.get('fix_mode', False)
 
-        # Generate feedback based on quality and behaviors
+        # Build technique confirmation string
+        technique_confirmation = self._build_technique_confirmation(mi_techniques, behaviors)
+
+        # Generate coaching tip based on quality and behaviors
         if has_unsolicited_advice:
-            tip = "Try to avoid giving advice directly. Instead, use an open question to explore their thoughts."
+            coaching_tip = "Try asking permission before offering suggestions."
             category = "technique"
         elif has_fixing:
-            tip = "You seem to be in 'fix mode'. Try reflecting back what they shared instead of offering solutions."
+            coaching_tip = "Try reflecting back what they shared instead of offering solutions."
             category = "approach"
         elif not mi_techniques:
-            tip = "Try to use an open question or reflection to engage more deeply with what they shared."
+            coaching_tip = "Try using an open question or reflection to explore their perspective."
             category = "technique"
-        elif 'reflection' in mi_techniques and 'open_question' in mi_techniques:
-            tip = "Great combination of reflections and open questions! Continue exploring their perspective."
+        elif 'complex_reflection' in mi_techniques:
+            coaching_tip = "Excellent depth in your reflection! You're capturing underlying feelings."
+            category = "technique"
+        elif 'simple_reflection' in mi_techniques and 'open_question' in mi_techniques:
+            coaching_tip = "Great combination! Continue exploring their perspective."
             category = "technique"
         elif quality_score >= 7:
-            tip = "Good interaction. Your response shows strong person-centered approach."
+            coaching_tip = "Strong person-centered approach in this response."
             category = "empathy"
         elif quality_score >= 5:
-            tip = "Fair attempt. Consider using more reflections to demonstrate understanding."
+            coaching_tip = "Consider adding a reflection to show understanding."
             category = "general"
         else:
-            tip = "Take a moment to reflect their words before responding. This shows you're truly listening."
+            coaching_tip = "Take a moment to reflect their words before responding."
             category = "general"
 
+        # Combine technique confirmation with coaching tip
+        if technique_confirmation:
+            tip = f"{technique_confirmation}\n\n{coaching_tip}"
+        else:
+            tip = coaching_tip
+
         return FeedbackResult(tip=tip, category=category, confidence=0.8)
+
+    def _build_technique_confirmation(
+        self,
+        mi_techniques: list,
+        behaviors: Dict[str, bool]
+    ) -> str:
+        """
+        Build a technique confirmation string showing what was detected.
+
+        Returns formatted string like:
+        "✓ Detected: Complex reflection, Open question"
+        """
+        detected = []
+
+        # Map technique codes to friendly names
+        technique_names = {
+            'complex_reflection': 'Complex reflection',
+            'simple_reflection': 'Simple reflection',
+            'open_question': 'Open question',
+            'closed_question': 'Closed question',
+            'affirmation': 'Affirmation',
+            'summarization': 'Summary',
+            'giving_advice': 'Advice giving',
+        }
+
+        # Add detected MI techniques
+        for technique in mi_techniques:
+            if technique in technique_names:
+                detected.append(technique_names[technique])
+
+        # Add positive behaviors
+        if behaviors.get('empathy') and 'Complex reflection' not in detected:
+            detected.append('Empathy shown')
+        if behaviors.get('autonomy_support'):
+            detected.append('Autonomy support')
+        if behaviors.get('permission_asking'):
+            detected.append('Permission asking')
+
+        if detected:
+            return f"✓ Detected: {', '.join(detected)}"
+        return ""
 
     def generate_end_of_scenario_feedback(
         self,

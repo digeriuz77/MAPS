@@ -28,6 +28,7 @@ from src.services.feedback_generator import (
 )
 from src.services.completion_checker import (
     CompletionChecker,
+    CompletionResult,
     get_completion_checker
 )
 
@@ -118,13 +119,23 @@ class ScenarioPipeline:
             "previous_trust": previous_state.get("trust_level", 4),
             **persona_response.updated_state.to_dict()
         }
-        
+
         analysis = await self.analyzer.analyze_turn(
             manager_message=manager_input,
             persona_response=persona_response.message,
             persona_state_change=state_change,
             rubric=scenario.get("maps_rubric", {})
         )
+
+        # STEP 2.5: Refine persona state based on LLM analysis
+        # This replaces the rigid keyword matching with actual technique detection
+        refined_state = self._refine_state_from_analysis(
+            current_state=current_state,
+            analysis=analysis,
+            persona_config=scenario.get("persona_config", {})
+        )
+        # Update the persona response with refined state
+        persona_response.updated_state = refined_state
 
         # Convert analysis to dict for feedback generation
         analysis_dict = asdict(analysis)
@@ -173,8 +184,126 @@ class ScenarioPipeline:
             turn_number=attempt.get("turn_count", 0) + 1
         )
     
+    def _refine_state_from_analysis(
+        self,
+        current_state: PersonaState,
+        analysis,
+        persona_config: Dict[str, Any]
+    ) -> PersonaState:
+        """
+        Refine persona state based on LLM analysis of detected techniques.
+
+        This replaces the rigid keyword matching with actual technique detection.
+        The LLM has already identified what techniques the manager actually used,
+        so we use those to determine trust/openness changes.
+
+        Args:
+            current_state: The state before this turn
+            analysis: InteractionAnalysis from LLM
+            persona_config: Persona configuration with response patterns
+
+        Returns:
+            Refined PersonaState based on detected techniques
+        """
+        techniques = analysis.mi_techniques_used
+        behaviors = analysis.behaviors_detected
+        trajectory = analysis.state_trajectory
+
+        trust_delta = 0
+        openness_delta = 0
+        resistance_triggered = current_state.resistance_active
+
+        # === TRUST-BUILDING TECHNIQUES (detected by LLM) ===
+        # These are actual MI-adherent techniques that build rapport
+
+        if "complex_reflection" in techniques:
+            trust_delta += 2  # Strong trust builder
+            openness_delta += 2
+            logger.debug("Trust +2: Complex reflection detected")
+
+        if "simple_reflection" in techniques:
+            trust_delta += 1
+            openness_delta += 1
+            logger.debug("Trust +1: Simple reflection detected")
+
+        if "open_question" in techniques:
+            trust_delta += 1
+            openness_delta += 1
+            logger.debug("Trust +1: Open question detected")
+
+        if "affirmation" in techniques:
+            trust_delta += 1
+            logger.debug("Trust +1: Affirmation detected")
+
+        if "summarization" in techniques:
+            trust_delta += 1
+            openness_delta += 1
+            logger.debug("Trust +1: Summarization detected")
+
+        # === TRUST-ERODING TECHNIQUES ===
+
+        if "giving_advice" in techniques and behaviors.get("unsolicited_advice"):
+            trust_delta -= 2
+            openness_delta -= 1
+            resistance_triggered = True
+            logger.debug("Trust -2: Unsolicited advice detected")
+
+        if behaviors.get("confrontation"):
+            trust_delta -= 2
+            resistance_triggered = True
+            logger.debug("Trust -2: Confrontation detected")
+
+        if behaviors.get("fix_mode"):
+            trust_delta -= 1
+            resistance_triggered = True
+            logger.debug("Trust -1: Fix mode detected")
+
+        # === NEUTRAL/MINOR IMPACT ===
+
+        if "closed_question" in techniques and not any(t in techniques for t in
+            ["open_question", "reflection", "simple_reflection", "complex_reflection"]):
+            # Only closed questions with no positive techniques
+            trust_delta -= 1
+            logger.debug("Trust -1: Only closed questions used")
+
+        # === USE LLM TRAJECTORY AS TIE-BREAKER ===
+        # If the LLM detected trust increased/decreased, weight that
+
+        if trajectory == "trust_increased" and trust_delta == 0:
+            trust_delta += 1
+            logger.debug("Trust +1: LLM detected trust increase")
+        elif trajectory == "trust_decreased" and trust_delta == 0:
+            trust_delta -= 1
+            resistance_triggered = True
+            logger.debug("Trust -1: LLM detected trust decrease")
+        elif trajectory == "resistance_triggered":
+            resistance_triggered = True
+            logger.debug("Resistance triggered by LLM analysis")
+
+        # === CALCULATE NEW STATE ===
+
+        new_trust = max(1, min(10, current_state.trust_level + trust_delta))
+        new_openness = max(1, min(10, current_state.openness_level + openness_delta))
+
+        # Natural resistance decay at high trust
+        if new_trust >= 7 and resistance_triggered:
+            resistance_triggered = False
+            logger.debug("Resistance cleared: High trust level reached")
+
+        logger.info(
+            f"State refined from analysis: trust={current_state.trust_level}->{new_trust}, "
+            f"openness={current_state.openness_level}->{new_openness}, "
+            f"techniques={techniques}"
+        )
+
+        return PersonaState(
+            trust_level=new_trust,
+            openness_level=new_openness,
+            resistance_active=resistance_triggered
+        )
+
     def _extract_history_for_persona(
-        self, 
+        self,
         transcript: List[Dict[str, Any]]
     ) -> List[Dict[str, Any]]:
         """Extract conversation history in format needed by persona engine"""
