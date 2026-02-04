@@ -349,7 +349,7 @@
     async function startModule(moduleId) {
         try {
             const attempt = await MIAPI.startAttempt(moduleId);
-            window.location.href = `/mi-practice-module.html?attempt=${attempt.id}`;
+            window.location.href = `/mi-practice-module.html?attempt=${attempt.attempt_id}`;
         } catch (error) {
             console.error('Failed to start module:', error);
             showError('Failed to start module. Please try again.');
