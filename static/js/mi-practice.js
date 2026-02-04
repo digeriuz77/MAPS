@@ -433,11 +433,177 @@
     }
 
     // ============================================
+    // SESSION PAGE FUNCTIONS
+    // ============================================
+
+    async function initSessionPage() {
+        /**
+         * Initialize the MI Practice session page.
+         * Called from mi-practice-module.html when starting a practice session.
+         */
+        try {
+            // Get attempt_id from URL parameter
+            const urlParams = new URLSearchParams(window.location.search);
+            const attemptId = urlParams.get('attempt');
+
+            if (!attemptId) {
+                showError('No attempt ID provided. Please start a module from the main page.');
+                return;
+            }
+
+            console.log(`Initializing session page for attempt: ${attemptId}`);
+
+            // Load attempt state
+            const state = await MIPracticeApp.getAttemptState(attemptId);
+            if (!state) {
+                showError('Failed to load attempt. Please try again.');
+                return;
+            }
+
+            // Update UI with current state
+            MIPracticeApp.renderSessionState(state);
+
+            // Setup event listeners
+            MIPracticeApp.setupSessionEventListeners(attemptId);
+
+        } catch (error) {
+            console.error('Failed to initialize session page:', error);
+            showError('Failed to initialize practice session. Please refresh the page.');
+        }
+    }
+
+    async function getAttemptState(attemptId) {
+        const response = await MIAPI.getAttemptState(attemptId);
+        return response;
+    }
+
+    function renderSessionState(state) {
+        // Update header info
+        const moduleInfo = state.current || {};
+        document.getElementById('module-title').textContent = moduleInfo.module_title || 'Practice Session';
+        document.getElementById('module-focus').textContent = moduleInfo.mi_focus_area || '';
+
+        // Update metrics
+        const metrics = state.state || {};
+        if (metrics.rapport_score !== undefined) {
+            MIPracticeApp.updateMetricBar('rapport', metrics.rapport_score);
+        }
+        if (metrics.resistance_level !== undefined) {
+            MIPracticeApp.updateMetricBar('resistance', 10 - metrics.resistance_level); // Invert: lower resistance = better
+        }
+        document.getElementById('turn-count').textContent = metrics.turns_taken || 0;
+
+        // Update persona card
+        document.getElementById('persona-text').textContent = moduleInfo.persona_text || 'Loading...';
+        document.getElementById('persona-mood').textContent = moduleInfo.persona_mood || '';
+
+        // Render choice points
+        const choices = state.choice_points || [];
+        const container = document.getElementById('choices-container');
+        if (choices.length === 0) {
+            container.innerHTML = '<div class="loading-state"><i class="fas fa-spinner fa-spin"></i><span>Loading choices...</span></div>';
+        } else {
+            container.innerHTML = '';
+            choices.forEach(choice => {
+                const choiceCard = MIPracticeApp.createChoiceCard(choice);
+                container.appendChild(choiceCard);
+            });
+        }
+    }
+
+    function updateMetricBar(metricType, value) {
+        const fill = document.getElementById(`${metricType}-fill`);
+        if (fill && value !== undefined) {
+            const percentage = Math.max(0, Math.min(100, (value / 10) * 100));
+            fill.style.width = `${percentage}%`;
+        }
+    }
+
+    function createChoiceCard(choice) {
+        const card = document.createElement('div');
+        card.className = 'choice-card';
+        card.setAttribute('data-choice-id', choice.id);
+
+        const optionText = document.createElement('div');
+        optionText.className = 'choice-text';
+        optionText.textContent = choice.option_text;
+
+        const previewHint = document.createElement('div');
+        previewHint.className = 'choice-hint';
+        previewHint.textContent = choice.preview_hint || '';
+
+        card.appendChild(optionText);
+        card.appendChild(previewHint);
+
+        card.addEventListener('click', () => MIPracticeApp.selectChoice(choice.id));
+
+        return card;
+    }
+
+    async function selectChoice(choicePointId) {
+        try {
+            const urlParams = new URLSearchParams(window.location.search);
+            const attemptId = urlParams.get('attempt');
+
+            const response = await MIAPI.makeChoice(attemptId, choicePointId);
+
+            if (response.is_complete) {
+                // Session complete - show completion
+                MIPracticeApp.showCompletion(response);
+            } else {
+                // Update with new state
+                MIPracticeApp.renderSessionState(response.new_state);
+            }
+        } catch (error) {
+            console.error('Failed to select choice:', error);
+            showError('Failed to process choice. Please try again.');
+        }
+    }
+
+    function setupSessionEventListeners(attemptId) {
+        // Exit button
+        document.getElementById('btn-exit').addEventListener('click', () => {
+            window.location.href = '/mi-practice.html';
+        });
+
+        // Hint button (placeholder)
+        document.getElementById('btn-hint').addEventListener('click', () => {
+            showNotification('Hint feature coming soon!', 'info');
+        });
+
+        // Skip button (placeholder)
+        document.getElementById('btn-skip').addEventListener('click', () => {
+            window.location.href = '/mi-practice.html';
+        });
+    }
+
+    function showCompletion(result) {
+        const container = document.querySelector('.mi-session-container');
+        if (!container) return;
+
+        container.innerHTML = `
+            <div class="completion-screen" role="alert" aria-live="polite">
+                <div class="completion-icon">
+                    <i class="fas fa-check-circle fa-3x"></i>
+                </div>
+                <h1>Session Complete!</h1>
+                <p>Great job practicing your MI skills.</p>
+                <div class="completion-summary">
+                    <p>Turns taken: ${result.turn_number || 0}</p>
+                    <p>Final rapport: ${result.new_state?.rapport_score || 'N/A'}</p>
+                </div>
+                <a href="/mi-practice.html" class="btn-teal">Back to Modules</a>
+            </div>
+        `;
+    }
+
+    // ============================================
     // EXPORT
     // ============================================
 
     window.MIPracticeApp = {
-        initLandingPage
+        initLandingPage,
+        initSessionPage
     };
 
 })();
