@@ -454,17 +454,17 @@
             console.log(`Initializing session page for attempt: ${attemptId}`);
 
             // Load attempt state
-            const state = await MIPracticeApp.getAttemptState(attemptId);
+            const state = await getAttemptState(attemptId);
             if (!state) {
                 showError('Failed to load attempt. Please try again.');
                 return;
             }
 
             // Update UI with current state
-            MIPracticeApp.renderSessionState(state);
+            renderSessionState(state);
 
             // Setup event listeners
-            MIPracticeApp.setupSessionEventListeners(attemptId);
+            setupSessionEventListeners(attemptId);
 
         } catch (error) {
             console.error('Failed to initialize session page:', error);
@@ -486,10 +486,10 @@
         // Update metrics
         const metrics = state.state || {};
         if (metrics.rapport_score !== undefined) {
-            MIPracticeApp.updateMetricBar('rapport', metrics.rapport_score);
+            updateMetricBar('rapport', metrics.rapport_score);
         }
         if (metrics.resistance_level !== undefined) {
-            MIPracticeApp.updateMetricBar('resistance', 10 - metrics.resistance_level); // Invert: lower resistance = better
+            updateMetricBar('resistance', 10 - metrics.resistance_level); // Invert: lower resistance = better
         }
         document.getElementById('turn-count').textContent = metrics.turns_taken || 0;
 
@@ -505,7 +505,7 @@
         } else {
             container.innerHTML = '';
             choices.forEach(choice => {
-                const choiceCard = MIPracticeApp.createChoiceCard(choice);
+                const choiceCard = createChoiceCard(choice);
                 container.appendChild(choiceCard);
             });
         }
@@ -535,7 +535,7 @@
         card.appendChild(optionText);
         card.appendChild(previewHint);
 
-        card.addEventListener('click', () => MIPracticeApp.selectChoice(choice.id));
+        card.addEventListener('click', () => selectChoice(choice.id));
 
         return card;
     }
@@ -549,10 +549,10 @@
 
             if (response.is_complete) {
                 // Session complete - show completion
-                MIPracticeApp.showCompletion(response);
+                showCompletion(response);
             } else {
                 // Update with new state
-                MIPracticeApp.renderSessionState(response.new_state);
+                renderSessionState(response.new_state);
             }
         } catch (error) {
             console.error('Failed to select choice:', error);
