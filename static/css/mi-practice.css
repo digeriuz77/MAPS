@@ -837,11 +837,15 @@
     right: 0;
     bottom: 0;
     background: rgba(0, 0, 0, 0.5);
-    display: flex;
+    display: none; /* Hidden by default */
     align-items: center;
     justify-content: center;
     z-index: 1000;
     padding: var(--mi-space-4);
+}
+
+.modal-overlay[aria-hidden="false"] {
+    display: flex; /* Show when aria-hidden is false */
 }
 
 .modal {
