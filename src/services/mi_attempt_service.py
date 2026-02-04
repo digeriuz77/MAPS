@@ -48,7 +48,20 @@ class MIAttemptService:
         self.supabase = supabase_client
         self.cache = get_cache_service()
         logger.info("MIAttemptService initialized with caching")
-    
+
+    def _serialize_datetime(self, value: Any) -> Any:
+        """
+        Convert datetime objects to ISO format strings for JSON serialization.
+        Recursively handles nested dicts and lists.
+        """
+        if isinstance(value, datetime):
+            return value.isoformat()
+        elif isinstance(value, dict):
+            return {k: self._serialize_datetime(v) for k, v in value.items()}
+        elif isinstance(value, list):
+            return [self._serialize_datetime(item) for item in value]
+        return value
+
     # ============================================
     # ATTEMPT LIFECYCLE
     # ============================================
@@ -303,7 +316,7 @@ class MIAttemptService:
             }
 
             # Convert existing ChoiceMade objects to dicts and append new choice
-            existing_choices = [c.model_dump() if hasattr(c, 'model_dump') else c for c in attempt.choices_made]
+            existing_choices = [c.model_dump(mode='json') if hasattr(c, 'model_dump') else c for c in attempt.choices_made]
             choices_made = existing_choices + [choice_record]
             
             # Get next node
@@ -331,7 +344,10 @@ class MIAttemptService:
             if is_complete:
                 update_data['completion_status'] = 'completed'
                 update_data['completed_at'] = datetime.utcnow().isoformat()
-            
+
+            # Serialize any datetime objects before saving to database
+            update_data = self._serialize_datetime(update_data)
+
             self.supabase.table('mi_practice_attempts').update(update_data).eq('id', attempt_id).execute()
 
             # Fetch module metadata for the response
@@ -494,7 +510,7 @@ class MIAttemptService:
         - Rapport built status
         """
         # Convert ChoiceMade objects to dicts for iteration
-        choices = [c.model_dump() if hasattr(c, 'model_dump') else c for c in attempt.choices_made]
+        choices = [c.model_dump(mode='json') if hasattr(c, 'model_dump') else c for c in attempt.choices_made]
         
         if not choices:
             return FinalScores(
@@ -568,7 +584,7 @@ class MIAttemptService:
         """
         insights = []
         # Convert ChoiceMade objects to dicts for iteration
-        choices = [c.model_dump() if hasattr(c, 'model_dump') else c for c in attempt.choices_made]
+        choices = [c.model_dump(mode='json') if hasattr(c, 'model_dump') else c for c in attempt.choices_made]
         
         if not choices:
             return insights
