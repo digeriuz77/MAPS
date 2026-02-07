@@ -1,0 +1,47 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground-rgb: 30, 58, 95;
+  --background-rgb: 249, 250, 251;
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background: rgb(var(--background-rgb));
+  font-family: var(--font-inter), system-ui, sans-serif;
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+/* MAPS-specific utilities */
+@layer components {
+  .btn-primary {
+    @apply bg-maps-teal hover:bg-maps-teal-dark text-white font-medium py-2.5 px-6 rounded-lg transition-all duration-200 shadow-soft hover:shadow-medium;
+  }
+
+  .btn-secondary {
+    @apply bg-maps-blue hover:bg-blue-600 text-white font-medium py-2.5 px-6 rounded-lg transition-all duration-200 shadow-soft hover:shadow-medium;
+  }
+
+  .btn-outline {
+    @apply border-2 border-maps-teal text-maps-teal hover:bg-maps-teal hover:text-white font-medium py-2.5 px-6 rounded-lg transition-all duration-200;
+  }
+
+  .card {
+    @apply bg-maps-surface rounded-xl shadow-soft border border-maps-gray-light p-6;
+  }
+
+  .input {
+    @apply w-full px-4 py-2.5 border border-maps-gray-light rounded-lg focus:outline-none focus:ring-2 focus:ring-maps-teal focus:border-transparent transition-all;
+  }
+
+  .label {
+    @apply block text-sm font-medium text-maps-navy mb-1.5;
+  }
+}
