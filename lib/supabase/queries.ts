@@ -6,8 +6,15 @@ import type {
   ScenarioAttempt,
   UserProfile,
   LearningPath,
-  DialogueAttempt,
 } from "@/types/supabase";
+import {
+  calculateLevel,
+  getPointsToNextLevel,
+  getLevelProgress,
+} from "@/lib/gamification/scoring";
+
+// Re-export gamification functions for convenience
+export { calculateLevel, getPointsToNextLevel, getLevelProgress };
 
 /**
  * Database query utilities for MAPS
@@ -22,7 +29,7 @@ export async function getUserProfile(userId: string): Promise<UserProfile | null
   const { createClient } = await import("./client");
   const supabase = createClient();
 
-  const { data, error } = await sb(supabase)
+  const { data, error } = await supabase
     .from("user_profiles")
     .select("*")
     .eq("id", userId)
@@ -407,61 +414,3 @@ export async function getLearningPaths(activeOnly: boolean = true): Promise<Lear
   return data || [];
 }
 
-// =====================================================
-// Utility Functions
-// =====================================================
-
-/**
- * Calculate user level based on total points
- * Level thresholds from mi-learning-platform
- */
-function calculateLevel(totalPoints: number): number {
-  const levels = [
-    { level: 1, points: 0 },
-    { level: 2, points: 500 },
-    { level: 3, points: 1500 },
-    { level: 4, points: 3000 },
-    { level: 5, points: 5000 },
-    { level: 6, points: 8000 },
-    { level: 7, points: 12000 },
-    { level: 8, points: 18000 },
-    { level: 9, points: 25000 },
-    { level: 10, points: 30000 },
-  ];
-
-  let currentLevel = 1;
-  for (const tier of levels) {
-    if (totalPoints >= tier.points) {
-      currentLevel = tier.level;
-    }
-  }
-
-  return currentLevel;
-}
-
-/**
- * Calculate points needed to reach next level
- */
-export function getPointsToNextLevel(currentPoints: number): number {
-  const levels = [
-    { level: 1, points: 0 },
-    { level: 2, points: 500 },
-    { level: 3, points: 1500 },
-    { level: 4, points: 3000 },
-    { level: 5, points: 5000 },
-    { level: 6, points: 8000 },
-    { level: 7, points: 12000 },
-    { level: 8, points: 18000 },
-    { level: 9, points: 25000 },
-    { level: 10, points: 30000 },
-  ];
-
-  const currentLevel = calculateLevel(currentPoints);
-
-  if (currentLevel >= 10) {
-    return 0; // Max level
-  }
-
-  const nextLevel = levels.find((l) => l.level === currentLevel + 1);
-  return nextLevel ? nextLevel.points - currentPoints : 0;
-}
