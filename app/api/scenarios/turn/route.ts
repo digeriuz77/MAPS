@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/client";
 import { createAdminClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
+import type { Scenario, ScenarioAttempt } from "@/types/supabase";
 
 /**
  * Process a chat turn with AI persona
@@ -34,7 +35,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Get attempt details
-    let attempt = null;
+    let attempt: ScenarioAttempt | null = null;
     if (attemptId) {
       const { data: attemptData } = await supabaseAdmin
         .from("scenario_attempts")
@@ -42,7 +43,7 @@ export async function POST(req: NextRequest) {
         .eq("id", attemptId)
         .single();
 
-      attempt = attemptData;
+      attempt = attemptData as ScenarioAttempt | null;
     }
 
     // Initialize OpenAI
@@ -51,14 +52,15 @@ export async function POST(req: NextRequest) {
     });
 
     // Build conversation context
-    const transcript = attempt?.transcript || [];
-    const personaConfig = scenario.persona_config as Record<string, unknown>;
+    const transcript = (attempt?.transcript as Array<{ role: string; content: string }>) || [];
+    const typedScenario = scenario as Scenario;
+    const personaConfig = typedScenario.persona_config as Record<string, unknown>;
 
     // Build messages for OpenAI
     const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [
       {
         role: "system",
-        content: buildSystemPrompt(scenario, personaConfig),
+        content: buildSystemPrompt(typedScenario, personaConfig),
       },
     ];
 
@@ -97,14 +99,12 @@ export async function POST(req: NextRequest) {
 
     // Update attempt
     if (attemptId) {
-      await supabaseAdmin
-        .from("scenario_attempts")
-        .update({
-          transcript: newTranscript,
-          turn_count: (attempt?.turn_count || 0) + 1,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", attemptId);
+      // @ts-ignore - Supabase type inference issue with JSON columns
+      await supabaseAdmin.from("scenario_attempts").update({
+        transcript: newTranscript,
+        turn_count: (attempt?.turn_count || 0) + 1,
+        updated_at: new Date().toISOString(),
+      }).eq("id", attemptId);
     }
 
     // Generate real-time feedback

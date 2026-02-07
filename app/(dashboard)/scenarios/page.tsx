@@ -1,6 +1,8 @@
 import { getScenarios } from "@/lib/supabase/queries";
 import Link from "next/link";
 
+export const dynamic = 'force-dynamic';
+
 export default async function ScenariosPage() {
   const scenarios = await getScenarios();
 

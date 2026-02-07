@@ -68,7 +68,14 @@ export default function MIPracticeSessionPage() {
       }
 
       if (userProgress) {
-        setProgress(userProgress);
+        // Map database fields to ProgressData interface
+        setProgress({
+          status: userProgress.status,
+          currentNodeId: userProgress.current_node_id,
+          nodesCompleted: userProgress.nodes_completed,
+          pointsEarned: userProgress.points_earned,
+          completionScore: userProgress.completion_score,
+        });
 
         // Load current node or start from beginning
         const dialogueContent = moduleData.dialogue_content as Record<string, unknown>;

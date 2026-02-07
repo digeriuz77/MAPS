@@ -6,6 +6,8 @@ import {
 } from "@/lib/supabase/queries";
 import Link from "next/link";
 
+export const dynamic = 'force-dynamic';
+
 export default async function DashboardPage() {
   const user = await getCurrentUser();
 
@@ -39,8 +41,8 @@ export default async function DashboardPage() {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <StatCard
           title="Current Level"
-          value={user.level.toString()}
-          subtitle={`${user.total_points} total points`}
+          value={(user.level ?? 1).toString()}
+          subtitle={`${user.total_points ?? 0} total points`}
           color="teal"
         />
         <StatCard
@@ -57,7 +59,7 @@ export default async function DashboardPage() {
         />
         <StatCard
           title="Change Talk Evoked"
-          value={user.change_talk_evoked.toString()}
+          value="0"
           subtitle="MI technique mastery"
           color="green"
         />

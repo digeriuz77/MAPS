@@ -1,21 +1,52 @@
-import { createMiddlewareClient } from "@supabase/auth-helpers-nextjs";
+import { createServerClient } from "@supabase/ssr";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 /**
  * Next.js middleware for Supabase authentication
- * Handles session refresh and protected routes
+ *
+ * This middleware runs on every request (matched routes only) and:
+ * 1. Refreshes the Supabase session from cookies
+ * 2. Protects routes based on authentication status
+ * 3. Redirects authenticated users away from auth pages
+ *
+ * The session is maintained via cookies set by Supabase auth helpers,
+ * ensuring browser and server clients share the same auth state.
+ *
+ * IMPORTANT: Unlike the old CDN approach, we don't need to manually
+ * manage browser auth - @supabase/ssr handles this via cookies.
  */
 export async function middleware(req: NextRequest) {
-  const res = NextResponse.next();
-  const supabase = createMiddlewareClient({ req, res });
-
-  // Refresh session if expired - required for Server Components
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-
   const { pathname } = req.nextUrl;
+
+  // Create Supabase client
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return req.cookies.get(name)?.value;
+        },
+        set(name: string, value: string, options: any) {
+          req.cookies.set({
+            name,
+            value,
+            ...options,
+          });
+        },
+        remove(name: string, options: any) {
+          req.cookies.delete({
+            name,
+            ...options,
+          });
+        },
+      },
+    }
+  );
+
+  // Refresh session if expired
+  const { data: { session } } = await supabase.auth.getSession();
 
   // Protected routes - require authentication
   const protectedRoutes = ["/dashboard", "/scenarios", "/mi-practice", "/analysis", "/progress", "/leaderboard"];
@@ -37,7 +68,7 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(new URL("/dashboard", req.url));
   }
 
-  return res;
+  return NextResponse.next();
 }
 
 /**

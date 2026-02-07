@@ -420,3 +420,13 @@ export interface Database {
     };
   };
 }
+
+// Type aliases for convenience
+export type UserProfile = Database["public"]["Tables"]["user_profiles"]["Row"];
+export type LearningModule = Database["public"]["Tables"]["learning_modules"]["Row"];
+export type Scenario = Database["public"]["Tables"]["scenarios"]["Row"];
+export type ScenarioAttempt = Database["public"]["Tables"]["scenario_attempts"]["Row"];
+export type UserProgress = Database["public"]["Tables"]["user_progress"]["Row"];
+export type DialogueAttempt = Database["public"]["Tables"]["dialogue_attempts"]["Row"];
+export type LearningPath = Database["public"]["Tables"]["learning_paths"]["Row"];
+export type VoiceSession = Database["public"]["Tables"]["voice_sessions"]["Row"];

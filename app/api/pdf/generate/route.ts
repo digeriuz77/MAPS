@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { generateCertificate, pdfToBlob } from "@/lib/pdf/generator";
+import { generateCertificate, generateProgressReport, generateAnalysisReport, pdfToBlob } from "@/lib/pdf/generator";
 
 /**
  * Generate PDF document

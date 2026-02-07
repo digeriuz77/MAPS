@@ -1,5 +1,6 @@
 import { createAdminClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
+import type { UserProfile } from "@/types/supabase";
 
 /**
  * Get leaderboard data
@@ -41,7 +42,7 @@ export async function GET(req: NextRequest) {
     }
 
     return NextResponse.json({
-      leaderboard: topUsers?.map((user, index) => ({
+      leaderboard: (topUsers as UserProfile[] | null)?.map((user, index) => ({
         rank: offset + index + 1,
         displayName: user.display_name || "Anonymous",
         totalPoints: user.total_points,

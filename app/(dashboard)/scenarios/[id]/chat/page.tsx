@@ -64,17 +64,19 @@ export default function ChatPage() {
       // In production, this would use the authenticated user's ID
       const userId = "anonymous"; // TODO: Replace with actual user ID
 
+      const personaConfig = scenarioData.persona_config as Record<string, unknown> | null;
+
       const attempt = await createScenarioAttempt(
         userId,
         scenarioData.id,
-        scenarioData.persona_config as Record<string, unknown>
+        personaConfig || undefined
       );
 
       if (attempt) {
         setAttemptId(attempt.id);
 
         // Add initial greeting from persona
-        const greeting = scenarioData.persona_config?.greeting as string ||
+        const greeting = personaConfig?.greeting as string ||
           `Hello, I'm ${scenarioData.persona_name}. ${scenarioData.persona_description}`;
 
         setMessages([

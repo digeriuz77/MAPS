@@ -45,7 +45,7 @@ export default async function DashboardLayout({
                   {user.displayName}
                 </div>
                 <div className="text-xs text-gray-500">
-                  Level {user.level} • {user.total_points} pts
+                  Level {user.level ?? 1} • {user.total_points ?? 0} pts
                 </div>
               </div>
               <form action="/auth/signout" method="post">

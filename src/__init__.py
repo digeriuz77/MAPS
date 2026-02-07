@@ -1,3 +1,0 @@
-"""
-AI Persona System
-"""

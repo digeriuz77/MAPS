@@ -1,4 +1,5 @@
 import { createClient } from "./client";
+import type { UserProfile } from "@/types/supabase";
 
 /**
  * Authentication utility functions
@@ -9,6 +10,11 @@ export interface AuthUser {
   email: string;
   displayName?: string;
   role?: "FULL" | "CONTROL";
+  level?: number;
+  total_points?: number;
+  modules_completed?: number;
+  change_talk_evoked?: number;
+  reflections_offered?: number;
 }
 
 /**
@@ -33,11 +39,18 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
       .eq("id", user.id)
       .single();
 
+    const typedProfile = profile as UserProfile | null;
+
     return {
       id: user.id,
       email: user.email || "",
-      displayName: profile?.display_name || user.email?.split("@")[0],
-      role: profile?.role || "FULL",
+      displayName: typedProfile?.display_name || user.email?.split("@")[0],
+      role: typedProfile?.role || "FULL",
+      level: typedProfile?.level || 1,
+      total_points: typedProfile?.total_points || 0,
+      modules_completed: typedProfile?.modules_completed || 0,
+      change_talk_evoked: typedProfile?.change_talk_evoked || 0,
+      reflections_offered: typedProfile?.reflections_offered || 0,
     };
   } catch (error) {
     console.error("Error fetching current user:", error);

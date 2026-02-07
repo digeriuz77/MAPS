@@ -3,6 +3,8 @@ import { getUserProgress } from "@/lib/supabase/queries";
 import { calculateLevel, getPointsToNextLevel, getLevelProgress } from "@/lib/gamification/scoring";
 import Link from "next/link";
 
+export const dynamic = 'force-dynamic';
+
 export default async function ProgressPage() {
   const user = await getCurrentUser();
 
@@ -14,8 +16,18 @@ export default async function ProgressPage() {
   const completedModules = progress.filter((p) => p.status === "completed");
   const inProgressModules = progress.filter((p) => p.status === "in_progress");
 
-  const levelProgress = getLevelProgress(user.total_points);
-  const pointsToNext = getPointsToNextLevel(user.total_points);
+  // Get module details for completed/in-progress items
+  const moduleIds = [...completedModules, ...inProgressModules].map(p => p.module_id);
+  const { getLearningModuleById } = await import("@/lib/supabase/queries");
+  const moduleDetails = new Map();
+  for (const id of moduleIds) {
+    const module = await getLearningModuleById(id);
+    if (module) moduleDetails.set(id, module);
+  }
+
+  const totalPoints = user.total_points ?? 0;
+  const levelProgress = getLevelProgress(totalPoints);
+  const pointsToNext = getPointsToNextLevel(totalPoints);
 
   return (
     <div className="max-w-4xl mx-auto space-y-8">
@@ -31,12 +43,12 @@ export default async function ProgressPage() {
       <div className="grid md:grid-cols-4 gap-4">
         <StatCard
           label="Current Level"
-          value={user.level.toString()}
+          value={(user.level ?? 1).toString()}
           color="teal"
         />
         <StatCard
           label="Total Points"
-          value={user.total_points.toString()}
+          value={totalPoints.toString()}
           color="blue"
         />
         <StatCard
@@ -56,7 +68,7 @@ export default async function ProgressPage() {
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-lg font-semibold text-maps-navy">Level Progress</h2>
           <span className="text-sm text-gray-500">
-            {pointsToNext} points to Level {user.level + 1}
+            {pointsToNext} points to Level {(user.level ?? 1) + 1}
           </span>
         </div>
         <div className="h-4 bg-gray-200 rounded-full overflow-hidden">
@@ -77,32 +89,35 @@ export default async function ProgressPage() {
             Completed Modules
           </h2>
           <div className="space-y-3">
-            {completedModules.map((item) => (
-              <div
-                key={item.id}
-                className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-              >
-                <div>
-                  <div className="font-medium text-maps-navy">
-                    {item.learning_modules?.title || "Module"}
+            {completedModules.map((item) => {
+              const module = moduleDetails.get(item.module_id);
+              return (
+                <div
+                  key={item.id}
+                  className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                >
+                  <div>
+                    <div className="font-medium text-maps-navy">
+                      {module?.title || "Module"}
+                    </div>
+                    <div className="text-sm text-gray-500">
+                      Completed:{" "}
+                      {item.completed_at
+                        ? new Date(item.completed_at).toLocaleDateString()
+                        : "N/A"}
+                    </div>
                   </div>
-                  <div className="text-sm text-gray-500">
-                    Completed:{" "}
-                    {item.completed_at
-                      ? new Date(item.completed_at).toLocaleDateString()
-                      : "N/A"}
+                  <div className="text-right">
+                    <div className="text-maps-teal font-semibold">
+                      {item.completion_score || 0}%
+                    </div>
+                    <div className="text-sm text-gray-500">
+                      {item.points_earned || 0} pts
+                    </div>
                   </div>
                 </div>
-                <div className="text-right">
-                  <div className="text-maps-teal font-semibold">
-                    {item.completion_score || 0}%
-                  </div>
-                  <div className="text-sm text-gray-500">
-                    {item.points_earned || 0} pts
-                  </div>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}
@@ -114,26 +129,29 @@ export default async function ProgressPage() {
             Continue Learning
           </h2>
           <div className="space-y-3">
-            {inProgressModules.map((item) => (
-              <Link
-                key={item.id}
-                href={`/mi-practice/${item.module_id}`}
-                className="flex items-center justify-between p-3 bg-maps-teal/10 rounded-lg hover:bg-maps-teal/20 transition-colors"
-              >
-                <div>
-                  <div className="font-medium text-maps-navy">
-                    {item.learning_modules?.title || "Module"}
+            {inProgressModules.map((item) => {
+              const module = moduleDetails.get(item.module_id);
+              return (
+                <Link
+                  key={item.id}
+                  href={`/mi-practice/${item.module_id}`}
+                  className="flex items-center justify-between p-3 bg-maps-teal/10 rounded-lg hover:bg-maps-teal/20 transition-colors"
+                >
+                  <div>
+                    <div className="font-medium text-maps-navy">
+                      {module?.title || "Module"}
+                    </div>
+                    <div className="text-sm text-gray-500">
+                      Started:{" "}
+                      {new Date(item.started_at).toLocaleDateString()}
+                    </div>
                   </div>
-                  <div className="text-sm text-gray-500">
-                    Started:{" "}
-                    {new Date(item.started_at).toLocaleDateString()}
+                  <div className="text-maps-teal font-medium">
+                    Continue →
                   </div>
-                </div>
-                <div className="text-maps-teal font-medium">
-                  Continue →
-                </div>
-              </Link>
-            ))}
+                </Link>
+              );
+            })}
           </div>
         </div>
       )}
@@ -146,13 +164,13 @@ export default async function ProgressPage() {
             <div className="flex justify-between text-sm">
               <span className="text-gray-600">Change Talk Evoked</span>
               <span className="font-medium text-maps-navy">
-                {user.change_talk_evoked}
+                {user.change_talk_evoked ?? 0}
               </span>
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-gray-600">Reflections Offered</span>
               <span className="font-medium text-maps-navy">
-                {user.reflections_offered}
+                {user.reflections_offered ?? 0}
               </span>
             </div>
           </div>

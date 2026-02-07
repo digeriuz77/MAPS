@@ -1,10 +1,12 @@
 import { getLearningModules, getLearningPaths } from "@/lib/supabase/queries";
 import Link from "next/link";
 
+export const dynamic = 'force-dynamic';
+
 export default async function MIPracticePage() {
   const [modules, paths] = await Promise.all([
     getLearningModules({ active: true }),
-    getLearningPaths({ activeOnly: true }),
+    getLearningPaths(true),
   ]);
 
   // Group modules by difficulty
@@ -95,7 +97,7 @@ function ModuleSection({
   color,
 }: {
   title: string;
-  modules: typeof getLearningModules;
+  modules: Awaited<ReturnType<typeof getLearningModules>>;
   color: "green" | "blue" | "purple";
 }) {
   const colorClasses = {
