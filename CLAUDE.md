@@ -102,6 +102,53 @@ curl -X POST "http://localhost:8001/api/mi-practice/modules/395f2eb9-3e13-4cf5-8
 
 **API Documentation:** http://localhost:8001/docs
 
+### 🚨 Production Deployment Error (2026-02-07)
+
+**Status:** Deployment failing with Supabase configuration error
+
+**Error Logs:**
+```
+2026-02-07T12:31:36.000000000Z [inf]  Starting Container
+2026-02-07T12:31:37.336536702Z [inf]  ✓ Ready in 377ms
+2026-02-07T12:31:37.336556662Z [err]  npm warn config production Use `--omit=dev` instead.
+2026-02-07T12:31:37.336567012Z [inf]  > maps-app@2.0.0 start
+2026-02-07T12:31:37.336571682Z [inf]  > next start
+2026-02-07T12:31:37.336578362Z [inf]
+2026-02-07T12:31:37.336584622Z [inf]     ▲ Next.js 15.5.12
+2026-02-07T12:31:37.336589982Z [inf]     - Local:        http://localhost:8080
+2026-02-07T12:31:37.336595002Z [inf]     - Network:      http://10.173.218.70:8080
+2026-02-07T12:31:37.336599872Z [inf]
+2026-02-07T12:31:37.336604872Z [inf]  ✓ Starting...
+2026-02-07T22:33:58.651507369Z [err]  Error: Your project's URL and Key are required to create a Supabase client!
+2026-02-07T22:33:58.651516549Z [err]
+2026-02-07T22:33:58.651527729Z [err]  Check your Supabase project's API settings to find these values
+2026-02-07T22:33:58.651534020Z [err]
+2026-02-07T22:33:58.651540360Z [err]  https://supabase.com/dashboard/project/_/settings/api
+2026-02-07T22:33:58.651546940Z [err]     at <unknown> (.next/server/middleware.js:49:53624)
+2026-02-07T22:33:58.651560589Z [err]     at eC (.next/server/middleware.js:53:5177)
+2026-02-07T22:33:58.651567229Z [err]     at handler (.next/server/middleware.js:53:6609)
+2026-02-07T22:33:58.651586160Z [err]     at async bs (.next/server/middleware.js:13:33569)
+2026-02-07T22:33:58.651591949Z [err]  ⨯ Error: Cannot append headers after they are sent to the client
+2026-02-07T22:33:58.651602969Z [err]     at p (.next/server/app/_not-found/page.js:2:4781)
+2026-02-07T22:33:58.651608580Z [err]    code: 'ERR_HTTP_HEADERS_SENT'
+```
+
+**Root Cause:** Next.js 15 standalone server doesn't properly expose `NEXT_PUBLIC_*` environment variables to middleware at runtime. Variables are embedded at build time but middleware runs in a separate context.
+
+**Variables Confirmed Set in Railway:**
+- `NEXT_PUBLIC_SUPABASE_URL` ✅
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY` ✅
+
+**Fix Required:** Update [`middleware.ts`](middleware.ts) to handle missing env vars gracefully:
+1. Add null checks before creating Supabase client
+2. Consider using server-only env vars (`SUPABASE_URL` without `NEXT_PUBLIC_` prefix) for middleware
+3. Ensure Railway rebuilds after env var changes (not just redeploy)
+
+**Reference Files:**
+- [`middleware.ts`](middleware.ts:23-25) - Middleware Supabase client creation
+- [`lib/supabase/server.ts`](lib/supabase/server.ts:19-28) - Server client
+- [`.env.local.example`](.env.local.example:1-4) - Expected variable names
+
 ---
 
 ## Application Architecture
@@ -146,5 +193,5 @@ Recent commits:
 
 ---
 
-**Last Updated:** 2026-02-03
-**Status:** Core functionality fully operational. Deepgram SDK v3 compatibility fixed.
+**Last Updated:** 2026-02-07
+**Status:** 🚨 Production deployment failing - missing Supabase environment variables. Local development works.
