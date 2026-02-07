@@ -139,15 +139,20 @@ curl -X POST "http://localhost:8001/api/mi-practice/modules/395f2eb9-3e13-4cf5-8
 - `NEXT_PUBLIC_SUPABASE_URL` ✅
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY` ✅
 
-**Fix Required:** Update [`middleware.ts`](middleware.ts) to handle missing env vars gracefully:
-1. Add null checks before creating Supabase client
-2. Consider using server-only env vars (`SUPABASE_URL` without `NEXT_PUBLIC_` prefix) for middleware
-3. Ensure Railway rebuilds after env var changes (not just redeploy)
+**Fix Applied (2026-02-07):** Updated [`middleware.ts`](middleware.ts:19-40) to:
+1. Check for both `NEXT_PUBLIC_*` and non-prefixed variants (e.g., `SUPABASE_URL`)
+2. Gracefully skip auth checks if env vars aren't available at middleware runtime
+3. Log warning instead of crashing
+
+**Railway Configuration Note:**
+Railway may require variables without the `NEXT_PUBLIC_` prefix for server-side/middleware access. Add these additional variables in Railway:
+- `SUPABASE_URL` (same value as `NEXT_PUBLIC_SUPABASE_URL`)
+- `SUPABASE_ANON_KEY` (same value as `NEXT_PUBLIC_SUPABASE_ANON_KEY`)
 
 **Reference Files:**
-- [`middleware.ts`](middleware.ts:23-25) - Middleware Supabase client creation
+- [`middleware.ts`](middleware.ts:19-40) - Middleware with fallback env var handling
 - [`lib/supabase/server.ts`](lib/supabase/server.ts:19-28) - Server client
-- [`.env.local.example`](.env.local.example:1-4) - Expected variable names
+- [`.env.local.example`](.env.local.example:1-12) - All expected variable names
 
 ---
 

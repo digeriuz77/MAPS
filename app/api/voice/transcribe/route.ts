@@ -1,19 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getMistralClient } from "@/lib/voice/mistral-client";
+import { getDeepgramClient } from "@/lib/voice/deepgram-client";
 
 /**
- * Transcribe audio using Mistral Audio API
+ * Transcribe audio using Deepgram API
  * POST /api/voice/transcribe
  *
  * Body: {
  *   audio: string (Base64 encoded audio)
  *   language?: string
- *   prompt?: string
+ *   model?: string
  * }
  */
 export async function POST(req: NextRequest) {
   try {
-    const { audio, language, prompt } = await req.json();
+    const { audio, language, model } = await req.json();
 
     if (!audio) {
       return NextResponse.json(
@@ -22,7 +22,14 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const client = getMistralClient();
+    const client = getDeepgramClient();
+
+    if (!client.isConfigured()) {
+      return NextResponse.json(
+        { error: "Deepgram not configured", message: "DEEPGRAM_API_KEY not set" },
+        { status: 503 }
+      );
+    }
 
     // Convert Base64 to ArrayBuffer
     const binaryString = atob(audio);
@@ -35,13 +42,14 @@ export async function POST(req: NextRequest) {
     // Transcribe
     const result = await client.transcribe(audioBuffer, {
       language,
-      prompt,
+      model,
     });
 
     return NextResponse.json({
       text: result.text,
       duration: result.duration,
       language: result.language,
+      confidence: result.confidence,
     });
   } catch (error) {
     console.error("Transcription error:", error);

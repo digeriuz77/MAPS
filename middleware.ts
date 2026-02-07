@@ -19,10 +19,21 @@ import type { NextRequest } from "next/server";
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
+  // Get environment variables with fallbacks
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
+
+  // If env vars are missing, skip auth checks and continue
+  // This allows the app to run in environments where env vars aren't available at middleware runtime
+  if (!supabaseUrl || !supabaseAnonKey) {
+    console.warn('[Middleware] Supabase env vars not available, skipping auth checks');
+    return NextResponse.next();
+  }
+
   // Create Supabase client
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    supabaseUrl,
+    supabaseAnonKey,
     {
       cookies: {
         get(name: string) {

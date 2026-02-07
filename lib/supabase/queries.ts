@@ -26,8 +26,8 @@ export { calculateLevel, getPointsToNextLevel, getLevelProgress };
 // =====================================================
 
 export async function getUserProfile(userId: string): Promise<UserProfile | null> {
-  const { createClient } = await import("./client");
-  const supabase = createClient();
+  const { createClient } = await import("./server");
+  const supabase = await createClient();
 
   const { data, error } = await supabase
     .from("user_profiles")
@@ -47,8 +47,8 @@ export async function updateUserProfile(
   userId: string,
   updates: Partial<UserProfile>
 ): Promise<UserProfile | null> {
-  const { createClient } = await import("./client");
-  const supabase = createClient();
+  const { createClient } = await import("./server");
+  const supabase = await createClient();
 
   const { data, error } = await (supabase as any)
     .from("user_profiles")
@@ -88,8 +88,8 @@ export async function getLearningModules(options: {
   difficulty?: string;
   limit?: number;
 }): Promise<LearningModule[]> {
-  const { createClient } = await import("./client");
-  const supabase = createClient();
+  const { createClient } = await import("./server");
+  const supabase = await createClient();
 
   let query = supabase
     .from("learning_modules")
@@ -120,8 +120,8 @@ export async function getLearningModules(options: {
 }
 
 export async function getLearningModuleById(id: string): Promise<LearningModule | null> {
-  const { createClient } = await import("./client");
-  const supabase = createClient();
+  const { createClient } = await import("./server");
+  const supabase = await createClient();
 
   const { data, error } = await supabase
     .from("learning_modules")
@@ -138,8 +138,8 @@ export async function getLearningModuleById(id: string): Promise<LearningModule 
 }
 
 export async function getLearningModuleByCode(code: string): Promise<LearningModule | null> {
-  const { createClient } = await import("./client");
-  const supabase = createClient();
+  const { createClient } = await import("./server");
+  const supabase = await createClient();
 
   const { data, error } = await supabase
     .from("learning_modules")
@@ -160,8 +160,8 @@ export async function getLearningModuleByCode(code: string): Promise<LearningMod
 // =====================================================
 
 export async function getScenarios(activeOnly: boolean = true): Promise<Scenario[]> {
-  const { createClient } = await import("./client");
-  const supabase = createClient();
+  const { createClient } = await import("./server");
+  const supabase = await createClient();
 
   let query = supabase
     .from("scenarios")
@@ -183,8 +183,8 @@ export async function getScenarios(activeOnly: boolean = true): Promise<Scenario
 }
 
 export async function getScenarioById(id: string): Promise<Scenario | null> {
-  const { createClient } = await import("./client");
-  const supabase = createClient();
+  const { createClient } = await import("./server");
+  const supabase = await createClient();
 
   const { data, error } = await supabase
     .from("scenarios")
@@ -209,8 +209,8 @@ export async function createScenarioAttempt(
   scenarioId: string,
   initialState?: Record<string, unknown>
 ): Promise<ScenarioAttempt | null> {
-  const { createClient } = await import("./client");
-  const supabase = createClient();
+  const { createClient } = await import("./server");
+  const supabase = await createClient();
 
   const { data, error } = await supabase
     .from("scenario_attempts")
@@ -232,8 +232,8 @@ export async function createScenarioAttempt(
 }
 
 export async function getScenarioAttempt(attemptId: string): Promise<ScenarioAttempt | null> {
-  const { createClient } = await import("./client");
-  const supabase = createClient();
+  const { createClient } = await import("./server");
+  const supabase = await createClient();
 
   const { data, error } = await supabase
     .from("scenario_attempts")
@@ -253,8 +253,8 @@ export async function updateScenarioAttempt(
   attemptId: string,
   updates: Partial<ScenarioAttempt>
 ): Promise<ScenarioAttempt | null> {
-  const { createClient } = await import("./client");
-  const supabase = createClient();
+  const { createClient } = await import("./server");
+  const supabase = await createClient();
 
   const { data, error } = await supabase
     .from("scenario_attempts")
@@ -275,8 +275,8 @@ export async function getUserScenarioAttempts(
   userId: string,
   limit: number = 10
 ): Promise<ScenarioAttempt[]> {
-  const { createClient } = await import("./client");
-  const supabase = createClient();
+  const { createClient } = await import("./server");
+  const supabase = await createClient();
 
   const { data, error } = await supabase
     .from("scenario_attempts")
@@ -298,8 +298,8 @@ export async function getUserScenarioAttempts(
 // =====================================================
 
 export async function getUserProgress(userId: string): Promise<UserProgress[]> {
-  const { createClient } = await import("./client");
-  const supabase = createClient();
+  const { createClient } = await import("./server");
+  const supabase = await createClient();
 
   const { data, error } = await supabase
     .from("user_progress")
@@ -319,8 +319,8 @@ export async function getUserProgressForModule(
   userId: string,
   moduleId: string
 ): Promise<UserProgress | null> {
-  const { createClient } = await import("./client");
-  const supabase = createClient();
+  const { createClient } = await import("./server");
+  const supabase = await createClient();
 
   const { data, error } = await supabase
     .from("user_progress")
@@ -344,8 +344,8 @@ export async function createUserProgress(
   userId: string,
   moduleId: string
 ): Promise<UserProgress | null> {
-  const { createClient } = await import("./client");
-  const supabase = createClient();
+  const { createClient } = await import("./server");
+  const supabase = await createClient();
 
   const { data, error } = await supabase
     .from("user_progress")
@@ -369,8 +369,8 @@ export async function updateUserProgress(
   progressId: string,
   updates: Partial<UserProgress>
 ): Promise<UserProgress | null> {
-  const { createClient } = await import("./client");
-  const supabase = createClient();
+  const { createClient } = await import("./server");
+  const supabase = await createClient();
 
   const { data, error } = await supabase
     .from("user_progress")
@@ -392,8 +392,8 @@ export async function updateUserProgress(
 // =====================================================
 
 export async function getLearningPaths(activeOnly: boolean = true): Promise<LearningPath[]> {
-  const { createClient } = await import("./client");
-  const supabase = createClient();
+  const { createClient } = await import("./server");
+  const supabase = await createClient();
 
   let query = supabase
     .from("learning_paths")

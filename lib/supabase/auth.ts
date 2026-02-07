@@ -1,8 +1,11 @@
-import { createClient } from "./client";
+import { createClient } from "./server";
 import type { UserProfile } from "@/types/supabase";
 
 /**
  * Authentication utility functions
+ * IMPORTANT: These functions use the SERVER client and should only be called
+ * from Server Components, Route Handlers, or Server Actions.
+ * For client-side auth, use the Supabase client directly.
  */
 
 export interface AuthUser {
@@ -18,12 +21,12 @@ export interface AuthUser {
 }
 
 /**
- * Get the current authenticated user
+ * Get the current authenticated user (SERVER-SIDE ONLY)
  * Returns null if not authenticated
  */
 export async function getCurrentUser(): Promise<AuthUser | null> {
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -59,10 +62,10 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
 }
 
 /**
- * Sign in with email and password
+ * Sign in with email and password (SERVER-SIDE ONLY)
  */
 export async function signIn(email: string, password: string) {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase.auth.signInWithPassword({
     email,
     password,
@@ -76,7 +79,7 @@ export async function signIn(email: string, password: string) {
 }
 
 /**
- * Sign up with email and password
+ * Sign up with email and password (SERVER-SIDE ONLY)
  * Creates user profile in user_profiles table
  */
 export async function signUp(
@@ -84,7 +87,7 @@ export async function signUp(
   password: string,
   displayName?: string
 ) {
-  const supabase = createClient();
+  const supabase = await createClient();
 
   // First, create the auth user
   const { data: authData, error: authError } = await supabase.auth.signUp({
@@ -108,10 +111,10 @@ export async function signUp(
 }
 
 /**
- * Sign out the current user
+ * Sign out the current user (SERVER-SIDE ONLY)
  */
 export async function signOut() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { error } = await supabase.auth.signOut();
 
   if (error) {
