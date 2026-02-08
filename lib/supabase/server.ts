@@ -17,7 +17,7 @@ import type { Database } from "@/types/supabase";
  * consistent authentication state across the application.
  */
 export async function createClient() {
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
 
   // Try NEXT_PUBLIC_* vars first, then fall back to non-prefixed vars
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
@@ -31,7 +31,22 @@ export async function createClient() {
     supabaseUrl,
     supabaseAnonKey,
     {
-      cookies: () => cookieStore,
+      cookies: {
+        getAll() {
+          return cookieStore.getAll();
+        },
+        setAll(cookiesToSet: Array<{ name: string; value: string; options?: Record<string, unknown> }>) {
+          try {
+            cookiesToSet.forEach(({ name, value, options }) =>
+              cookieStore.set(name, value, options as Record<string, never>)
+            );
+          } catch {
+            // The `setAll` method was called from a Server Component.
+            // This can be ignored if you have middleware refreshing
+            // user sessions.
+          }
+        },
+      },
     }
   );
 }
@@ -44,8 +59,8 @@ export async function createClient() {
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 
 export function createAdminClient() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
+  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
   if (!supabaseUrl || !supabaseServiceKey) {
     throw new Error("Missing Supabase environment variables");

@@ -227,4 +227,4 @@ Recent commits:
 ---
 
 **Last Updated:** 2026-02-08
-**Status:** ✅ Build successful - all client/server component issues resolved. Ready for Railway deployment.
+**Status:** ✅ Build successful. Auth protection temporarily disabled in middleware to prevent redirect loops. Ready for Railway deployment.
