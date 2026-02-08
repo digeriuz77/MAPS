@@ -129,3 +129,33 @@ export async function hasRoleClient(role: "FULL" | "CONTROL"): Promise<boolean> 
     const user = await getCurrentUserClient();
     return user?.role === role;
 }
+
+/**
+ * Request password reset email (CLIENT-SIDE)
+ * Sends an email with a reset link to the user
+ */
+export async function requestPasswordReset(email: string) {
+    const supabase = createClient();
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+    });
+
+    if (error) {
+        throw new Error(error.message);
+    }
+}
+
+/**
+ * Update user password (CLIENT-SIDE)
+ * Used after user clicks the reset link from email
+ */
+export async function updatePassword(newPassword: string) {
+    const supabase = createClient();
+    const { error } = await supabase.auth.updateUser({
+        password: newPassword,
+    });
+
+    if (error) {
+        throw new Error(error.message);
+    }
+}

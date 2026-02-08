@@ -61,11 +61,21 @@ export async function middleware(req: NextRequest) {
   const isProtectedRoute = protectedRoutes.some((route) => pathname.startsWith(route));
 
   // Auth routes - redirect to dashboard if already authenticated
-  const authRoutes = ["/login", "/signup"];
+  const authRoutes = ["/login", "/signup", "/forgot-password"];
   const isAuthRoute = authRoutes.some((route) => pathname.startsWith(route));
 
-  // Allow all routes for now to prevent redirect loops
-  // TODO: Re-enable auth protection once session handling is stable
+  // Redirect unauthenticated users from protected routes to login
+  if (isProtectedRoute && !session) {
+    const redirectUrl = new URL("/login", req.url);
+    redirectUrl.searchParams.set("redirect", pathname);
+    return NextResponse.redirect(redirectUrl);
+  }
+
+  // Redirect authenticated users from auth routes to dashboard
+  if (isAuthRoute && session) {
+    return NextResponse.redirect(new URL("/dashboard", req.url));
+  }
+
   return NextResponse.next();
 }
 

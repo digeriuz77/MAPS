@@ -12,19 +12,29 @@ export async function GET() {
         const supabase = await createClient();
 
         // Call the RPC function for efficient data retrieval
-        const { data: debugData, error: rpcError } = await supabase
-            .rpc("get_debug_info");
+        const { data, error } = await supabase.rpc("get_debug_info");
 
-        if (rpcError) {
+        if (error) {
             // Fallback to manual discovery if RPC doesn't exist yet
-            console.warn("RPC function error, falling back to manual discovery:", rpcError.message);
-            return await getDebugInfoManual(supabase, rpcError.message);
+            console.warn("RPC function error, falling back to manual discovery:", error.message);
+            return await getDebugInfoManual(supabase, error.message);
         }
+
+        // Type the RPC response
+        type DebugRpcResponse = {
+            scenarios: { count: number; sample: unknown[] };
+            mi_practice_modules: { count: number; sample: unknown[] };
+            scenario_attempts_count: number;
+            profiles_count: number;
+            timestamp: string;
+        };
+
+        const debugData = data as DebugRpcResponse | null;
 
         return NextResponse.json({
             connection: "ok",
             method: "rpc",
-            ...debugData,
+            ...(debugData ?? {}),
         });
     } catch (error) {
         return NextResponse.json(
@@ -36,6 +46,27 @@ export async function GET() {
         );
     }
 }
+
+/**
+ * Type definitions for database records
+ */
+type ScenarioRecord = {
+    id: string;
+    code: string;
+    title: string;
+    mi_skill_category: string | null;
+    difficulty: string | null;
+    [key: string]: unknown;
+};
+
+type ModuleRecord = {
+    id: string;
+    code: string;
+    title: string;
+    difficulty_level: string | null;
+    mi_focus_area: string | null;
+    [key: string]: unknown;
+};
 
 /**
  * Fallback manual discovery if RPC function doesn't exist
@@ -75,7 +106,7 @@ async function getDebugInfoManual(
         scenarios: {
             count: scenariosCount || 0,
             error: scenariosError?.message,
-            sample: scenarios?.map(s => ({
+            sample: (scenarios as ScenarioRecord[] | null)?.map(s => ({
                 id: s.id,
                 code: s.code,
                 title: s.title,
@@ -86,7 +117,7 @@ async function getDebugInfoManual(
         mi_practice_modules: {
             count: modulesCount || 0,
             error: modulesError?.message,
-            sample: modules?.map(m => ({
+            sample: (modules as ModuleRecord[] | null)?.map(m => ({
                 id: m.id,
                 code: m.code,
                 title: m.title,

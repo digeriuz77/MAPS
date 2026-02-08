@@ -1,5 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
+import { asTypedClient, insertScenarioAttempt } from "@/lib/supabase/typed-helpers";
+import { Tables, type Scenario } from "@/types/database";
 
 /**
  * Get all scenarios (personas)
@@ -70,36 +72,51 @@ export async function POST(req: NextRequest) {
       .eq("id", scenarioId)
       .single();
 
-    if (scenarioError || !scenario) {
+    const scenarioData = scenario as Scenario | null;
+
+    if (scenarioError || !scenarioData) {
       return NextResponse.json(
         { error: "Scenario not found" },
         { status: 404 }
       );
     }
 
-    // Create the attempt
-    const { data: attempt, error: attemptError } = await (supabase as any)
-      .from("scenario_attempts")
-      .insert({
-        user_id: userId,
-        scenario_id: scenarioId,
-        transcript: [],
-        turn_count: 0,
-      })
+    // Create the attempt with typed helper
+    const typedClient = asTypedClient(supabase);
+
+    // Extract initial persona state from scenario config
+    const initialState = scenarioData.persona_config?.starting_state || {
+      trust_level: 3,
+      openness_level: 2,
+      resistance_active: true,
+    };
+
+    const attemptData = insertScenarioAttempt({
+      user_id: userId,
+      scenario_id: scenarioId,
+      transcript: [],
+      turn_count: 0,
+      initial_persona_state: initialState,
+    });
+
+    const { data: attempt, error: attemptError } = await typedClient
+      .from(Tables.SCENARIO_ATTEMPTS)
+      .insert(attemptData)
       .select()
       .single();
 
     if (attemptError) {
       console.error("Error creating scenario attempt:", attemptError);
       return NextResponse.json(
-        { error: "Failed to start scenario" },
+        { error: "Failed to start scenario", details: attemptError.message },
         { status: 500 }
       );
     }
 
     return NextResponse.json({
       attempt,
-      scenario,
+      scenario: scenarioData,
+      isNew: true,
     });
   } catch (error) {
     console.error("Error in start scenario route:", error);

@@ -1,6 +1,9 @@
 /**
  * Supabase Database Types
  * Generated based on the unified schema for MAPS + mi-learning-platform
+ *
+ * @deprecated For new code, prefer using @/types/database which has simpler,
+ * more direct interface types. This file is maintained for backward compatibility.
  */
 
 export type Json =

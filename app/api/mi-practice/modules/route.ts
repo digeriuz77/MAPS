@@ -1,5 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
+import { asTypedClient, insertMiPracticeAttempt } from "@/lib/supabase/typed-helpers";
+import { Tables } from "@/types/database";
 
 /**
  * Get all MI practice modules
@@ -95,17 +97,20 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Create an attempt in mi_practice_attempts
-    const { data: attempt, error: attemptError } = await supabase
-      .from("mi_practice_attempts")
-      .insert({
-        user_id: userId,
-        module_id: moduleId,
-        started_at: new Date().toISOString(),
-        current_node_id: "node_1",
-        path_taken: [],
-        choices_made: [],
-      })
+    // Create an attempt in mi_practice_attempts with typed helper
+    const typedClient = asTypedClient(supabase);
+    const attemptData = insertMiPracticeAttempt({
+      user_id: userId,
+      module_id: moduleId,
+      started_at: new Date().toISOString(),
+      current_node_id: "node_1",
+      path_taken: [],
+      choices_made: [],
+    });
+
+    const { data: attempt, error: attemptError } = await typedClient
+      .from(Tables.MI_PRACTICE_ATTEMPTS)
+      .insert(attemptData)
       .select()
       .single();
 

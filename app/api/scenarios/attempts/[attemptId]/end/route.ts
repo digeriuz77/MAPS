@@ -1,5 +1,7 @@
 import { createAdminClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
+import { asTypedClient, updateScenarioAttempt } from "@/lib/supabase/typed-helpers";
+import { Tables } from "@/types/database";
 
 /**
  * End a scenario attempt session
@@ -21,13 +23,15 @@ export async function POST(
 
     const supabaseAdmin = createAdminClient();
 
-    // Update the attempt to mark it as completed
-    const { data, error } = await supabaseAdmin
-      .from("scenario_attempts")
-      .update({
-        ended_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      })
+    // Update the attempt to mark it as completed with typed helper
+    const updateData = updateScenarioAttempt({
+      ended_at: new Date().toISOString(),
+    });
+
+    const typedClient = asTypedClient(supabaseAdmin);
+    const { data, error } = await typedClient
+      .from(Tables.SCENARIO_ATTEMPTS)
+      .update(updateData)
       .eq("id", attemptId)
       .select()
       .single();

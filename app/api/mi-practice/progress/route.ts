@@ -1,5 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
+import { asTypedClient, updateMiPracticeAttempt } from "@/lib/supabase/typed-helpers";
+import { Tables } from "@/types/database";
 
 /**
  * Update MI practice attempt progress
@@ -19,32 +21,18 @@ export async function POST(req: NextRequest) {
 
     const supabase = await createClient();
 
-    const updateData: Record<string, unknown> = {
-      updated_at: new Date().toISOString(),
-    };
+    // Build update data with typed helper
+    const updateData = updateMiPracticeAttempt({
+      current_node_id: currentNodeId,
+      path_taken: pathTaken,
+      choices_made: choicesMade,
+      current_rapport_score: rapportScore,
+      current_resistance_level: resistanceLevel,
+    });
 
-    if (currentNodeId !== undefined) {
-      updateData.current_node_id = currentNodeId;
-    }
-
-    if (pathTaken !== undefined) {
-      updateData.path_taken = pathTaken;
-    }
-
-    if (choicesMade !== undefined) {
-      updateData.choices_made = choicesMade;
-    }
-
-    if (rapportScore !== undefined) {
-      updateData.current_rapport_score = rapportScore;
-    }
-
-    if (resistanceLevel !== undefined) {
-      updateData.current_resistance_level = resistanceLevel;
-    }
-
-    const { data, error } = await supabase
-      .from("mi_practice_attempts")
+    const typedClient = asTypedClient(supabase);
+    const { data, error } = await typedClient
+      .from(Tables.MI_PRACTICE_ATTEMPTS)
       .update(updateData)
       .eq("id", attemptId)
       .select()
@@ -100,15 +88,17 @@ export async function PUT(req: NextRequest) {
       );
     }
 
-    // Update attempt as completed
-    const { data, error } = await supabase
-      .from("mi_practice_attempts")
-      .update({
-        completion_status: completionStatus || "completed",
-        completed_at: new Date().toISOString(),
-        final_scores: finalScores || {},
-        updated_at: new Date().toISOString(),
-      })
+    // Update attempt as completed with typed helper
+    const completeData = updateMiPracticeAttempt({
+      completion_status: completionStatus || "completed",
+      completed_at: new Date().toISOString(),
+      final_scores: finalScores || {},
+    });
+
+    const typedClient = asTypedClient(supabase);
+    const { data, error } = await typedClient
+      .from(Tables.MI_PRACTICE_ATTEMPTS)
+      .update(completeData)
       .eq("id", attemptId)
       .select()
       .single();
