@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, Suspense } from "react";
-import { signIn } from "@/lib/supabase/auth";
+import { signInClient } from "@/lib/supabase/client-auth";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 
@@ -21,7 +21,7 @@ function LoginForm() {
     setLoading(true);
 
     try {
-      await signIn(email, password);
+      await signInClient(email, password);
       router.push(redirect);
       router.refresh();
     } catch (err) {

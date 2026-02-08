@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { signUp } from "@/lib/supabase/auth";
+import { signUpClient } from "@/lib/supabase/client-auth";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
@@ -32,7 +32,7 @@ export default function SignupPage() {
     setLoading(true);
 
     try {
-      await signUp(email, password, displayName || undefined);
+      await signUpClient(email, password, displayName || undefined);
       router.push("/dashboard");
       router.refresh();
     } catch (err) {

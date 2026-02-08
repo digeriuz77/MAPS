@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { getScenarioById, createScenarioAttempt } from "@/lib/supabase/queries";
+import { getScenarioByIdClient, createScenarioAttemptClient } from "@/lib/supabase/client-queries";
 import type { Scenario } from "@/types/supabase";
 
 interface Message {
@@ -45,7 +45,7 @@ export default function ChatPage() {
 
   const loadScenario = async () => {
     try {
-      const data = await getScenarioById(scenarioId);
+      const data = await getScenarioByIdClient(scenarioId);
       if (data) {
         setScenario(data);
         await startSession(data);
@@ -66,10 +66,9 @@ export default function ChatPage() {
 
       const personaConfig = scenarioData.persona_config as Record<string, unknown> | null;
 
-      const attempt = await createScenarioAttempt(
-        userId,
+      const attempt = await createScenarioAttemptClient(
         scenarioData.id,
-        personaConfig || undefined
+        userId
       );
 
       if (attempt) {
@@ -261,11 +260,10 @@ export default function ChatPage() {
                 {feedbackTips.map((tip, index) => (
                   <div
                     key={index}
-                    className={`p-3 rounded-lg text-sm ${
-                      tip.type === "strength"
-                        ? "bg-green-50 text-green-800"
-                        : "bg-amber-50 text-amber-800"
-                    }`}
+                    className={`p-3 rounded-lg text-sm ${tip.type === "strength"
+                      ? "bg-green-50 text-green-800"
+                      : "bg-amber-50 text-amber-800"
+                      }`}
                   >
                     {tip.message}
                   </div>
@@ -320,17 +318,15 @@ function MessageBubble({ message }: { message: Message }) {
   return (
     <div className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
       <div
-        className={`rounded-lg px-4 py-2 max-w-[80%] ${
-          isUser
-            ? "bg-maps-teal text-white"
-            : "bg-gray-100 text-gray-800"
-        }`}
+        className={`rounded-lg px-4 py-2 max-w-[80%] ${isUser
+          ? "bg-maps-teal text-white"
+          : "bg-gray-100 text-gray-800"
+          }`}
       >
         <p className="whitespace-pre-wrap">{message.content}</p>
         <p
-          className={`text-xs mt-1 ${
-            isUser ? "text-maps-teal-light" : "text-gray-500"
-          }`}
+          className={`text-xs mt-1 ${isUser ? "text-maps-teal-light" : "text-gray-500"
+            }`}
         >
           {new Date(message.timestamp).toLocaleTimeString([], {
             hour: "2-digit",

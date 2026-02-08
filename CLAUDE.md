@@ -24,7 +24,35 @@ The MAPS (AI Persona System) application is a Motivational Interviewing training
 
 ---
 
-## ✅ Recent Fixes (Committed)
+## ✅ Recent Fixes (2026-02-07)
+
+### 1. Next.js 15 Deployment Environment Variables
+- **Issue:** `NEXT_PUBLIC_*` env vars not accessible in middleware at runtime
+- **Fix:** Updated [`middleware.ts`](middleware.ts), [`lib/supabase/server.ts`](lib/supabase/server.ts) to check both `NEXT_PUBLIC_*` and non-prefixed variants
+- **Files Changed:**
+  - [`middleware.ts`](middleware.ts:21-30) - Graceful fallback for missing env vars
+  - [`lib/supabase/server.ts`](lib/supabase/server.ts:22-27) - Server client env var fallbacks
+  - [`.env.local.example`](.env.local.example:6-10) - Added `SUPABASE_URL` and `SUPABASE_ANON_KEY` fallbacks
+
+### 2. Server-Side Supabase Client Usage
+- **Issue:** Dashboard and pages using browser client instead of server client
+- **Fix:** Updated all server-side code to use `createClient` from `./server` with `await`
+- **Files Changed:**
+  - [`lib/supabase/auth.ts`](lib/supabase/auth.ts:1) - Changed import to server client
+  - [`lib/supabase/queries.ts`](lib/supabase/queries.ts) - All 14 functions updated to use server client
+
+### 3. Voice API Reverted to Deepgram
+- **Issue:** Mistral audio API not working
+- **Fix:** Created new Deepgram client and updated voice routes
+- **Files Changed:**
+  - [`lib/voice/deepgram-client.ts`](lib/voice/deepgram-client.ts) - New Deepgram client
+  - [`app/api/voice/transcribe/route.ts`](app/api/voice/transcribe/route.ts) - Uses Deepgram
+  - [`app/api/voice/tts/route.ts`](app/api/voice/tts/route.ts) - Uses Deepgram
+  - [`.env.local.example`](.env.local.example:16-18) - Deepgram env vars
+
+---
+
+## Previous Fixes (Committed)
 
 ### 1. Turn Processing Feedback Generator Integration (Commit 2cee43d)
 - **Issue:** `generate_realtime_tip()` expected dict but received `InteractionAnalysis` object
@@ -198,5 +226,5 @@ Recent commits:
 
 ---
 
-**Last Updated:** 2026-02-07
-**Status:** 🚨 Production deployment failing - missing Supabase environment variables. Local development works.
+**Last Updated:** 2026-02-08
+**Status:** ✅ Build successful - all client/server component issues resolved. Ready for Railway deployment.
