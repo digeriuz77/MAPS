@@ -31,6 +31,17 @@
     --warning: #f59e0b;
     --error: #ef4444;
     --info: #3b82f6;
+
+    /* MAPS brand colors */
+    --maps-navy: #1e3a5f;
+    --maps-navy-light: #2a4a73;
+    --maps-navy-lighter: #3d5a80;
+    --maps-teal: #14b8a6;
+    --maps-teal-light: #5ceadc;
+    --maps-teal-dark: #0d9488;
+    --maps-blue: #3b82f6;
+    --maps-purple: #8b5cf6;
+    --maps-gray-light: #e2e8f0;
   }
 
   body {
@@ -58,6 +69,14 @@
   /* Text colors */
   .text-maps-teal {
     color: #14b8a6;
+  }
+
+  .text-maps-teal-light {
+    color: #5ceadc;
+  }
+
+  .text-maps-teal-dark {
+    color: #0d9488;
   }
 
   .text-maps-navy {
@@ -191,6 +210,33 @@
 }
 
 @layer utilities {
+  /* Shadow variants */
+  .shadow-small {
+    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  }
+
+  .shadow-medium {
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  }
+
+  .shadow-large {
+    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  }
+
+  /* Border left utilities */
+  .border-l-4 {
+    border-left-width: 4px;
+    border-left-style: solid;
+  }
+
+  .border-l-green-500 {
+    border-left-color: #22c55e;
+  }
+
+  .border-l-amber-500 {
+    border-left-color: #f59e0b;
+  }
+
   /* Scrollbar styling */
   .scrollbar-thin {
     scrollbar-width: thin;

@@ -10,177 +10,110 @@ The MAPS (AI Persona System) application is a Motivational Interviewing training
 
 ---
 
+## 🔍 Supabase Schema Discovery (2026-02-08)
+
+### Tables That Exist:
+| Table | Count | Columns |
+|-------|-------|---------|
+| `scenarios` | 8 | `id`, `code`, `title`, `situation`, `persona_config` (JSON), `is_active`, etc. |
+| `scenario_attempts` | 0 | (empty) |
+| `mi_practice_modules` | 0 | (empty - needs seeding) |
+| `profiles` | 0 | (empty) |
+
+### Tables That DON'T Exist:
+- `learning_modules` (code expected this, actual is `mi_practice_modules`)
+- `user_profiles` (code expected this, actual is `profiles`)
+- `user_progress`
+- `learning_paths`
+
+### Schema Mismatch Fixes Applied:
+1. **Scenarios table** - Uses `title` and `persona_config.name`, not `persona_name`
+2. **Learning modules** - Changed queries to use `mi_practice_modules` table
+3. **User profiles** - Changed queries to use `profiles` table with fallback
+
+### Debug Endpoint:
+- `GET /api/debug/supabase` - Shows all table discovery results
+
+---
+
 ## ✅ Working Core Features
 
 | Feature | Endpoint | Status | Details |
 |---------|----------|--------|---------|
-| **Health Check** | `GET /health` | ✅ Working | Returns server/DB status |
-| **List Scenarios** | `GET /api/scenarios/` | ✅ Working | Returns 8 scenarios |
-| **Start Scenario** | `POST /api/scenarios/{id}/start` | ✅ Working | Creates attempt, returns initial message |
-| **Process Turn** | `POST /api/scenarios/attempts/{attempt_id}/turn` | ✅ Working | Chat with persona fully functional |
-| **List MI Modules** | `GET /api/mi-practice/modules` | ✅ Working | Returns 45 modules |
-| **Start MI Module** | `POST /api/mi-practice/modules/{id}/start` | ✅ Working | Creates attempt with choice points |
-| **Static Pages** | `/chat`, `/mi-practice`, etc. | ✅ Working | HTML pages served |
+| **List Scenarios** | `GET /api/scenarios` | ✅ Working | Returns 8 scenarios |
+| **Debug Supabase** | `GET /api/debug/supabase` | ✅ Working | Shows table discovery |
+| **Login Page** | `/login` | ✅ Working | Client-side auth |
+| **Signup Page** | `/signup` | ✅ Working | Client-side auth |
 
 ---
 
-## ✅ Recent Fixes (2026-02-07)
+## ✅ Recent Fixes (2026-02-07 to 2026-02-08)
 
 ### 1. Next.js 15 Deployment Environment Variables
 - **Issue:** `NEXT_PUBLIC_*` env vars not accessible in middleware at runtime
 - **Fix:** Updated [`middleware.ts`](middleware.ts), [`lib/supabase/server.ts`](lib/supabase/server.ts) to check both `NEXT_PUBLIC_*` and non-prefixed variants
 - **Files Changed:**
   - [`middleware.ts`](middleware.ts:21-30) - Graceful fallback for missing env vars
-  - [`lib/supabase/server.ts`](lib/supabase/server.ts:22-27) - Server client env var fallbacks
-  - [`.env.local.example`](.env.local.example:6-10) - Added `SUPABASE_URL` and `SUPABASE_ANON_KEY` fallbacks
+  - [`lib/supabase/server.ts`](lib/supabase/server.ts:22-27) - Server client env var fallbacks with `getAll/setAll` cookie methods
+  - [`.env.local.example`](.env.local.example) - Updated to match actual variable naming
 
-### 2. Server-Side Supabase Client Usage
-- **Issue:** Dashboard and pages using browser client instead of server client
-- **Fix:** Updated all server-side code to use `createClient` from `./server` with `await`
+### 2. Client/Server Component Separation
+- **Issue:** Client components importing server-only code (cookies)
+- **Fix:** Created separate client-side modules
 - **Files Changed:**
-  - [`lib/supabase/auth.ts`](lib/supabase/auth.ts:1) - Changed import to server client
-  - [`lib/supabase/queries.ts`](lib/supabase/queries.ts) - All 14 functions updated to use server client
+  - [`lib/supabase/client-auth.ts`](lib/supabase/client-auth.ts) - Client-side auth functions
+  - [`lib/supabase/client-queries.ts`](lib/supabase/client-queries.ts) - Client-side query functions
+  - [`app/(auth)/login/page.tsx`](app/(auth)/login/page.tsx) - Uses client-auth
+  - [`app/(auth)/signup/page.tsx`](app/(auth)/signup/page.tsx) - Uses client-auth
 
-### 3. Voice API Reverted to Deepgram
-- **Issue:** Mistral audio API not working
-- **Fix:** Created new Deepgram client and updated voice routes
+### 3. Supabase Schema Alignment (2026-02-08)
+- **Issue:** Code expected different table/column names than actual Supabase schema
+- **Fix:** Updated queries to match actual schema
+- **Files Changed:**
+  - [`lib/supabase/queries.ts`](lib/supabase/queries.ts) - Uses `mi_practice_modules` table, maps `scenarios.title` to display name
+  - [`app/api/scenarios/route.ts`](app/api/scenarios/route.ts) - Orders by `title` not `persona_name`
+
+### 4. Voice API (Deepgram)
 - **Files Changed:**
   - [`lib/voice/deepgram-client.ts`](lib/voice/deepgram-client.ts) - New Deepgram client
   - [`app/api/voice/transcribe/route.ts`](app/api/voice/transcribe/route.ts) - Uses Deepgram
   - [`app/api/voice/tts/route.ts`](app/api/voice/tts/route.ts) - Uses Deepgram
-  - [`.env.local.example`](.env.local.example:16-18) - Deepgram env vars
 
 ---
 
-## Previous Fixes (Committed)
+## ⚠️ Known Issues
 
-### 1. Turn Processing Feedback Generator Integration (Commit 2cee43d)
-- **Issue:** `generate_realtime_tip()` expected dict but received `InteractionAnalysis` object
-- **Fix:** Convert analysis to dict before passing to feedback generator
-- **Impact:** Chat with persona now fully functional
+### 1. Empty MI Practice Modules Table
+- **Status:** `mi_practice_modules` table exists but is empty
+- **Impact:** MI Practice page shows no modules
+- **Fix Required:** Seed the `mi_practice_modules` table with module data
 
-### 2. Deepgram SDK v3 Compatibility (Commit 3b4a1b1)
-- **Issue:** Deepgram imports failing on v3 SDK
-- **Fix:** Added graceful handling with stub types when SDK unavailable
-- **Impact:** Voice features now optional (non-blocking for core functionality)
-
-### 3. Authentication Removal & LLM Service (Commits 6c289dc, 2b70f82)
-- **Issue:** Auth guards blocking requests, missing LLM methods
-- **Fix:** Removed AuthConfig, added wrapper methods, fixed type hints
-- **Impact:** All routes now public, app fully functional without auth
+### 2. Auth Protection Disabled
+- **Status:** Middleware auth checks temporarily disabled
+- **Reason:** Prevent redirect loops during development
+- **Location:** [`middleware.ts`](middleware.ts:70-71)
 
 ---
 
-## ⚠️ Known Minor Issues
-
-### 1. Voice Routes (LOW PRIORITY)
-- **Status:** Gracefully disabled when Deepgram SDK unavailable
-- **Impact:** Voice features unavailable (non-blocking)
-- **Note:** Text-based chat works perfectly
-
-### 2. Redis Cache (LOW PRIORITY)
-- **Warning:** "redis-py not installed, caching disabled"
-- **Impact:** No caching, slightly slower response times
-- **Status:** Non-blocking warning
-
----
-
-## Database Status
-
-**Foreign Key Constraints:** Using existing valid user ID `a126e8ec-00ff-4914-8fd2-eb6e2864d3f0` for all anonymous requests.
-
-**Tables Affected:**
-- `scenario_attempts` - ✅ Working
-- `mi_practice_attempts` - ✅ Working
-
----
-
-## Testing Commands
+## Environment Variables Required
 
 ```bash
-# Health check
-curl http://localhost:8001/health
+# Supabase (with NEXT_PUBLIC_ prefix)
+NEXT_PUBLIC_SUPABASE_URL=https://wrevbimglixdzlcwveug.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=<key>
+NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY=<key>
 
-# List scenarios
-curl http://localhost:8001/api/scenarios/
+# AI/LLM
+OPENAI_API_KEY=<key>
+DEEPGRAM_API_KEY=<key>
+GEMINI_API_KEY=<key>
+DEFAULT_MODEL=gpt-4o-mini
+LLM_PROVIDER=openai
 
-# Start scenario
-curl -X POST http://localhost:8001/api/scenarios/92f286e1-fd09-4eda-ab08-cf7f9c183f17/start \
-  -H "Content-Type: application/json" -d '{"module_id": "92f286e1-fd09-4eda-ab08-cf7f9c183f17"}'
-
-# Process turn (WORKING!)
-curl -X POST http://localhost:8001/api/scenarios/attempts/{attempt_id}/turn \
-  -H "Content-Type: application/json" \
-  -d '{"message": "Hi Terry, how are things going?"}'
-
-# List MI modules
-curl http://localhost:8001/api/mi-practice/modules?limit=3
-
-# Start MI module
-curl -X POST "http://localhost:8001/api/mi-practice/modules/395f2eb9-3e13-4cf5-8b33-9072b769e511/start" \
-  -H "Content-Type: application/json" \
-  -d '{"module_id": "395f2eb9-3e13-4cf5-8b33-9072b769e511"}'
+# App Config
+ENVIRONMENT=production
+DEBUG=false
 ```
-
----
-
-## Deployment Status
-
-**Local Server:** Running on http://localhost:8001
-
-**API Documentation:** http://localhost:8001/docs
-
-### 🚨 Production Deployment Error (2026-02-07)
-
-**Status:** Deployment failing with Supabase configuration error
-
-**Error Logs:**
-```
-2026-02-07T12:31:36.000000000Z [inf]  Starting Container
-2026-02-07T12:31:37.336536702Z [inf]  ✓ Ready in 377ms
-2026-02-07T12:31:37.336556662Z [err]  npm warn config production Use `--omit=dev` instead.
-2026-02-07T12:31:37.336567012Z [inf]  > maps-app@2.0.0 start
-2026-02-07T12:31:37.336571682Z [inf]  > next start
-2026-02-07T12:31:37.336578362Z [inf]
-2026-02-07T12:31:37.336584622Z [inf]     ▲ Next.js 15.5.12
-2026-02-07T12:31:37.336589982Z [inf]     - Local:        http://localhost:8080
-2026-02-07T12:31:37.336595002Z [inf]     - Network:      http://10.173.218.70:8080
-2026-02-07T12:31:37.336599872Z [inf]
-2026-02-07T12:31:37.336604872Z [inf]  ✓ Starting...
-2026-02-07T22:33:58.651507369Z [err]  Error: Your project's URL and Key are required to create a Supabase client!
-2026-02-07T22:33:58.651516549Z [err]
-2026-02-07T22:33:58.651527729Z [err]  Check your Supabase project's API settings to find these values
-2026-02-07T22:33:58.651534020Z [err]
-2026-02-07T22:33:58.651540360Z [err]  https://supabase.com/dashboard/project/_/settings/api
-2026-02-07T22:33:58.651546940Z [err]     at <unknown> (.next/server/middleware.js:49:53624)
-2026-02-07T22:33:58.651560589Z [err]     at eC (.next/server/middleware.js:53:5177)
-2026-02-07T22:33:58.651567229Z [err]     at handler (.next/server/middleware.js:53:6609)
-2026-02-07T22:33:58.651586160Z [err]     at async bs (.next/server/middleware.js:13:33569)
-2026-02-07T22:33:58.651591949Z [err]  ⨯ Error: Cannot append headers after they are sent to the client
-2026-02-07T22:33:58.651602969Z [err]     at p (.next/server/app/_not-found/page.js:2:4781)
-2026-02-07T22:33:58.651608580Z [err]    code: 'ERR_HTTP_HEADERS_SENT'
-```
-
-**Root Cause:** Next.js 15 standalone server doesn't properly expose `NEXT_PUBLIC_*` environment variables to middleware at runtime. Variables are embedded at build time but middleware runs in a separate context.
-
-**Variables Confirmed Set in Railway:**
-- `NEXT_PUBLIC_SUPABASE_URL` ✅
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY` ✅
-
-**Fix Applied (2026-02-07):** Updated [`middleware.ts`](middleware.ts:19-40) to:
-1. Check for both `NEXT_PUBLIC_*` and non-prefixed variants (e.g., `SUPABASE_URL`)
-2. Gracefully skip auth checks if env vars aren't available at middleware runtime
-3. Log warning instead of crashing
-
-**Railway Configuration Note:**
-Railway may require variables without the `NEXT_PUBLIC_` prefix for server-side/middleware access. Add these additional variables in Railway:
-- `SUPABASE_URL` (same value as `NEXT_PUBLIC_SUPABASE_URL`)
-- `SUPABASE_ANON_KEY` (same value as `NEXT_PUBLIC_SUPABASE_ANON_KEY`)
-
-**Reference Files:**
-- [`middleware.ts`](middleware.ts:19-40) - Middleware with fallback env var handling
-- [`lib/supabase/server.ts`](lib/supabase/server.ts:19-28) - Server client
-- [`.env.local.example`](.env.local.example:1-12) - All expected variable names
 
 ---
 
@@ -189,42 +122,22 @@ Railway may require variables without the `NEXT_PUBLIC_` prefix for server-side/
 ### Core Features
 
 1. **Chat with Persona**
-   - User selects a scenario (Terry, Mary, Jan, Vic)
+   - User selects a scenario from `scenarios` table
+   - Persona config stored in `persona_config` JSON column
    - Engages in text-based conversation with AI persona
-   - Receives real-time MI feedback
-   - Optional voice interface (STT/TTS) - requires Deepgram SDK
 
 2. **MI Practice Modules**
-   - 45 structured learning modules
+   - Modules stored in `mi_practice_modules` table (currently empty)
    - Choice-based dialogue practice
-   - Immediate feedback on MI technique
-   - Progress tracking
 
 ### API Routes
 
-- `/api/scenarios/` - Scenario-based training
-- `/api/mi-practice/` - MI practice modules
-- `/api/analysis` - MAPS analysis
-- `/api/voice` - Voice interface (optional)
-- `/api/feedback` - Feedback system
-- `/api/reflection` - Reflection prompts
-- `/api/metrics` - Usage metrics
-
----
-
-## Git Status
-
-**Current branch:** main
-**Status:** Clean (all changes committed)
-
-Recent commits:
-- `2cee43d` Fix turn processing feedback generator integration
-- `3b4a1b1` Add graceful Deepgram SDK v3 compatibility handling
-- `6c289dc` Fix authentication removal and add missing LLM service methods
-- `2b70f82` Remove duplicate model definitions in mi_models.py
-- `30260c8` Merge pull request #4 - Remove all authentication
+- `/api/scenarios` - Scenario listing and management
+- `/api/debug/supabase` - Database discovery endpoint
+- `/api/voice/transcribe` - Deepgram transcription
+- `/api/voice/tts` - Deepgram TTS
 
 ---
 
 **Last Updated:** 2026-02-08
-**Status:** ✅ Build successful. Auth protection temporarily disabled in middleware to prevent redirect loops. Ready for Railway deployment.
+**Status:** ✅ Build successful. Scenarios API working. MI modules table needs seeding.

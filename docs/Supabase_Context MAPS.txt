@@ -1,0 +1,321 @@
+Supabase_Context MAPS
+
+#create table public.character_consistency_rules (
+  id uuid not null default gen_random_uuid (),
+  persona_id text not null,
+  forbidden_phrases jsonb not null default '[]'::jsonb,
+  required_traits jsonb not null default '[]'::jsonb,
+  knowledge_boundaries jsonb not null default '{}'::jsonb,
+  personality_constraints jsonb not null default '[]'::jsonb,
+  trust_level_rules jsonb not null default '{"opening": [], "cautious": [], "trusting": [], "defensive": []}'::jsonb,
+  length_constraints jsonb not null default '{"opening": {"max": 300, "min": 60}, "cautious": {"max": 200, "min": 40}, "trusting": {"max": 400, "min": 80}, "defensive": {"max": 150, "min": 20, "hostile_max": 100}}'::jsonb,
+  created_at timestamp with time zone null default now(),
+  updated_at timestamp with time zone null default now(),
+  constraint character_consistency_rules_pkey primary key (id),
+  constraint character_consistency_rules_persona_id_key unique (persona_id)
+) TABLESPACE pg_default;
+
+create index IF not exists idx_consistency_rules_persona on public.character_consistency_rules using btree (persona_id) TABLESPACE pg_default;
+
+#create table public.mi_learning_paths (
+  id uuid not null default gen_random_uuid (),
+  code character varying(50) not null,
+  title character varying(200) not null,
+  description text null,
+  module_sequence uuid[] not null,
+  target_audience character varying(100) null,
+  estimated_total_minutes integer null,
+  maps_competencies_targeted text[] null default '{}'::text[],
+  is_active boolean null default true,
+  created_at timestamp without time zone null default now(),
+  updated_at timestamp without time zone null default now(),
+  pathway_data jsonb null,
+  constraint mi_learning_paths_pkey primary key (id),
+  constraint mi_learning_paths_code_key unique (code)
+) TABLESPACE pg_default;
+
+create index IF not exists idx_mi_paths_code on public.mi_learning_paths using btree (code) TABLESPACE pg_default;
+
+create index IF not exists idx_mi_paths_active on public.mi_learning_paths using btree (is_active) TABLESPACE pg_default
+where
+  (is_active = true);
+
+create trigger update_mi_learning_paths_updated_at BEFORE
+update on mi_learning_paths for EACH row
+execute FUNCTION update_mi_updated_at ();
+
+#[{"idx":0,"id":"0905d6bf-0424-4afa-bbd9-f4f0724a3774","code":"mi-collaborative-climate--agenda--007","title":"Module 7: Collaborative Climate & Focusing","content_type":"shared","mi_focus_area":"Building Rapport","difficulty_level":"intermediate","estimated_minutes":10,"learning_objective":"Create a collaborative rather than authoritative conversational climate; Invite the patient to set priorities collaboratively; Use transparency about time and structure; Balance flexibility with focus","target_competencies":["B1","B2","B6","A2","A6","A1"],"maps_rubric":"{\"dimensions\": {\"A6\": {\"weight\": 1.5, \"description\": \"Rapport Building\", \"negative_signals\": [\"confrontation\", \"educating\", \"righting_reflex\"], \"positive_signals\": [\"simple_reflection\", \"affirmation\", \"open_question\"]}, \"B6\": {\"weight\": 1.5, \"description\": \"Therapeutic Alliance\", \"negative_signals\": [\"judgment\", \"pressure\", \"explanation\"], \"positive_signals\": [\"validation\", \"empathy\", \"reflection\"]}}, \"overall_scoring_logic\": \"weighted_average\"}","maps_framework_alignment":null,"is_active":true,"created_at":"2026-02-01 09:46:49.248792","updated_at":"2026-02-01 09:48:36.862277"}]
+
+#[{"idx":0,"id":"0905d6bf-0424-4afa-bbd9-f4f0724a3774","code":"mi-collaborative-climate--agenda--007","title":"Module 7: Collaborative Climate & Focusing","content_type":"shared","mi_focus_area":"Building Rapport","difficulty_level":"intermediate","estimated_minutes":10,"learning_objective":"Create a collaborative rather than authoritative conversational climate; Invite the patient to set priorities collaboratively; Use transparency about time and structure; Balance flexibility with focus","target_competencies":["B1","B2","B6","A2","A6","A1"],"maps_rubric":"{\"dimensions\": {\"A6\": {\"weight\": 1.5, \"description\": \"Rapport Building\", \"negative_signals\": [\"confrontation\", \"educating\", \"righting_reflex\"], \"positive_signals\": [\"simple_reflection\", \"affirmation\", \"open_question\"]}, \"B6\": {\"weight\": 1.5, \"description\": \"Therapeutic Alliance\", \"negative_signals\": [\"judgment\", \"pressure\", \"explanation\"], \"positive_signals\": [\"validation\", \"empathy\", \"reflection\"]}}, \"overall_scoring_logic\": \"weighted_average\"}","maps_framework_alignment":null,"is_active":true,"created_at":"2026-02-01 09:46:49.248792","updated_at":"2026-02-01 09:48:36.862277"}]
+
+#create table public.mi_practice_attempts (
+  id uuid not null default gen_random_uuid (),
+  user_id uuid not null,
+  module_id uuid not null,
+  started_at timestamp without time zone null default now(),
+  completed_at timestamp without time zone null,
+  current_node_id character varying(50) null,
+  path_taken text[] null default '{}'::text[],
+  current_rapport_score integer null default 0,
+  current_resistance_level integer null default 5,
+  tone_spectrum_position double precision null default 0.0,
+  choices_made jsonb null default '[]'::jsonb,
+  completion_status character varying(50) null,
+  final_scores jsonb null,
+  insights_generated jsonb null default '[]'::jsonb,
+  created_at timestamp without time zone null default now(),
+  updated_at timestamp without time zone null default now(),
+  constraint mi_practice_attempts_pkey primary key (id),
+  constraint mi_practice_attempts_module_id_fkey foreign KEY (module_id) references mi_practice_modules (id) on delete CASCADE,
+  constraint mi_practice_attempts_user_id_fkey foreign KEY (user_id) references auth.users (id) on delete CASCADE
+) TABLESPACE pg_default;
+
+create index IF not exists idx_mi_attempts_user on public.mi_practice_attempts using btree (user_id) TABLESPACE pg_default;
+
+create index IF not exists idx_mi_attempts_module on public.mi_practice_attempts using btree (module_id) TABLESPACE pg_default;
+
+create index IF not exists idx_mi_attempts_completed on public.mi_practice_attempts using btree (completed_at) TABLESPACE pg_default
+where
+  (completed_at is not null);
+
+create trigger update_mi_practice_attempts_updated_at BEFORE
+update on mi_practice_attempts for EACH row
+execute FUNCTION update_mi_updated_at ();
+
+#create table public.mi_practice_modules (
+  id uuid not null default gen_random_uuid (),
+  code character varying(50) not null,
+  title character varying(200) not null,
+  mi_focus_area character varying(100) null,
+  difficulty_level character varying(20) null default 'beginner'::character varying,
+  estimated_minutes integer null default 5,
+  learning_objective text not null,
+  scenario_context text not null,
+  persona_config jsonb not null,
+  dialogue_structure jsonb not null,
+  target_competencies text[] null default '{}'::text[],
+  maps_rubric jsonb not null,
+  is_active boolean null default true,
+  created_at timestamp without time zone null default now(),
+  updated_at timestamp without time zone null default now(),
+  content_type character varying(50) not null default 'shared'::character varying,
+  maps_framework_alignment jsonb null,
+  constraint mi_practice_modules_pkey primary key (id),
+  constraint mi_practice_modules_code_key unique (code),
+  constraint content_type_check check (
+    (
+      (content_type)::text = any (
+        (
+          array[
+            'shared'::character varying,
+            'customer_facing'::character varying,
+            'colleague_facing'::character varying
+          ]
+        )::text[]
+      )
+    )
+  )
+) TABLESPACE pg_default;
+
+create index IF not exists idx_mi_modules_focus on public.mi_practice_modules using btree (mi_focus_area) TABLESPACE pg_default;
+
+create index IF not exists idx_mi_modules_difficulty on public.mi_practice_modules using btree (difficulty_level) TABLESPACE pg_default;
+
+create index IF not exists idx_mi_modules_code on public.mi_practice_modules using btree (code) TABLESPACE pg_default;
+
+create index IF not exists idx_mi_modules_active on public.mi_practice_modules using btree (is_active) TABLESPACE pg_default
+where
+  (is_active = true);
+
+create index IF not exists idx_mi_modules_content_type on public.mi_practice_modules using btree (content_type) TABLESPACE pg_default;
+
+create trigger update_mi_practice_modules_updated_at BEFORE
+update on mi_practice_modules for EACH row
+execute FUNCTION update_mi_updated_at ();
+
+#create table public.mi_user_progress (
+  id uuid not null default gen_random_uuid (),
+  user_id uuid not null,
+  modules_completed integer null default 0,
+  modules_attempted integer null default 0,
+  total_practice_minutes integer null default 0,
+  competency_scores jsonb null default '{}'::jsonb,
+  techniques_practiced jsonb null default '{}'::jsonb,
+  active_learning_path_id uuid null,
+  current_module_index integer null default 0,
+  learning_insights jsonb null default '[]'::jsonb,
+  updated_at timestamp without time zone null default now(),
+  constraint mi_user_progress_pkey primary key (id),
+  constraint mi_user_progress_user_id_key unique (user_id),
+  constraint mi_user_progress_active_learning_path_id_fkey foreign KEY (active_learning_path_id) references mi_learning_paths (id),
+  constraint mi_user_progress_user_id_fkey foreign KEY (user_id) references auth.users (id) on delete CASCADE
+) TABLESPACE pg_default;
+
+create index IF not exists idx_mi_progress_user on public.mi_user_progress using btree (user_id) TABLESPACE pg_default;
+
+create index IF not exists idx_mi_progress_path on public.mi_user_progress using btree (active_learning_path_id) TABLESPACE pg_default;
+
+create trigger update_mi_user_progress_updated_at BEFORE
+update on mi_user_progress for EACH row
+execute FUNCTION update_mi_updated_at ();
+
+
+#create table public.scenario_attempts (
+  id uuid not null default gen_random_uuid (),
+  user_id uuid not null,
+  scenario_id uuid not null,
+  started_at timestamp without time zone null default now(),
+  completed_at timestamp without time zone null,
+  turn_count integer null default 0,
+  transcript jsonb not null default '[]'::jsonb,
+  final_scores jsonb null,
+  completion_reason character varying(50) null,
+  initial_persona_state jsonb not null,
+  current_persona_state jsonb not null,
+  final_persona_state jsonb null,
+  skills_demonstrated text[] null default '{}'::text[],
+  negative_behaviors text[] null default '{}'::text[],
+  mi_module_attempt_id uuid null,
+  dialogue_path jsonb null,
+  constraint scenario_attempts_pkey primary key (id),
+  constraint fk_attempt_scenario foreign KEY (scenario_id) references scenarios (id) on delete CASCADE,
+  constraint fk_attempt_user foreign KEY (user_id) references auth.users (id) on delete CASCADE,
+  constraint scenario_attempts_mi_module_attempt_id_fkey foreign KEY (mi_module_attempt_id) references mi_practice_attempts (id)
+) TABLESPACE pg_default;
+
+create index IF not exists idx_scenario_attempts_mi on public.scenario_attempts using btree (mi_module_attempt_id) TABLESPACE pg_default
+where
+  (mi_module_attempt_id is not null);
+
+create index IF not exists idx_scenario_attempts_user on public.scenario_attempts using btree (user_id) TABLESPACE pg_default;
+
+create index IF not exists idx_scenario_attempts_scenario on public.scenario_attempts using btree (scenario_id) TABLESPACE pg_default;
+
+create index IF not exists idx_scenario_attempts_completed on public.scenario_attempts using btree (completed_at) TABLESPACE pg_default
+where
+  (completed_at is not null);
+
+create index IF not exists idx_scenario_attempts_user_scenario on public.scenario_attempts using btree (user_id, scenario_id) TABLESPACE pg_default;
+
+create index IF not exists idx_scenario_attempts_started on public.scenario_attempts using btree (started_at desc) TABLESPACE pg_default;
+
+#create table public.scenario_attempts (
+  id uuid not null default gen_random_uuid (),
+  user_id uuid not null,
+  scenario_id uuid not null,
+  started_at timestamp without time zone null default now(),
+  completed_at timestamp without time zone null,
+  turn_count integer null default 0,
+  transcript jsonb not null default '[]'::jsonb,
+  final_scores jsonb null,
+  completion_reason character varying(50) null,
+  initial_persona_state jsonb not null,
+  current_persona_state jsonb not null,
+  final_persona_state jsonb null,
+  skills_demonstrated text[] null default '{}'::text[],
+  negative_behaviors text[] null default '{}'::text[],
+  mi_module_attempt_id uuid null,
+  dialogue_path jsonb null,
+  constraint scenario_attempts_pkey primary key (id),
+  constraint fk_attempt_scenario foreign KEY (scenario_id) references scenarios (id) on delete CASCADE,
+  constraint fk_attempt_user foreign KEY (user_id) references auth.users (id) on delete CASCADE,
+  constraint scenario_attempts_mi_module_attempt_id_fkey foreign KEY (mi_module_attempt_id) references mi_practice_attempts (id)
+) TABLESPACE pg_default;
+
+create index IF not exists idx_scenario_attempts_mi on public.scenario_attempts using btree (mi_module_attempt_id) TABLESPACE pg_default
+where
+  (mi_module_attempt_id is not null);
+
+create index IF not exists idx_scenario_attempts_user on public.scenario_attempts using btree (user_id) TABLESPACE pg_default;
+
+create index IF not exists idx_scenario_attempts_scenario on public.scenario_attempts using btree (scenario_id) TABLESPACE pg_default;
+
+create index IF not exists idx_scenario_attempts_completed on public.scenario_attempts using btree (completed_at) TABLESPACE pg_default
+where
+  (completed_at is not null);
+
+create index IF not exists idx_scenario_attempts_user_scenario on public.scenario_attempts using btree (user_id, scenario_id) TABLESPACE pg_default;
+
+create index IF not exists idx_scenario_attempts_started on public.scenario_attempts using btree (started_at desc) TABLESPACE pg_default;
+
+#create table public.scenarios (
+  id uuid not null default gen_random_uuid (),
+  code character varying(50) not null,
+  title character varying(200) not null,
+  mi_skill_category character varying(100) null,
+  difficulty character varying(20) null default 'beginner'::character varying,
+  estimated_minutes integer null default 5,
+  situation text not null,
+  learning_objective text not null,
+  persona_config jsonb not null,
+  success_criteria jsonb not null,
+  maps_rubric jsonb not null default '{}'::jsonb,
+  is_active boolean null default true,
+  created_at timestamp without time zone null default now(),
+  updated_at timestamp without time zone null default now(),
+  mi_practice_module_id uuid null,
+  has_structured_dialogue boolean null default false,
+  constraint scenarios_pkey primary key (id),
+  constraint scenarios_code_key unique (code),
+  constraint scenarios_mi_practice_module_id_fkey foreign KEY (mi_practice_module_id) references mi_practice_modules (id)
+) TABLESPACE pg_default;
+
+create index IF not exists idx_scenarios_mi_module on public.scenarios using btree (mi_practice_module_id) TABLESPACE pg_default;
+
+create index IF not exists idx_scenarios_skill on public.scenarios using btree (mi_skill_category) TABLESPACE pg_default;
+
+create index IF not exists idx_scenarios_difficulty on public.scenarios using btree (difficulty) TABLESPACE pg_default;
+
+create index IF not exists idx_scenarios_code on public.scenarios using btree (code) TABLESPACE pg_default;
+
+create index IF not exists idx_scenarios_active on public.scenarios using btree (is_active) TABLESPACE pg_default
+where
+  (is_active = true);
+
+create trigger scenario_timestamp_trigger BEFORE
+update on scenarios for EACH row
+execute FUNCTION update_scenario_timestamp ();
+
+#create table public.system_prompts (
+  id uuid not null,
+  prompt_key text not null,
+  prompt_name text not null,
+  prompt_text text not null,
+  model_recommended text null,
+  temperature numeric null,
+  max_tokens integer null,
+  created_at timestamp with time zone null default now(),
+  updated_at timestamp with time zone null default now(),
+  metadata jsonb null,
+  constraint system_prompts_pkey primary key (id)
+) TABLESPACE pg_default;
+
+#create table public.system_prompts (
+  id uuid not null,
+  prompt_key text not null,
+  prompt_name text not null,
+  prompt_text text not null,
+  model_recommended text null,
+  temperature numeric null,
+  max_tokens integer null,
+  created_at timestamp with time zone null default now(),
+  updated_at timestamp with time zone null default now(),
+  metadata jsonb null,
+  constraint system_prompts_pkey primary key (id)
+) TABLESPACE pg_default;
+
+#create table public.user_feedback (
+  id uuid not null,
+  session_id text not null,
+  conversation_id text null,
+  persona_practiced text null,
+  helpfulness_score integer null,
+  what_was_helpful text null,
+  improvement_suggestions text null,
+  user_email text null,
+  created_at timestamp with time zone null default now(),
+  metadata jsonb null,
+  constraint user_feedback_pkey primary key (id)
+) TABLESPACE pg_default;
+
+

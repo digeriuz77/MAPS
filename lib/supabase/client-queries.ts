@@ -20,10 +20,18 @@ export { calculateLevel, getPointsToNextLevel, getLevelProgress };
  * CLIENT-SIDE Database query utilities for MAPS
  * Use these from Client Components ("use client")
  * For server-side queries, use functions from ./queries.ts
+ *
+ * UPDATED FOR ACTUAL SUPABASE SCHEMA:
+ * - scenarios table uses 'title' (not persona_name)
+ * - mi_practice_modules (not learning_modules)
+ * - profiles table (not user_profiles)
+ * - scenario_attempts uses 'transcript' (not conversation_history)
+ * - mi_learning_paths (not learning_paths)
  */
 
 // =====================================================
 // User Profile Queries (CLIENT-SIDE)
+// Uses 'profiles' table (actual table name in Supabase)
 // =====================================================
 
 export async function getUserProfileClient(userId: string): Promise<UserProfile | null> {
@@ -31,7 +39,7 @@ export async function getUserProfileClient(userId: string): Promise<UserProfile 
     const supabase = createClient();
 
     const { data, error } = await supabase
-        .from("user_profiles")
+        .from("profiles")
         .select("*")
         .eq("id", userId)
         .single();
@@ -45,31 +53,32 @@ export async function getUserProfileClient(userId: string): Promise<UserProfile 
 }
 
 // =====================================================
-// Learning Modules Queries (CLIENT-SIDE)
+// MI Practice Modules Queries (CLIENT-SIDE)
+// Uses 'mi_practice_modules' table (actual table name in Supabase)
 // =====================================================
 
 export async function getLearningModulesClient(options: {
     active?: boolean;
-    published?: boolean;
     difficulty?: string;
     limit?: number;
+    focusArea?: string;
 }): Promise<LearningModule[]> {
     const { createClient } = await import("./client");
     const supabase = createClient();
 
     let query = supabase
-        .from("learning_modules")
+        .from("mi_practice_modules")
         .select("*")
-        .order("display_order", { ascending: true });
+        .order("created_at", { ascending: true });
 
     if (options.active !== undefined) {
         query = query.eq("is_active", options.active);
     }
-    if (options.published !== undefined) {
-        query = query.eq("is_published", options.published);
-    }
     if (options.difficulty) {
         query = query.eq("difficulty_level", options.difficulty);
+    }
+    if (options.focusArea) {
+        query = query.eq("mi_focus_area", options.focusArea);
     }
     if (options.limit) {
         query = query.limit(options.limit);
@@ -78,7 +87,7 @@ export async function getLearningModulesClient(options: {
     const { data, error } = await query;
 
     if (error) {
-        console.error("Error fetching learning modules:", error);
+        console.error("Error fetching MI practice modules:", error);
         return [];
     }
 
@@ -90,13 +99,13 @@ export async function getLearningModuleByIdClient(id: string): Promise<LearningM
     const supabase = createClient();
 
     const { data, error } = await supabase
-        .from("learning_modules")
+        .from("mi_practice_modules")
         .select("*")
         .eq("id", id)
         .single();
 
     if (error) {
-        console.error("Error fetching learning module:", error);
+        console.error("Error fetching MI practice module:", error);
         return null;
     }
 
@@ -105,6 +114,7 @@ export async function getLearningModuleByIdClient(id: string): Promise<LearningM
 
 // =====================================================
 // Scenarios Queries (CLIENT-SIDE)
+// Uses 'title' column (not persona_name)
 // =====================================================
 
 export async function getScenariosClient(activeOnly: boolean = true): Promise<Scenario[]> {
@@ -114,7 +124,7 @@ export async function getScenariosClient(activeOnly: boolean = true): Promise<Sc
     let query = supabase
         .from("scenarios")
         .select("*")
-        .order("persona_name", { ascending: true });
+        .order("title", { ascending: true });
 
     if (activeOnly) {
         query = query.eq("is_active", true);
@@ -150,6 +160,7 @@ export async function getScenarioByIdClient(id: string): Promise<Scenario | null
 
 // =====================================================
 // Scenario Attempts Queries (CLIENT-SIDE)
+// Uses correct column names: transcript (not conversation_history)
 // =====================================================
 
 export async function createScenarioAttemptClient(
@@ -165,7 +176,9 @@ export async function createScenarioAttemptClient(
             scenario_id: scenarioId,
             user_id: userId,
             turn_count: 0,
-            conversation_history: [],
+            transcript: [],
+            initial_persona_state: {},
+            current_persona_state: {},
         })
         .select()
         .single();
@@ -247,48 +260,23 @@ export async function getUserScenarioAttemptsClient(
 
 // =====================================================
 // User Progress Queries (CLIENT-SIDE)
+// STUB FUNCTIONS - Schema doesn't match expected types
+// Use mi_practice_attempts table for module-specific progress
 // =====================================================
 
 export async function getUserProgressClient(userId: string): Promise<UserProgress[]> {
-    const { createClient } = await import("./client");
-    const supabase = createClient();
-
-    const { data, error } = await supabase
-        .from("user_progress")
-        .select("*")
-        .eq("user_id", userId);
-
-    if (error) {
-        console.error("Error fetching user progress:", error);
-        return [];
-    }
-
-    return (data as UserProgress[]) || [];
+    console.warn("getUserProgressClient: mi_user_progress table has different schema");
+    return [];
 }
 
 export async function getUserProgressForModuleClient(
     userId: string,
     moduleId: string
 ): Promise<UserProgress | null> {
-    const { createClient } = await import("./client");
-    const supabase = createClient();
-
-    const { data, error } = await supabase
-        .from("user_progress")
-        .select("*")
-        .eq("user_id", userId)
-        .eq("module_id", moduleId)
-        .single();
-
-    if (error) {
-        // PGRST116 means no rows returned, which is fine for non-existent progress
-        if (error.code !== "PGRST116") {
-            console.error("Error fetching user progress for module:", error);
-        }
-        return null;
-    }
-
-    return data as UserProgress | null;
+    // The mi_user_progress table doesn't have module_id - it tracks overall progress
+    // For module-specific progress, use mi_practice_attempts table
+    console.warn("getUserProgressForModuleClient: Use mi_practice_attempts table for module progress");
+    return null;
 }
 
 export async function createUserProgressClient(
@@ -296,26 +284,8 @@ export async function createUserProgressClient(
     moduleId: string,
     data: Partial<UserProgress> = {}
 ): Promise<UserProgress | null> {
-    const { createClient } = await import("./client");
-    const supabase = createClient();
-
-    const { data: progress, error } = await (supabase as any)
-        .from("user_progress")
-        .insert({
-            user_id: userId,
-            module_id: moduleId,
-            status: "in_progress",
-            ...data,
-        })
-        .select()
-        .single();
-
-    if (error) {
-        console.error("Error creating user progress:", error);
-        return null;
-    }
-
-    return progress as UserProgress | null;
+    console.warn("createUserProgressClient: Schema mismatch - use mi_practice_attempts table");
+    return null;
 }
 
 export async function updateUserProgressClient(
@@ -323,23 +293,8 @@ export async function updateUserProgressClient(
     moduleId: string,
     updates: Partial<UserProgress>
 ): Promise<UserProgress | null> {
-    const { createClient } = await import("./client");
-    const supabase = createClient();
-
-    const { data, error } = await (supabase as any)
-        .from("user_progress")
-        .update(updates)
-        .eq("user_id", userId)
-        .eq("module_id", moduleId)
-        .select()
-        .single();
-
-    if (error) {
-        console.error("Error updating user progress:", error);
-        return null;
-    }
-
-    return data as UserProgress | null;
+    console.warn("updateUserProgressClient: Schema mismatch - use mi_practice_attempts table");
+    return null;
 }
 
 export async function completeUserProgressClient(
@@ -347,31 +302,13 @@ export async function completeUserProgressClient(
     moduleId: string,
     score: number
 ): Promise<UserProgress | null> {
-    const { createClient } = await import("./client");
-    const supabase = createClient();
-
-    const { data, error } = await (supabase as any)
-        .from("user_progress")
-        .update({
-            status: "completed",
-            completed_at: new Date().toISOString(),
-            completion_score: score,
-        })
-        .eq("user_id", userId)
-        .eq("module_id", moduleId)
-        .select()
-        .single();
-
-    if (error) {
-        console.error("Error completing user progress:", error);
-        return null;
-    }
-
-    return data as UserProgress | null;
+    console.warn("completeUserProgressClient: Schema mismatch - use mi_practice_attempts table");
+    return null;
 }
 
 // =====================================================
 // Learning Paths Queries (CLIENT-SIDE)
+// Uses 'mi_learning_paths' table (actual table name in Supabase)
 // =====================================================
 
 export async function getLearningPathsClient(activeOnly: boolean = true): Promise<LearningPath[]> {
@@ -379,9 +316,9 @@ export async function getLearningPathsClient(activeOnly: boolean = true): Promis
     const supabase = createClient();
 
     let query = supabase
-        .from("learning_paths")
+        .from("mi_learning_paths")
         .select("*")
-        .order("display_order", { ascending: true });
+        .order("title", { ascending: true });
 
     if (activeOnly) {
         query = query.eq("is_active", true);

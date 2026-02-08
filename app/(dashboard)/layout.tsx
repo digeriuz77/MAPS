@@ -8,11 +8,19 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const user = await getCurrentUser();
+  // Auth temporarily disabled for testing
+  // Uncomment the following lines to re-enable auth
+  // const user = await getCurrentUser();
+  // if (!user) {
+  //   redirect("/login");
+  // }
 
-  if (!user) {
-    redirect("/login");
-  }
+  // Demo user for testing
+  const user = {
+    displayName: "Demo User",
+    level: 1,
+    total_points: 0,
+  };
 
   return (
     <div className="min-h-screen bg-maps-background">
